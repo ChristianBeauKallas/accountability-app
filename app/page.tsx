@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Onboarding from "./onboarding";
 import Composer from "./composer";
@@ -165,7 +166,14 @@ export default async function Home() {
             </span>
           </p>
         </div>
-        <SignOut compact />
+        <div className="head-actions">
+          {membership.role === "owner" && (
+            <Link className="head-link" href="/activities">
+              ⚙ Activities
+            </Link>
+          )}
+          <SignOut compact />
+        </div>
       </header>
 
       {/* Today strip — who's shown up + their streak */}

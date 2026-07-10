@@ -269,6 +269,29 @@ a {
   font-weight: 700;
 }
 
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.head-link {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.78rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.15s ease;
+}
+
+.head-link:active {
+  border-color: var(--accent);
+}
+
 .signout-compact button {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -783,5 +806,87 @@ a {
 
 .comment-box button:disabled {
   color: var(--faint);
+  cursor: default;
+}
+
+/* ---- Activities editor ---------------------------------------------------- */
+.activity-editor {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activity-row,
+.activity-add {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.emoji-input {
+  width: 52px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 0.6rem 0.3rem;
+  font-size: 1.1rem;
+}
+
+.name-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.95rem;
+}
+
+.emoji-input:focus,
+.name-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.remove-activity {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.remove-activity:active {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.activity-add {
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-soft);
+}
+
+.activity-add button {
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.activity-add button:disabled {
+  opacity: 0.5;
   cursor: default;
 }
