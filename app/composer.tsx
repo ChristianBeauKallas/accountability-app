@@ -205,7 +205,7 @@ export default function Composer({
       <div className={`context-box ${recording ? "is-recording" : ""}`}>
         <textarea
           className="context-input"
-          placeholder="Add a caption or note…"
+          placeholder="Add a caption or voice note…"
           rows={2}
           value={caption}
           onChange={(e) => setCaption(e.target.value)}

@@ -168,12 +168,16 @@ export default async function Home() {
         <SignOut compact />
       </header>
 
-      {/* Today strip — who's shown up */}
+      {/* Today strip — who's shown up + their streak */}
       <section className="today-strip">
         {roster.map((r) => (
           <div key={r.id} className={`today-avatar ${r.postedToday ? "in" : "out"}`}>
             <Avatar name={r.name} url={r.avatar} />
             <span className="today-name">{r.name.split(" ")[0]}</span>
+            <span className="today-streak">
+              {r.streak}
+              <span className="flame">🔥</span>
+            </span>
             {r.postedToday && <span className="check">✓</span>}
           </div>
         ))}
@@ -186,24 +190,6 @@ export default async function Home() {
         userId={user.id}
         postedToday={me?.postedToday ?? false}
       />
-
-      {/* Streak leaderboard */}
-      <section className="panel">
-        <h2>Streaks</h2>
-        <ul className="roster">
-          {roster.map((r) => (
-            <li key={r.id} className="roster-row">
-              <Avatar name={r.name} url={r.avatar} />
-              <span className="roster-name">{r.name}</span>
-              <span className="streak">{r.streak}🔥</span>
-              <StatusBadge
-                postedToday={r.postedToday}
-                daysSince={r.daysSince}
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
 
       {/* Who's dark today */}
       {dark.length > 0 && (

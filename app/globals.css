@@ -318,6 +318,25 @@ a {
   white-space: nowrap;
 }
 
+.today-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.today-streak .flame {
+  font-size: 0.72rem;
+}
+
+.today-avatar.out .today-streak {
+  color: var(--faint);
+}
+
 .today-avatar.out {
   opacity: 0.4;
 }
