@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Onboarding from "./onboarding";
 import Composer from "./composer";
+import CommentBox from "./comment-box";
 import { computeStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 
@@ -23,6 +24,13 @@ type PostRow = {
   created_at: string;
   post_activities: { activity_id: string }[];
   author: { display_name: string; avatar_url: string | null } | null;
+  media: { id: string; type: string; storage_path: string }[];
+  comments: {
+    id: string;
+    body: string;
+    created_at: string;
+    author: { display_name: string; avatar_url: string | null } | null;
+  }[];
 };
 
 export default async function Home() {
@@ -88,7 +96,7 @@ export default async function Home() {
     supabase
       .from("group_posts")
       .select(
-        "id, author_id, caption, created_at, post_activities(activity_id), author:profiles(display_name, avatar_url)",
+        "id, author_id, caption, created_at, post_activities(activity_id), author:profiles(display_name, avatar_url), media(id, type, storage_path), comments(id, body, created_at, author:profiles(display_name, avatar_url))",
       )
       .eq("group_id", groupId)
       .order("created_at", { ascending: false })
@@ -100,6 +108,18 @@ export default async function Home() {
   const posts = (postsRes.data ?? []) as unknown as PostRow[];
 
   const activityById = new Map(activities.map((a) => [a.id, a]));
+
+  // Batch-sign every media path once (bucket is private).
+  const allPaths = posts.flatMap((p) => p.media.map((m) => m.storage_path));
+  const signedByPath = new Map<string, string>();
+  if (allPaths.length > 0) {
+    const { data: signed } = await supabase.storage
+      .from("media")
+      .createSignedUrls(allPaths, 60 * 60);
+    for (const s of signed ?? []) {
+      if (s.signedUrl && s.path) signedByPath.set(s.path, s.signedUrl);
+    }
+  }
 
   // Bucket each member's post dates in their own timezone.
   const tzByUser = new Map(
@@ -231,6 +251,38 @@ export default async function Home() {
               </div>
             )}
             {p.caption && <p className="post-caption">{p.caption}</p>}
+
+            {p.media.map((m) => {
+              const src = signedByPath.get(m.storage_path);
+              if (!src) return null;
+              if (m.type === "image") {
+                // eslint-disable-next-line @next/next/no-img-element
+                return <img className="post-photo" key={m.id} src={src} alt="" />;
+              }
+              if (m.type === "audio") {
+                return (
+                  <audio className="post-audio" key={m.id} controls src={src} />
+                );
+              }
+              return null;
+            })}
+
+            {p.comments.length > 0 && (
+              <ul className="comments">
+                {[...p.comments]
+                  .sort((a, b) => a.created_at.localeCompare(b.created_at))
+                  .map((c) => (
+                    <li className="comment" key={c.id}>
+                      <span className="comment-author">
+                        {c.author?.display_name}
+                      </span>{" "}
+                      {c.body}
+                    </li>
+                  ))}
+              </ul>
+            )}
+
+            <CommentBox postId={p.id} userId={user.id} />
           </article>
         ))}
       </section>

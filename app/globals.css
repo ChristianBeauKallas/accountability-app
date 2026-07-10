@@ -582,3 +582,139 @@ a {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+/* ---- Media in composer ---------------------------------------------------- */
+.media-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.media-btn {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.media-btn:active {
+  border-color: var(--accent);
+}
+
+.media-btn.recording {
+  border-color: var(--danger);
+  color: var(--danger);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.media-preview {
+  position: relative;
+  margin-top: 0.75rem;
+}
+
+.media-preview img {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+.media-preview.audio audio {
+  width: 100%;
+}
+
+.media-preview .remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+/* ---- Media in feed -------------------------------------------------------- */
+.post-photo {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  margin: 0.35rem 0 0.15rem;
+  display: block;
+}
+
+.post-audio {
+  width: 100%;
+  margin: 0.5rem 0 0.15rem;
+  height: 40px;
+}
+
+/* ---- Comments ------------------------------------------------------------- */
+.comments {
+  list-style: none;
+  margin: 0.7rem 0 0.2rem;
+  padding: 0.7rem 0 0;
+  border-top: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.comment {
+  font-size: 0.88rem;
+  color: #dfe4ec;
+}
+
+.comment-author {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.comment-box {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.comment-box input {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.88rem;
+}
+
+.comment-box input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.comment-box button {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 0 0.4rem;
+}
+
+.comment-box button:disabled {
+  color: var(--faint);
+  cursor: default;
+}

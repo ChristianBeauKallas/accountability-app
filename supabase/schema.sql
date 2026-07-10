@@ -451,3 +451,25 @@ create policy media_owner_read on storage.objects
   for select to authenticated using (
     bucket_id = 'media' and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- Anyone who can see the parent post/check-in can read its media object. This
+-- lets group members view each other's photos/voice notes via signed URLs
+-- while keeping the bucket private.
+drop policy if exists media_group_read on storage.objects;
+create policy media_group_read on storage.objects
+  for select to authenticated using (
+    bucket_id = 'media' and (
+      exists (
+        select 1 from public.media m
+        join public.group_posts p on p.id = m.post_id
+        where m.storage_path = name and public.is_group_member(p.group_id)
+      )
+      or exists (
+        select 1 from public.media m
+        join public.checkins c on c.id = m.checkin_id
+        join public.coaching_relationships r on r.id = c.relationship_id
+        where m.storage_path = name
+          and (r.coach_id = auth.uid() or r.client_id = auth.uid())
+      )
+    )
+  );
