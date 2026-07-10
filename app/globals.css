@@ -1,0 +1,79 @@
+:root {
+  --bg: #0b0d12;
+  --card: #151922;
+  --border: #262c3a;
+  --text: #e6e9ef;
+  --muted: #9aa4b2;
+  --accent: #6ee7b7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+
+h1 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin: 0 0 2rem;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.notice {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+.notice code {
+  background: #0b0d12;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+a {
+  color: var(--accent);
+}
