@@ -136,8 +136,13 @@ export default async function Home() {
         <div>
           <h1>{membership.groups.name}</h1>
           <p className="subtitle">
-            {roster.filter((r) => r.postedToday).length} of {roster.length}{" "}
-            checked in today
+            {me && me.streak > 0 && (
+              <span className="head-streak">{me.streak}🔥</span>
+            )}
+            <span>
+              {roster.filter((r) => r.postedToday).length} of {roster.length}{" "}
+              checked in today
+            </span>
           </p>
         </div>
         <SignOut compact />
