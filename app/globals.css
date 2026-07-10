@@ -583,33 +583,75 @@ a {
   font-size: 0.9rem;
 }
 
-/* ---- Media in composer ---------------------------------------------------- */
-.media-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.8rem;
-}
-
-.media-btn {
-  flex: 1;
+/* ---- Context box (caption + voice + photo, unified) ----------------------- */
+.context-box {
+  margin-top: 0.9rem;
   background: var(--bg-2);
   border: 1px solid var(--border);
-  color: var(--text);
   border-radius: var(--radius-sm);
-  padding: 0.6rem;
-  font-size: 0.88rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
+  padding: 0.4rem 0.4rem 0.4rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.media-btn:active {
+.context-box:focus-within {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
-.media-btn.recording {
+.context-box.is-recording {
   border-color: var(--danger);
+}
+
+.context-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  padding: 0.5rem 0.55rem 0.2rem;
+  resize: none;
+}
+
+.context-input::placeholder {
+  color: var(--faint);
+}
+
+.context-input:focus {
+  outline: none;
+}
+
+.context-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.25rem 0.15rem;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.35rem 0.5rem;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+.icon-btn.recording {
   color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 700;
   animation: pulse 1s ease-in-out infinite;
 }
 
@@ -619,9 +661,15 @@ a {
   }
 }
 
+.context-hint {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--faint);
+}
+
 .media-preview {
   position: relative;
-  margin-top: 0.75rem;
+  margin: 0.4rem 0.15rem 0.15rem;
 }
 
 .media-preview img {

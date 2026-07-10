@@ -186,7 +186,7 @@ export default function Composer({
 
   return (
     <div className="composer">
-      <p className="composer-label">What did you do today?</p>
+      <p className="composer-label">How&apos;d today go?</p>
       <div className="toggle-grid">
         {activities.map((a) => (
           <button
@@ -201,60 +201,74 @@ export default function Composer({
         ))}
       </div>
 
-      <textarea
-        className="composer-caption"
-        placeholder="Add a note (optional)…"
-        rows={2}
-        value={caption}
-        onChange={(e) => setCaption(e.target.value)}
-      />
-
-      {/* Media row */}
-      <div className="media-actions">
-        <input
-          ref={fileInput}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          hidden
-          onChange={onPhoto}
+      {/* Context — caption, voice, photo all live together, all optional */}
+      <div className={`context-box ${recording ? "is-recording" : ""}`}>
+        <textarea
+          className="context-input"
+          placeholder="Add a caption or note…"
+          rows={2}
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
         />
-        <button
-          type="button"
-          className="media-btn"
-          onClick={() => fileInput.current?.click()}
-        >
-          📷 Photo
-        </button>
-        {recording ? (
-          <button type="button" className="media-btn recording" onClick={stopRecording}>
-            ● Stop
-          </button>
-        ) : (
-          <button type="button" className="media-btn" onClick={startRecording}>
-            🎙️ Voice
-          </button>
+
+        {photoPreview && (
+          <div className="media-preview">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photoPreview} alt="preview" />
+            <button type="button" className="remove" onClick={clearPhoto}>
+              ✕
+            </button>
+          </div>
         )}
+
+        {audioPreview && (
+          <div className="media-preview audio">
+            <audio controls src={audioPreview} />
+            <button type="button" className="remove" onClick={clearAudio}>
+              ✕
+            </button>
+          </div>
+        )}
+
+        <div className="context-toolbar">
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={onPhoto}
+          />
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => fileInput.current?.click()}
+            aria-label="Add photo"
+          >
+            📷
+          </button>
+          {recording ? (
+            <button
+              type="button"
+              className="icon-btn recording"
+              onClick={stopRecording}
+              aria-label="Stop recording"
+            >
+              ● Stop
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={startRecording}
+              aria-label="Record voice note"
+            >
+              🎙️
+            </button>
+          )}
+          <span className="context-hint">optional context</span>
+        </div>
       </div>
-
-      {photoPreview && (
-        <div className="media-preview">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photoPreview} alt="preview" />
-          <button type="button" className="remove" onClick={clearPhoto}>
-            ✕
-          </button>
-        </div>
-      )}
-
-      {audioPreview && (
-        <div className="media-preview audio">
-          <audio controls src={audioPreview} />
-          <button type="button" className="remove" onClick={clearAudio}>
-            ✕
-          </button>
-        </div>
-      )}
 
       {error && <p className="auth-error">{error}</p>}
 
