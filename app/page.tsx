@@ -11,24 +11,34 @@ type Goal = {
 };
 
 export default async function Home() {
-  const isConfigured =
-    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Trim in case a stray space/newline snuck into an env var when it was
+  // pasted into the Vercel dashboard — a common cause of hard-to-spot errors.
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  const isConfigured = !!url && !!anonKey;
 
   let goals: Goal[] = [];
   let errorMessage: string | null = null;
 
   if (isConfigured) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("goals")
-      .select("*")
-      .order("created_at", { ascending: false });
+    // Catch *everything* — including a client that fails to construct because
+    // of a malformed URL/key — so the page shows a diagnostic instead of a
+    // white "Application error" screen.
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from("goals")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      errorMessage = error.message;
-    } else {
-      goals = (data as Goal[]) ?? [];
+      if (error) {
+        errorMessage = error.message;
+      } else {
+        goals = (data as Goal[]) ?? [];
+      }
+    } catch (e) {
+      errorMessage =
+        e instanceof Error ? e.message : "Unknown error contacting Supabase.";
     }
   }
 
@@ -39,10 +49,12 @@ export default async function Home() {
 
       {!isConfigured && (
         <div className="notice">
-          <strong>Supabase not configured yet.</strong> Copy{" "}
-          <code>.env.local.example</code> to <code>.env.local</code> and add
-          your Supabase URL and anon key, then restart the dev server. See{" "}
-          <code>README.md</code> for the full walkthrough.
+          <strong>Supabase not configured yet.</strong> Set{" "}
+          <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
+          <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>. Locally, copy{" "}
+          <code>.env.local.example</code> to <code>.env.local</code>; on Vercel,
+          add them under Project Settings → Environment Variables and redeploy.
+          See <code>README.md</code> for the full walkthrough.
         </div>
       )}
 
@@ -50,8 +62,9 @@ export default async function Home() {
         <div className="notice">
           <strong>Couldn&apos;t load goals:</strong> {errorMessage}
           <br />
-          Make sure you&apos;ve created the <code>goals</code> table and its RLS
-          policy (see <code>supabase/schema.sql</code>).
+          Common fixes: run <code>supabase/schema.sql</code> to create the{" "}
+          <code>goals</code> table and its RLS policy, and double-check your
+          Supabase URL and anon key.
         </div>
       )}
 
