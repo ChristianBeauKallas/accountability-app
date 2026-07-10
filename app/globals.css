@@ -387,6 +387,133 @@ a {
   box-shadow: 0 0 0 2px var(--accent), 0 0 14px var(--accent-glow);
 }
 
+/* ---- Roster board (the hero: everyone, today status, signed streak) ------- */
+.roster-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.4rem;
+}
+
+.rb-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.7rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.rb-row.rb-today {
+  border-color: rgba(62, 232, 122, 0.35);
+  background: linear-gradient(
+    100deg,
+    rgba(62, 232, 122, 0.06),
+    var(--surface) 60%
+  );
+}
+
+.rb-row.rb-out {
+  opacity: 0.9;
+}
+
+.rb-avatar {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.rb-row.rb-today .rb-avatar .avatar {
+  box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent-glow);
+}
+
+.rb-row.rb-pending .rb-avatar .avatar {
+  box-shadow: 0 0 0 2px var(--amber);
+}
+
+.rb-row.rb-out .rb-avatar .avatar {
+  filter: grayscale(0.7);
+  opacity: 0.75;
+}
+
+.rb-check {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.rb-name {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.96rem;
+  font-weight: 600;
+}
+
+.rb-sub {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--faint);
+}
+
+.rb-row.rb-today .rb-sub {
+  color: var(--accent);
+}
+.rb-row.rb-pending .rb-sub {
+  color: var(--amber);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  font-weight: 800;
+  font-size: 0.92rem;
+  letter-spacing: -0.02em;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  min-width: 46px;
+  justify-content: center;
+}
+
+.pill .flame {
+  font-size: 0.8rem;
+}
+
+.pill-today {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.pill-pending {
+  background: rgba(251, 191, 36, 0.14);
+  color: var(--amber);
+}
+
+.pill-out {
+  background: rgba(252, 165, 165, 0.14);
+  color: var(--danger);
+}
+
+.pill-new {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
 /* Avatars */
 .avatar {
   width: 46px;

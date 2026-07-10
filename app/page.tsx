@@ -134,22 +134,45 @@ export default async function Home() {
     datesByUser.set(p.author_id, set);
   }
 
-  // Compute streak + today status per member, sorted by streak desc.
+  // Compute streak + today status per member, derive a display state, and sort
+  // as a leaderboard (positive streaks on top, people slipping at the bottom).
   const roster = members
     .map((m) => {
       const tz = m.profiles?.timezone ?? "America/New_York";
       const info = computeStreak(datesByUser.get(m.user_id) ?? new Set(), tz);
+
+      let state: "today" | "pending" | "out" | "new";
+      let value: number | null;
+      if (info.postedToday) {
+        state = "today";
+        value = info.streak;
+      } else if (info.streak > 0) {
+        state = "pending";
+        value = info.streak;
+      } else if (info.daysSince !== null) {
+        state = "out";
+        value = info.daysSince;
+      } else {
+        state = "new";
+        value = null;
+      }
+
+      const sortKey = state === "out" ? -(value ?? 0) : (value ?? 0);
+
       return {
         id: m.user_id,
         name: m.profiles?.display_name ?? "Member",
         avatar: m.profiles?.avatar_url ?? null,
         ...info,
+        state,
+        value,
+        sortKey,
       };
     })
-    .sort((a, b) => b.streak - a.streak || a.name.localeCompare(b.name));
+    .sort((a, b) => b.sortKey - a.sortKey || a.name.localeCompare(b.name));
 
   const me = roster.find((r) => r.id === user.id);
-  const dark = roster.filter((r) => !r.postedToday);
+  const checkedInCount = roster.filter((r) => r.postedToday).length;
 
   return (
     <main className="board">
@@ -161,8 +184,7 @@ export default async function Home() {
               <span className="head-streak">{me.streak}🔥</span>
             )}
             <span>
-              {roster.filter((r) => r.postedToday).length} of {roster.length}{" "}
-              checked in today
+              {checkedInCount} of {roster.length} checked in today
             </span>
           </p>
         </div>
@@ -176,17 +198,19 @@ export default async function Home() {
         </div>
       </header>
 
-      {/* Today strip — who's shown up + their streak */}
-      <section className="today-strip">
+      {/* Roster — everyone, whether they've checked in today, and their streak */}
+      <section className="roster-board">
         {roster.map((r) => (
-          <div key={r.id} className={`today-avatar ${r.postedToday ? "in" : "out"}`}>
-            <Avatar name={r.name} url={r.avatar} />
-            <span className="today-name">{r.name.split(" ")[0]}</span>
-            <span className="today-streak">
-              {r.streak}
-              <span className="flame">🔥</span>
+          <div key={r.id} className={`rb-row rb-${r.state}`}>
+            <span className="rb-avatar">
+              <Avatar name={r.name} url={r.avatar} />
+              {r.state === "today" && <span className="rb-check">✓</span>}
             </span>
-            {r.postedToday && <span className="check">✓</span>}
+            <span className="rb-name">
+              {r.name}
+              <span className="rb-sub">{subLabel(r.state, r.value)}</span>
+            </span>
+            <StreakPill state={r.state} value={r.value} />
           </div>
         ))}
       </section>
@@ -198,25 +222,6 @@ export default async function Home() {
         userId={user.id}
         postedToday={me?.postedToday ?? false}
       />
-
-      {/* Who's dark today */}
-      {dark.length > 0 && (
-        <section className="panel">
-          <h2>Missing today</h2>
-          <ul className="roster">
-            {dark.map((r) => (
-              <li key={r.id} className="roster-row dim">
-                <Avatar name={r.name} url={r.avatar} />
-                <span className="roster-name">{r.name}</span>
-                <StatusBadge
-                  postedToday={false}
-                  daysSince={r.daysSince}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* Feed */}
       <section className="panel">
@@ -284,16 +289,38 @@ export default async function Home() {
   );
 }
 
-function StatusBadge({
-  postedToday,
-  daysSince,
+type RosterState = "today" | "pending" | "out" | "new";
+
+function subLabel(state: RosterState, value: number | null): string {
+  switch (state) {
+    case "today":
+      return "checked in";
+    case "pending":
+      return "not yet today";
+    case "out":
+      return `${value} ${value === 1 ? "day" : "days"} out`;
+    case "new":
+      return "no check-ins yet";
+  }
+}
+
+function StreakPill({
+  state,
+  value,
 }: {
-  postedToday: boolean;
-  daysSince: number | null;
+  state: RosterState;
+  value: number | null;
 }) {
-  if (postedToday) return <span className="badge in">today ✓</span>;
-  if (daysSince === null) return <span className="badge none">no posts yet</span>;
-  return <span className="badge out">{daysSince}d out</span>;
+  if (state === "new") return <span className="pill pill-new">—</span>;
+  if (state === "out")
+    return <span className="pill pill-out">−{value}</span>;
+  // today or pending — positive streak
+  return (
+    <span className={`pill pill-${state}`}>
+      {value}
+      <span className="flame">🔥</span>
+    </span>
+  );
 }
 
 function Avatar({ name, url }: { name: string; url: string | null }) {
