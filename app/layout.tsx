@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Accountability App",
-  description: "Track your goals and stay accountable.",
+  title: "Accountability",
+  description: "Show up. Every day.",
 };
 
 export default function RootLayout({

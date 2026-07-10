@@ -1,86 +1,75 @@
 import { createClient } from "@/lib/supabase/server";
+import Onboarding from "./onboarding";
 
-// Always render fresh so you see new rows without redeploying.
 export const dynamic = "force-dynamic";
 
-type Goal = {
-  id: number;
-  title: string;
-  description: string | null;
-  created_at: string;
-};
-
 export default async function Home() {
-  // Trim in case a stray space/newline snuck into an env var when it was
-  // pasted into the Vercel dashboard — a common cause of hard-to-spot errors.
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  const isConfigured = !!url && !!anonKey;
 
-  let goals: Goal[] = [];
-  let errorMessage: string | null = null;
-
-  if (isConfigured) {
-    // Catch *everything* — including a client that fails to construct because
-    // of a malformed URL/key — so the page shows a diagnostic instead of a
-    // white "Application error" screen.
-    try {
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from("goals")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        errorMessage = error.message;
-      } else {
-        goals = (data as Goal[]) ?? [];
-      }
-    } catch (e) {
-      errorMessage =
-        e instanceof Error ? e.message : "Unknown error contacting Supabase.";
-    }
-  }
-
-  return (
-    <main>
-      <h1>Accountability App</h1>
-      <p className="subtitle">Track your goals and stay accountable.</p>
-
-      {!isConfigured && (
+  if (!url || !anonKey) {
+    return (
+      <main>
+        <h1>Accountability</h1>
         <div className="notice">
           <strong>Supabase not configured yet.</strong> Set{" "}
           <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
-          <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>. Locally, copy{" "}
-          <code>.env.local.example</code> to <code>.env.local</code>; on Vercel,
-          add them under Project Settings → Environment Variables and redeploy.
-          See <code>README.md</code> for the full walkthrough.
+          <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, then run{" "}
+          <code>supabase/schema.sql</code> in the SQL editor.
         </div>
-      )}
+      </main>
+    );
+  }
 
-      {isConfigured && errorMessage && (
-        <div className="notice">
-          <strong>Couldn&apos;t load goals:</strong> {errorMessage}
-          <br />
-          Common fixes: run <code>supabase/schema.sql</code> to create the{" "}
-          <code>goals</code> table and its RLS policy, and double-check your
-          Supabase URL and anon key.
-        </div>
-      )}
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-      {isConfigured && !errorMessage && goals.length === 0 && (
-        <div className="notice">
-          Connected to Supabase, but no goals yet. Add a row to the{" "}
-          <code>goals</code> table in the Supabase Table Editor to see it here.
-        </div>
-      )}
+  // Middleware guarantees a signed-in user here, but guard anyway.
+  if (!user) return null;
 
-      {goals.map((goal) => (
-        <div className="card" key={goal.id}>
-          <h3>{goal.title}</h3>
-          {goal.description && <p>{goal.description}</p>}
-        </div>
-      ))}
+  // Which group(s) is this person in?
+  const { data: memberships } = await supabase
+    .from("group_members")
+    .select("group_id, role, groups(name, invite_code)")
+    .eq("user_id", user.id);
+
+  const membership = memberships?.[0] as
+    | { role: string; groups: { name: string; invite_code: string } }
+    | undefined;
+
+  if (!membership) {
+    return (
+      <main>
+        <h1>Welcome 👋</h1>
+        <p className="subtitle">
+          Start a group for your crew, or join one with an invite code.
+        </p>
+        <Onboarding />
+        <SignOut />
+      </main>
+    );
+  }
+
+  // Foundation placeholder — Step 2 replaces this with the Home board.
+  return (
+    <main>
+      <h1>{membership.groups.name}</h1>
+      <p className="subtitle">You&apos;re in. The board lands here next.</p>
+      <div className="notice">
+        You joined as <strong>{membership.role}</strong>. Invite others with
+        code <code>{membership.groups.invite_code}</code>.
+      </div>
+      <SignOut />
     </main>
+  );
+}
+
+function SignOut() {
+  return (
+    <form action="/auth/signout" method="post" className="signout">
+      <button type="submit">Sign out</button>
+    </form>
   );
 }
