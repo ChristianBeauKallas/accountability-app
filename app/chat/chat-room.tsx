@@ -20,6 +20,7 @@ export default function ChatRoom({
   const [messages, setMessages] = useState<Message[]>(initial);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Live updates.
@@ -59,12 +60,23 @@ export default function ChatRoom({
     const text = body.trim();
     if (!text) return;
     setSending(true);
+    setError(null);
     const supabase = createClient();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("messages")
-      .insert({ group_id: groupId, author_id: userId, body: text });
+      .insert({ group_id: groupId, author_id: userId, body: text })
+      .select("id, group_id, author_id, body, created_at")
+      .single();
     setSending(false);
-    if (!error) setBody("");
+    if (error || !data) {
+      setError(error?.message ?? "Couldn't send that — try again.");
+      return;
+    }
+    setBody("");
+    // Show it immediately; realtime dedup below prevents a double.
+    setMessages((prev) =>
+      prev.some((m) => m.id === data.id) ? prev : [...prev, data as Message],
+    );
   }
 
   return (
@@ -92,6 +104,8 @@ export default function ChatRoom({
         })}
         <div ref={bottomRef} />
       </div>
+
+      {error && <p className="chat-error">{error}</p>}
 
       <form className="chat-input" onSubmit={send}>
         <input
