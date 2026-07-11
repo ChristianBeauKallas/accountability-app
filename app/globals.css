@@ -1983,33 +1983,31 @@ span.avatar-lg.avatar-fallback {
 /* ---- Reaction bar (fire / heart / like) ----------------------------------- */
 .reaction-bar {
   display: flex;
-  gap: 0.4rem;
-  margin: 0.5rem 0 0.2rem;
+  align-items: center;
+  gap: 0;
 }
 .react-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.28rem 0.55rem;
+  border: none;
+  border-radius: 8px;
+  padding: 0.25rem 0.3rem;
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+  transition: transform 0.12s ease, background 0.15s ease;
 }
-.react-btn:active { transform: scale(0.9); }
+.react-btn:active { transform: scale(0.85); }
 .react-btn .react-emoji {
-  font-size: 1rem;
-  filter: grayscale(0.55);
-  transition: filter 0.15s ease;
+  font-size: 1.2rem;
+  filter: grayscale(0.6);
+  opacity: 0.72;
+  transition: filter 0.15s ease, opacity 0.15s ease;
 }
-.react-btn.on {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-}
-.react-btn.on .react-emoji { filter: none; }
+.react-btn.on { background: var(--accent-dim); }
+.react-btn.on .react-emoji { filter: none; opacity: 1; }
 .react-count {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 800;
   color: var(--text);
 }
@@ -2024,8 +2022,5 @@ span.avatar-lg.avatar-fallback {
 .comment-box .reaction-bar {
   margin: 0;
   flex-shrink: 0;
-  gap: 0.25rem;
-}
-.comment-box .react-btn {
-  padding: 0.28rem 0.45rem;
+  gap: 0;
 }
