@@ -24,7 +24,7 @@ self.addEventListener("push", (event) => {
   } catch {
     data = {};
   }
-  const title = data.title || "Accountability";
+  const title = data.title || "Get Better";
   const options = {
     body: data.body || "",
     icon: "/icon-192.png",

@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Accountability",
-    short_name: "Accountable",
+    name: "Get Better",
+    short_name: "Get Better",
     description: "Show up. Every day.",
     start_url: "/",
     display: "standalone",

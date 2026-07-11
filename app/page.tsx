@@ -2,7 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Onboarding from "./onboarding";
 import Composer from "./composer";
-import CommentBox from "./comment-box";
+import PostComments from "./post-comments";
+import FireButton from "./fire-button";
 import { computeStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 
@@ -122,6 +123,24 @@ export default async function Home() {
     }
   }
 
+  // Fire reactions — fetched separately so a missing table never breaks the feed.
+  const reactionsByPost = new Map<string, { count: number; mine: boolean }>();
+  if (posts.length > 0) {
+    const { data: reactions } = await supabase
+      .from("post_reactions")
+      .select("post_id, user_id")
+      .in(
+        "post_id",
+        posts.map((p) => p.id),
+      );
+    for (const r of reactions ?? []) {
+      const cur = reactionsByPost.get(r.post_id) ?? { count: 0, mine: false };
+      cur.count += 1;
+      if (r.user_id === user.id) cur.mine = true;
+      reactionsByPost.set(r.post_id, cur);
+    }
+  }
+
   // Bucket each member's post dates in their own timezone.
   const tzByUser = new Map(
     members.map((m) => [m.user_id, m.profiles?.timezone ?? "America/New_York"]),
@@ -207,16 +226,16 @@ export default async function Home() {
       {/* Roster — everyone, whether they've checked in today, and their streak */}
       <section className="roster-board">
         {roster.map((r) => (
-          <Link key={r.id} href={`/u/${r.id}`} className={`rb-row rb-${r.state}`}>
+          <Link key={r.id} href={`/u/${r.id}`} className={`rb-card rb-${r.state}`}>
             <span className="rb-avatar">
               <Avatar name={r.name} url={r.avatar} />
               {r.state === "today" && <span className="rb-check">✓</span>}
             </span>
-            <span className="rb-name">
-              {r.name}
-              <span className="rb-sub">{subLabel(r.state, r.value)}</span>
+            <span className="rb-line">
+              <span className="rb-name">{r.name.split(" ")[0]}</span>
+              <StreakPill state={r.state} value={r.value} />
             </span>
-            <StreakPill state={r.state} value={r.value} />
+            <span className="rb-sub">{subLabel(r.state, r.value)}</span>
           </Link>
         ))}
       </section>
@@ -246,6 +265,12 @@ export default async function Home() {
                 <span className="post-author">{p.author?.display_name}</span>
               </Link>
               <span className="post-time">{timeAgo(p.created_at)}</span>
+              <FireButton
+                postId={p.id}
+                userId={user.id}
+                initialCount={reactionsByPost.get(p.id)?.count ?? 0}
+                initialMine={reactionsByPost.get(p.id)?.mine ?? false}
+              />
             </div>
             {p.post_activities.length > 0 && (
               <div className="chips">
@@ -277,22 +302,17 @@ export default async function Home() {
               return null;
             })}
 
-            {p.comments.length > 0 && (
-              <ul className="comments">
-                {[...p.comments]
-                  .sort((a, b) => a.created_at.localeCompare(b.created_at))
-                  .map((c) => (
-                    <li className="comment" key={c.id}>
-                      <span className="comment-author">
-                        {c.author?.display_name}
-                      </span>{" "}
-                      {c.body}
-                    </li>
-                  ))}
-              </ul>
-            )}
-
-            <CommentBox postId={p.id} userId={user.id} />
+            <PostComments
+              postId={p.id}
+              userId={user.id}
+              comments={[...p.comments]
+                .sort((a, b) => a.created_at.localeCompare(b.created_at))
+                .map((c) => ({
+                  id: c.id,
+                  body: c.body,
+                  authorName: c.author?.display_name ?? "Someone",
+                }))}
+            />
           </article>
         ))}
       </section>

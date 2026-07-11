@@ -59,7 +59,7 @@ export default function LoginPage() {
   if (needsConfirm) {
     return (
       <main className="auth">
-        <h1>Accountability</h1>
+        <h1>Get Better</h1>
         <div className="notice">
           <strong>Almost there.</strong> Check <code>{email}</code> for a
           confirmation link, then come back and sign in.
@@ -70,7 +70,7 @@ export default function LoginPage() {
 
   return (
     <main className="auth">
-      <h1>Accountability</h1>
+      <h1>Get Better</h1>
       <p className="subtitle">Show up. Every day.</p>
 
       <div className="tabs">

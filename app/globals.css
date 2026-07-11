@@ -389,35 +389,49 @@ a {
   box-shadow: 0 0 0 2px var(--accent), 0 0 14px var(--accent-glow);
 }
 
-/* ---- Roster board (the hero: everyone, today status, signed streak) ------- */
+/* ---- Roster board (grid of everyone: today status + signed streak) -------- */
 .roster-board {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
   margin-bottom: 1.4rem;
 }
 
-.rb-row {
+@media (max-width: 360px) {
+  .roster-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.rb-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.7rem;
+  text-align: center;
+  gap: 0.4rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0.55rem 0.7rem;
+  padding: 0.8rem 0.4rem 0.65rem;
+  text-decoration: none;
+  color: inherit;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.rb-row.rb-today {
+.rb-card:active {
+  border-color: var(--accent);
+}
+
+.rb-card.rb-today {
   border-color: rgba(62, 232, 122, 0.35);
   background: linear-gradient(
-    100deg,
-    rgba(62, 232, 122, 0.06),
-    var(--surface) 60%
+    180deg,
+    rgba(62, 232, 122, 0.07),
+    var(--surface) 72%
   );
 }
 
-.rb-row.rb-out {
+.rb-card.rb-out {
   opacity: 0.9;
 }
 
@@ -427,15 +441,21 @@ a {
   flex-shrink: 0;
 }
 
-.rb-row.rb-today .rb-avatar .avatar {
+.rb-card .avatar {
+  width: 54px;
+  height: 54px;
+  font-size: 1.3rem;
+}
+
+.rb-card.rb-today .rb-avatar .avatar {
   box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent-glow);
 }
 
-.rb-row.rb-pending .rb-avatar .avatar {
+.rb-card.rb-pending .rb-avatar .avatar {
   box-shadow: 0 0 0 2px var(--amber);
 }
 
-.rb-row.rb-out .rb-avatar .avatar {
+.rb-card.rb-out .rb-avatar .avatar {
   filter: grayscale(0.7);
   opacity: 0.75;
 }
@@ -448,47 +468,53 @@ a {
   color: var(--accent-ink);
   border: 2px solid var(--surface);
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  font-size: 0.62rem;
+  width: 20px;
+  height: 20px;
+  font-size: 0.66rem;
   font-weight: 800;
   display: grid;
   place-items: center;
 }
 
-.rb-name {
-  flex: 1;
+.rb-line {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
   min-width: 0;
-  font-size: 0.96rem;
+}
+
+.rb-name {
+  font-size: 0.86rem;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rb-sub {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 400;
   color: var(--faint);
 }
 
-.rb-row.rb-today .rb-sub {
+.rb-card.rb-today .rb-sub {
   color: var(--accent);
 }
-.rb-row.rb-pending .rb-sub {
+.rb-card.rb-pending .rb-sub {
   color: var(--amber);
 }
 
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.05rem;
   font-weight: 800;
-  font-size: 0.92rem;
+  font-size: 0.8rem;
   letter-spacing: -0.02em;
-  padding: 0.3rem 0.6rem;
+  padding: 0.1rem 0.4rem;
   border-radius: 999px;
   flex-shrink: 0;
-  min-width: 46px;
   justify-content: center;
 }
 
@@ -1481,4 +1507,96 @@ span.avatar-lg.avatar-fallback {
 .chat-input button:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* ---- Fire reaction -------------------------------------------------------- */
+.fire-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.fire-btn:active {
+  transform: scale(0.9);
+}
+
+.fire-btn .fire-emoji {
+  font-size: 1rem;
+  filter: grayscale(0.6);
+  transition: filter 0.15s ease;
+}
+
+.fire-btn.lit {
+  border-color: rgba(251, 146, 60, 0.5);
+  background: rgba(251, 146, 60, 0.12);
+}
+
+.fire-btn.lit .fire-emoji {
+  filter: none;
+}
+
+.fire-count {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ---- Collapsible comments ------------------------------------------------- */
+.post-comments {
+  margin-top: 0.55rem;
+}
+
+.comments-toggle {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.15rem 0;
+}
+
+.comments-toggle:active {
+  color: var(--accent);
+}
+
+/* ---- Group name editor ---------------------------------------------------- */
+.group-name-editor {
+  margin-bottom: 1.5rem;
+}
+
+.group-name-editor label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+.group-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.group-name-row input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 0.6rem 0.8rem;
+}
+
+.group-name-row input:focus {
+  outline: none;
+  border-color: var(--accent);
 }

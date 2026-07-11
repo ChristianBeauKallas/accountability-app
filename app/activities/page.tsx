@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ActivitiesManager from "./activities-manager";
+import GroupNameEditor from "./group-name-editor";
 import type { Activity } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -46,10 +47,13 @@ export default async function ActivitiesPage() {
       </header>
 
       {isOwner ? (
-        <ActivitiesManager
-          groupId={membership.group_id}
-          initial={activities}
-        />
+        <>
+          <GroupNameEditor
+            groupId={membership.group_id}
+            initial={membership.groups.name}
+          />
+          <ActivitiesManager groupId={membership.group_id} initial={activities} />
+        </>
       ) : (
         <div className="notice">
           These are your group&apos;s daily activities. Only the group owner can

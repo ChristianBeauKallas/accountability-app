@@ -8,9 +8,11 @@ import { notify } from "@/lib/push";
 export default function CommentBox({
   postId,
   userId,
+  onSent,
 }: {
   postId: string;
   userId: string;
+  onSent?: () => void;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
@@ -31,6 +33,7 @@ export default function CommentBox({
     if (!error && data) {
       notify("comment", data.id);
       setBody("");
+      onSent?.();
       router.refresh();
     }
   }

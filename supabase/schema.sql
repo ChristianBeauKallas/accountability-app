@@ -564,3 +564,37 @@ create policy push_subs_update on public.push_subscriptions
 drop policy if exists push_subs_delete on public.push_subscriptions;
 create policy push_subs_delete on public.push_subscriptions
   for delete to authenticated using (user_id = auth.uid());
+
+-- =============================================================================
+-- Fire reactions on posts (like a "like", but 🔥). One per user per post.
+-- =============================================================================
+create table if not exists public.post_reactions (
+  post_id    uuid not null references public.group_posts (id) on delete cascade,
+  user_id    uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+
+alter table public.post_reactions enable row level security;
+
+drop policy if exists post_reactions_select on public.post_reactions;
+create policy post_reactions_select on public.post_reactions
+  for select to authenticated using (
+    exists (
+      select 1 from public.group_posts p
+      where p.id = post_id and public.is_group_member(p.group_id)
+    )
+  );
+
+drop policy if exists post_reactions_insert on public.post_reactions;
+create policy post_reactions_insert on public.post_reactions
+  for insert to authenticated with check (
+    user_id = auth.uid() and exists (
+      select 1 from public.group_posts p
+      where p.id = post_id and public.is_group_member(p.group_id)
+    )
+  );
+
+drop policy if exists post_reactions_delete on public.post_reactions;
+create policy post_reactions_delete on public.post_reactions
+  for delete to authenticated using (user_id = auth.uid());

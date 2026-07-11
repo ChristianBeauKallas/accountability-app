@@ -5,14 +5,14 @@ import InstallPrompt from "./install-prompt";
 import BottomNav from "./nav";
 
 export const metadata: Metadata = {
-  applicationName: "Accountability",
-  title: "Accountability",
+  applicationName: "Get Better",
+  title: "Get Better",
   description: "Show up. Every day.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Accountable",
+    title: "Get Better",
   },
   icons: {
     icon: "/favicon-32.png",
