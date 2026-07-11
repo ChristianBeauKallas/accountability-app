@@ -1159,8 +1159,8 @@ a {
 }
 
 .avatar-lg {
-  width: 76px;
-  height: 76px;
+  width: 94px;
+  height: 94px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--border);
@@ -1170,7 +1170,7 @@ a {
 span.avatar-lg.avatar-fallback {
   display: grid;
   place-items: center;
-  font-size: 1.9rem;
+  font-size: 2.2rem;
 }
 
 .avatar-edit {
@@ -2151,4 +2151,30 @@ span.avatar-lg.avatar-fallback {
   border-radius: 999px;
   padding: 0.3rem 0.7rem;
   font-size: 0.8rem;
+}
+
+/* Notifications as a stat tile */
+.notif-tile {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.2rem;
+}
+.notif-bell {
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+.notif-state {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.notif-state.on {
+  color: var(--accent);
+}
+.notif-tile.on {
+  border-color: rgba(62, 232, 122, 0.3);
+  background: linear-gradient(180deg, rgba(62, 232, 122, 0.06), var(--surface) 75%);
 }

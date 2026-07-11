@@ -19,6 +19,7 @@ export default function NotificationsToggle({ userId }: { userId: string }) {
   }, []);
 
   async function turnOn() {
+    if (state === "on" || state === "unsupported" || state === "working") return;
     setState("working");
     const result = await enablePush(userId);
     if (result === "granted") setState("on");
@@ -27,27 +28,27 @@ export default function NotificationsToggle({ userId }: { userId: string }) {
     else setState("off");
   }
 
+  const on = state === "on";
+  const label =
+    state === "on"
+      ? "On"
+      : state === "working"
+        ? "…"
+        : state === "denied"
+          ? "Blocked"
+          : state === "unsupported"
+            ? "N/A"
+            : "Enable";
+
   return (
-    <div className="notif-toggle">
-      <div>
-        <strong>🔔 Notifications</strong>
-        <p className="notif-sub">
-          {state === "on" && "On — you'll be nudged on new posts, comments & chats."}
-          {state === "off" && "Get nudged when the group posts, comments, or chats."}
-          {state === "working" && "Setting up…"}
-          {state === "denied" &&
-            "Blocked in your browser settings. Re-enable notifications for this site, then try again."}
-          {state === "unsupported" &&
-            "This device/browser can't do push. On iPhone, add the app to your Home Screen first, then come back."}
-          {state === "unknown" && ""}
-        </p>
-      </div>
-      {(state === "off" || state === "denied") && (
-        <button className="notif-btn" onClick={turnOn}>
-          Enable
-        </button>
-      )}
-      {state === "on" && <span className="notif-on">✓ On</span>}
-    </div>
+    <button
+      type="button"
+      className={`stat-tile notif-tile ${on ? "on" : ""}`}
+      onClick={turnOn}
+    >
+      <span className="notif-bell">🔔</span>
+      <span className="stat-cap">Alerts</span>
+      <span className={`notif-state ${on ? "on" : ""}`}>{label}</span>
+    </button>
   );
 }

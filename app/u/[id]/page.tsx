@@ -17,28 +17,6 @@ type PostRow = {
   media: { id: string; type: string; storage_path: string }[];
 };
 
-function timeBucket(iso: string, tz: string): string {
-  const h =
-    Number(
-      new Intl.DateTimeFormat("en-US", {
-        timeZone: tz,
-        hour: "2-digit",
-        hour12: false,
-      }).format(new Date(iso)),
-    ) % 24;
-  if (h >= 5 && h < 12) return "morning";
-  if (h >= 12 && h < 17) return "afternoon";
-  if (h >= 17 && h < 22) return "evening";
-  return "night";
-}
-
-const BUCKET_EMOJI: Record<string, string> = {
-  morning: "🌅",
-  afternoon: "☀️",
-  evening: "🌆",
-  night: "🌙",
-};
-
 export default async function ProfilePage({
   params,
 }: {
@@ -119,13 +97,6 @@ export default async function ProfilePage({
     .sort((a, b) => b[1] - a[1])
     .map(([aid]) => activityById.get(aid))
     .filter(Boolean)[0] as Activity | undefined;
-
-  const buckets = new Map<string, number>();
-  for (const p of posts) {
-    const b = timeBucket(p.created_at, tz);
-    buckets.set(b, (buckets.get(b) ?? 0) + 1);
-  }
-  const topBucket = [...buckets.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 
   const last30 = new Set(
     [...dates].filter(
@@ -252,7 +223,7 @@ export default async function ProfilePage({
         )}
       </section>
 
-      {/* Stats: streak + most logged */}
+      {/* Stats: streak · most logged · notifications */}
       <section className="profile-stats">
         <div className="stat-tile">
           <span className="stat-num">
@@ -261,26 +232,18 @@ export default async function ProfilePage({
           </span>
           <span className="stat-label">day streak</span>
         </div>
-        {topActivity && (
-          <div className="stat-tile wide">
-            <span className="stat-cap">Most logged</span>
-            <span className="stat-value">
-              {topActivity.emoji ?? "✅"} {topActivity.name}
-            </span>
-          </div>
-        )}
+        <div className="stat-tile">
+          <span className="stat-cap">Most logged</span>
+          <span className="stat-value">
+            {topActivity ? `${topActivity.emoji ?? "✅"} ${topActivity.name}` : "—"}
+          </span>
+        </div>
+        {isMe && <NotificationsToggle userId={profile.id} />}
       </section>
-
-      {isMe && <NotificationsToggle userId={profile.id} />}
 
       {/* Pills */}
       {posts.length > 0 && (
         <div className="stat-pills">
-          {topBucket && (
-            <span className="chip">
-              {BUCKET_EMOJI[topBucket]} {topBucket} check-ins
-            </span>
-          )}
           <span className="chip">🔥 Best: {best}</span>
           <span className="chip">📅 {last30}/30 last month</span>
           <span className="chip">✅ {totalDays} total days</span>
