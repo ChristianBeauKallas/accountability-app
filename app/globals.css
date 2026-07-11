@@ -1146,33 +1146,31 @@ a {
 }
 
 /* ---- Profile page --------------------------------------------------------- */
-.profile-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+/* Identity row: avatar left, name right */
+.profile-id {
+  margin-bottom: 1.1rem;
 }
 
 .profile-editor {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.6rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
 }
 
 .avatar-lg {
-  width: 88px;
-  height: 88px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--border);
+  flex-shrink: 0;
 }
 
 span.avatar-lg.avatar-fallback {
   display: grid;
   place-items: center;
-  font-size: 2rem;
+  font-size: 1.9rem;
 }
 
 .avatar-edit {
@@ -1211,19 +1209,21 @@ span.avatar-lg.avatar-fallback {
 }
 
 .name-edit input {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
   color: var(--text);
-  font-size: 1.1rem;
-  font-weight: 700;
-  padding: 0.4rem 0.7rem;
-  max-width: 200px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  padding: 0.2rem 0;
+  width: 100%;
+  max-width: 220px;
 }
 
 .name-edit input:focus {
   outline: none;
-  border-color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .saved-tick {
@@ -2081,4 +2081,74 @@ span.avatar-lg.avatar-fallback {
   margin: -0.5rem 0 0.25rem;
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+/* ---- Profile stats (unified card language) -------------------------------- */
+.profile-stats {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.stat-tile {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  min-width: 0;
+}
+.stat-tile.wide {
+  flex: 1.5;
+}
+.stat-num {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.stat-num .flame {
+  font-size: 1rem;
+}
+.stat-label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stat-cap {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 1.75rem;
+}
+.stat-pills .chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
 }

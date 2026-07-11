@@ -5,6 +5,7 @@ import { computeStreak, bestStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 import ProfileEditor from "./profile-editor";
 import NotificationsToggle from "./notifications-toggle";
+import PostCard from "@/app/post-card";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +18,14 @@ type PostRow = {
 };
 
 function timeBucket(iso: string, tz: string): string {
-  const h = Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: tz,
-      hour: "2-digit",
-      hour12: false,
-    }).format(new Date(iso)),
-  ) % 24;
+  const h =
+    Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hour: "2-digit",
+        hour12: false,
+      }).format(new Date(iso)),
+    ) % 24;
   if (h >= 5 && h < 12) return "morning";
   if (h >= 12 && h < 17) return "afternoon";
   if (h >= 17 && h < 22) return "evening";
@@ -48,10 +50,8 @@ export default async function ProfilePage({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-
   const isMe = user.id === id;
 
-  // Target profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, display_name, avatar_url, timezone, created_at")
@@ -59,16 +59,26 @@ export default async function ProfilePage({
     .single();
   if (!profile) notFound();
 
-  // Viewer's group provides the context for which posts we can see.
   const { data: memberships } = await supabase
     .from("group_members")
     .select("group_id")
     .eq("user_id", user.id);
   const groupId = memberships?.[0]?.group_id as string | undefined;
 
-  const [activitiesRes, postsRes] = await Promise.all([
+  const [membersRes, activitiesRes, postsRes] = await Promise.all([
     groupId
-      ? supabase.from("activities").select("*").eq("group_id", groupId)
+      ? supabase
+          .from("group_members")
+          .select("user_id, profiles(display_name)")
+          .eq("group_id", groupId)
+      : Promise.resolve({ data: [] }),
+    groupId
+      ? supabase
+          .from("activities")
+          .select("*")
+          .eq("group_id", groupId)
+          .eq("active", true)
+          .order("sort_order")
       : Promise.resolve({ data: [] }),
     groupId
       ? supabase
@@ -83,29 +93,33 @@ export default async function ProfilePage({
       : Promise.resolve({ data: [] }),
   ]);
 
+  const members = (membersRes.data ?? []) as unknown as {
+    user_id: string;
+    profiles: { display_name: string } | null;
+  }[];
+  const nameById = new Map(
+    members.map((m) => [m.user_id, m.profiles?.display_name ?? "Member"]),
+  );
   const activities = (activitiesRes.data ?? []) as Activity[];
   const posts = (postsRes.data ?? []) as unknown as PostRow[];
   const activityById = new Map(activities.map((a) => [a.id, a]));
   const tz = profile.timezone ?? "America/New_York";
 
-  // ---- Stats / tendencies ----
+  // ---- Stats ----
   const dates = new Set(posts.map((p) => localDate(p.created_at, tz)));
   const { streak } = computeStreak(dates, tz);
   const best = bestStreak(dates);
   const totalDays = dates.size;
 
-  // Most common activities
   const counts = new Map<string, number>();
   for (const p of posts)
     for (const { activity_id } of p.post_activities)
       counts.set(activity_id, (counts.get(activity_id) ?? 0) + 1);
-  const topActivities = [...counts.entries()]
+  const topActivity = [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .map(([aid]) => activityById.get(aid))
-    .filter(Boolean)
-    .slice(0, 2) as Activity[];
+    .filter(Boolean)[0] as Activity | undefined;
 
-  // Time-of-day tendency
   const buckets = new Map<string, number>();
   for (const p of posts) {
     const b = timeBucket(p.created_at, tz);
@@ -113,16 +127,13 @@ export default async function ProfilePage({
   }
   const topBucket = [...buckets.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 
-  // Consistency over the last 30 days
   const last30 = new Set(
-    [...dates].filter((d) => {
-      const diff =
-        (Date.now() - new Date(d + "T12:00:00Z").getTime()) / 86400000;
-      return diff <= 30;
-    }),
+    [...dates].filter(
+      (d) => (Date.now() - new Date(d + "T12:00:00Z").getTime()) / 86400000 <= 30,
+    ),
   ).size;
 
-  // Signed URLs for their post media
+  // ---- Media / transcripts / reactions / comments (mirror the feed) ----
   const allPaths = posts.flatMap((p) => p.media.map((m) => m.storage_path));
   const signedByPath = new Map<string, string>();
   if (allPaths.length > 0) {
@@ -133,18 +144,93 @@ export default async function ProfilePage({
       if (s.signedUrl && s.path) signedByPath.set(s.path, s.signedUrl);
   }
 
+  const transcriptById = new Map<string, string>();
+  const audioIds = posts.flatMap((p) =>
+    p.media.filter((m) => m.type === "audio").map((m) => m.id),
+  );
+  if (audioIds.length > 0) {
+    const { data: trows } = await supabase
+      .from("media")
+      .select("id, transcript")
+      .in("id", audioIds);
+    for (const r of (trows ?? []) as { id: string; transcript: string | null }[])
+      if (r.transcript) transcriptById.set(r.id, r.transcript);
+  }
+
+  const reactionsByPost = new Map<
+    string,
+    Record<string, { count: number; mine: boolean }>
+  >();
+  if (posts.length > 0) {
+    const { data: reactions } = await supabase
+      .from("post_reactions")
+      .select("post_id, user_id, type")
+      .in(
+        "post_id",
+        posts.map((p) => p.id),
+      );
+    for (const r of (reactions ?? []) as {
+      post_id: string;
+      user_id: string;
+      type: string | null;
+    }[]) {
+      const rec = reactionsByPost.get(r.post_id) ?? {};
+      const t = r.type ?? "fire";
+      const cur = rec[t] ?? { count: 0, mine: false };
+      cur.count += 1;
+      if (r.user_id === user.id) cur.mine = true;
+      rec[t] = cur;
+      reactionsByPost.set(r.post_id, rec);
+    }
+  }
+
+  const commentsByPost = new Map<
+    string,
+    { id: string; body: string; authorName: string }[]
+  >();
+  if (posts.length > 0) {
+    const { data: cdata } = await supabase
+      .from("comments")
+      .select("id, post_id, author_id, body, created_at")
+      .in(
+        "post_id",
+        posts.map((p) => p.id),
+      )
+      .order("created_at", { ascending: true });
+    for (const c of (cdata ?? []) as {
+      id: string;
+      post_id: string;
+      author_id: string;
+      body: string;
+    }[]) {
+      const arr = commentsByPost.get(c.post_id) ?? [];
+      arr.push({
+        id: c.id,
+        body: c.body,
+        authorName: nameById.get(c.author_id) ?? "Someone",
+      });
+      commentsByPost.set(c.post_id, arr);
+    }
+  }
+
   return (
     <main className="board profile">
       <header className="board-head">
         <div>
           <h1>Profile</h1>
           <p className="subtitle">
-            <Link href="/">‹ Board</Link>
+            <Link href="/">‹ Feed</Link>
           </p>
         </div>
+        {isMe && (
+          <form action="/auth/signout" method="post" className="signout-compact">
+            <button type="submit">Sign out</button>
+          </form>
+        )}
       </header>
 
-      <section className="profile-hero">
+      {/* Identity: avatar + name */}
+      <section className="profile-id">
         {isMe ? (
           <ProfileEditor
             userId={profile.id}
@@ -164,95 +250,90 @@ export default async function ProfilePage({
             <h2 className="profile-name">{profile.display_name}</h2>
           </div>
         )}
+      </section>
 
-        <div className="profile-streak">
-          <span className="profile-streak-num">{streak}</span>
-          <span className="flame">🔥</span>
-          <span className="profile-streak-label">day streak</span>
+      {/* Stats: streak + most logged */}
+      <section className="profile-stats">
+        <div className="stat-tile">
+          <span className="stat-num">
+            {streak}
+            <span className="flame">🔥</span>
+          </span>
+          <span className="stat-label">day streak</span>
         </div>
+        {topActivity && (
+          <div className="stat-tile wide">
+            <span className="stat-cap">Most logged</span>
+            <span className="stat-value">
+              {topActivity.emoji ?? "✅"} {topActivity.name}
+            </span>
+          </div>
+        )}
       </section>
 
       {isMe && <NotificationsToggle userId={profile.id} />}
 
-      {/* Tendencies */}
+      {/* Pills */}
       {posts.length > 0 && (
-        <section className="tendencies">
-          {topActivities[0] && (
-            <div className="tendency hero-tendency">
-              <span className="tendency-label">Most common</span>
-              <span className="tendency-value">
-                {topActivities[0].emoji ?? "✅"} {topActivities[0].name}
-              </span>
-            </div>
+        <div className="stat-pills">
+          {topBucket && (
+            <span className="chip">
+              {BUCKET_EMOJI[topBucket]} {topBucket} check-ins
+            </span>
           )}
-          <div className="tendency-chips">
-            {topBucket && (
-              <span className="chip">
-                {BUCKET_EMOJI[topBucket]} {topBucket} check-ins
-              </span>
-            )}
-            <span className="chip">🔥 Best: {best}</span>
-            <span className="chip">📅 {last30}/30 last month</span>
-            <span className="chip">✅ {totalDays} total days</span>
-            {topActivities[1] && (
-              <span className="chip">
-                {topActivities[1].emoji ?? "✅"} {topActivities[1].name}
-              </span>
-            )}
-          </div>
-        </section>
+          <span className="chip">🔥 Best: {best}</span>
+          <span className="chip">📅 {last30}/30 last month</span>
+          <span className="chip">✅ {totalDays} total days</span>
+        </div>
       )}
 
-      {/* Their posts */}
+      {/* Updates — identical to the feed */}
       <section className="panel">
         <h2>{isMe ? "Your updates" : "Updates"}</h2>
         {posts.length === 0 && <p className="empty">No updates yet.</p>}
-        {posts.map((p) => (
-          <article className="post" key={p.id}>
-            <div className="post-head">
-              <span className="post-time">{fmtDate(p.created_at)}</span>
-            </div>
-            {p.post_activities.length > 0 && (
-              <div className="chips">
-                {p.post_activities.map(({ activity_id }) => {
-                  const a = activityById.get(activity_id);
-                  if (!a) return null;
-                  return (
-                    <span className="chip" key={activity_id}>
-                      {a.emoji ?? "✅"} {a.name}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-            {p.caption && <p className="post-caption">{p.caption}</p>}
-            {p.media.map((m) => {
-              const src = signedByPath.get(m.storage_path);
-              if (!src) return null;
-              if (m.type === "image")
-                // eslint-disable-next-line @next/next/no-img-element
-                return <img className="post-photo" key={m.id} src={src} alt="" />;
-              if (m.type === "audio")
-                return <audio className="post-audio" key={m.id} controls src={src} />;
-              return null;
-            })}
-          </article>
-        ))}
-      </section>
+        {posts.map((p) => {
+          const photos = p.media
+            .filter((m) => m.type === "image")
+            .map((m) => signedByPath.get(m.storage_path))
+            .filter((s): s is string => !!s);
+          const audios = p.media
+            .filter((m) => m.type === "audio")
+            .map((m) => ({
+              id: m.id,
+              src: signedByPath.get(m.storage_path),
+              transcript: transcriptById.get(m.id) ?? null,
+            }))
+            .filter(
+              (a): a is { id: string; src: string; transcript: string | null } =>
+                !!a.src,
+            );
+          const activityItems = p.post_activities
+            .map(({ activity_id }) => {
+              const a = activityById.get(activity_id);
+              return a ? { emoji: a.emoji ?? "✅", name: a.name } : null;
+            })
+            .filter((x): x is { emoji: string; name: string } => !!x);
 
-      {isMe && (
-        <form action="/auth/signout" method="post" className="signout">
-          <button type="submit">Sign out</button>
-        </form>
-      )}
+          return (
+            <PostCard
+              key={p.id}
+              postId={p.id}
+              authorId={id}
+              authorName={profile.display_name}
+              authorAvatar={profile.avatar_url}
+              createdAt={p.created_at}
+              photos={photos}
+              audios={audios}
+              caption={p.caption}
+              activityItems={activityItems}
+              activityTotal={activities.length}
+              reactions={reactionsByPost.get(p.id) ?? {}}
+              comments={commentsByPost.get(p.id) ?? []}
+              viewerId={user.id}
+            />
+          );
+        })}
+      </section>
     </main>
   );
-}
-
-function fmtDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
 }

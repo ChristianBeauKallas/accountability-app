@@ -2,11 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Onboarding from "./onboarding";
 import Composer from "./composer";
-import PostComments from "./post-comments";
-import ReactionBar from "./reaction-bar";
-import VoiceNote from "./voice-note";
-import ActivityRow from "./activity-row";
-import PostGallery from "./post-gallery";
+import PostCard from "./post-card";
+import { Avatar } from "./avatar";
 import { computeStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 
@@ -329,38 +326,22 @@ export default async function Home() {
             .filter((x): x is { emoji: string; name: string } => !!x);
 
           return (
-            <article className="post" key={p.id}>
-              <div className="post-head">
-                <Link className="post-author-link" href={`/u/${p.author_id}`}>
-                  <Avatar name={author?.name ?? "?"} url={author?.avatar ?? null} />
-                  <span className="post-author">{author?.name}</span>
-                </Link>
-                <span className="post-time">{timeAgo(p.created_at)}</span>
-              </div>
-
-              {photos.length > 0 && <PostGallery photos={photos} />}
-
-              {audios.map((a) => (
-                <VoiceNote key={a.id} src={a.src} transcript={a.transcript} />
-              ))}
-
-              {p.caption && <p className="post-caption">{p.caption}</p>}
-
-              <ActivityRow items={activityItems} total={activities.length} />
-
-              <PostComments
-                postId={p.id}
-                userId={user.id}
-                comments={commentsByPost.get(p.id) ?? []}
-                reactions={
-                  <ReactionBar
-                    postId={p.id}
-                    userId={user.id}
-                    initial={reactionsByPost.get(p.id) ?? {}}
-                  />
-                }
-              />
-            </article>
+            <PostCard
+              key={p.id}
+              postId={p.id}
+              authorId={p.author_id}
+              authorName={author?.name ?? "Member"}
+              authorAvatar={author?.avatar ?? null}
+              createdAt={p.created_at}
+              photos={photos}
+              audios={audios}
+              caption={p.caption}
+              activityItems={activityItems}
+              activityTotal={activities.length}
+              reactions={reactionsByPost.get(p.id) ?? {}}
+              comments={commentsByPost.get(p.id) ?? []}
+              viewerId={user.id}
+            />
           );
         })}
       </section>
@@ -402,25 +383,6 @@ function StreakPill({
   );
 }
 
-function Avatar({ name, url }: { name: string; url: string | null }) {
-  if (url) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img className="avatar" src={url} alt={name} />;
-  }
-  const initial = name.trim().charAt(0).toUpperCase() || "?";
-  return <span className="avatar avatar-fallback">{initial}</span>;
-}
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(diff / 60000);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  const days = Math.round(hrs / 24);
-  return `${days}d`;
-}
 
 function SignOut({ compact = false }: { compact?: boolean }) {
   return (
