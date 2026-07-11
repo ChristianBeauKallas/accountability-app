@@ -27,27 +27,24 @@ export default function ProfileEditor({
     setBusy(true);
     setError(null);
     setPreview(URL.createObjectURL(file));
+
     const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { contentType: file.type, upsert: true });
-    if (upErr) {
-      setError(upErr.message);
-      setBusy(false);
-      return;
-    }
-
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    const { error: updErr } = await supabase
-      .from("profiles")
-      .update({ avatar_url: data.publicUrl })
-      .eq("id", userId);
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/avatar", {
+      method: "POST",
+      headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+      body: form,
+    });
     setBusy(false);
-    if (updErr) {
-      setError(updErr.message);
+
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error ?? "Couldn't save photo — try again.");
       return;
     }
     router.refresh();
