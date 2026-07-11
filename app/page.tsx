@@ -6,6 +6,7 @@ import PostComments from "./post-comments";
 import FireButton from "./fire-button";
 import VoiceNote from "./voice-note";
 import ActivityRow from "./activity-row";
+import PostGallery from "./post-gallery";
 import { computeStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 
@@ -339,16 +340,7 @@ export default async function Home() {
                 />
               </div>
 
-              {photos.length > 0 && (
-                <div
-                  className={`post-gallery ${photos.length > 1 ? "multi" : ""}`}
-                >
-                  {photos.map((src, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img className="gallery-photo" key={i} src={src} alt="" />
-                  ))}
-                </div>
-              )}
+              {photos.length > 0 && <PostGallery photos={photos} />}
 
               {audios.map((a) => (
                 <VoiceNote key={a.id} src={a.src} transcript={a.transcript} />
