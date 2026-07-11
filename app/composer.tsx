@@ -20,12 +20,14 @@ export default function Composer({
   activities,
   groupId,
   userId,
-  postedToday,
+  done,
+  remainingCount,
 }: {
   activities: Activity[];
   groupId: string;
   userId: string;
-  postedToday: boolean;
+  done: boolean;
+  remainingCount: number;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -234,13 +236,23 @@ export default function Composer({
 
   // ---- Render ----
   if (!open) {
+    if (done) {
+      return (
+        <div className="fab done" aria-label="All logged for today">
+          <span className="fab-plus">✓</span>
+        </div>
+      );
+    }
     return (
       <button
-        className={`fab ${postedToday ? "done" : ""}`}
+        className="fab"
         onClick={() => setOpen(true)}
-        aria-label={postedToday ? "Add another update" : "Log today"}
+        aria-label="Log today"
       >
         <span className="fab-plus">＋</span>
+        {remainingCount > 0 && (
+          <span className="fab-badge">{remainingCount}</span>
+        )}
       </button>
     );
   }

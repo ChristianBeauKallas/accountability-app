@@ -4,6 +4,7 @@ import Onboarding from "./onboarding";
 import Composer from "./composer";
 import PostCard from "./post-card";
 import { Avatar } from "./avatar";
+import { ProgressAvatar } from "./progress-avatar";
 import HeaderBell from "./header-bell";
 import NotifPrompt from "./notif-prompt";
 import { computeStreak, localDate } from "@/lib/streaks";
@@ -211,6 +212,25 @@ export default async function Home() {
     datesByUser.set(p.author_id, set);
   }
 
+  // Distinct activities each member has logged TODAY (their timezone). Drives
+  // the progress ring and the compose button's "remaining/done" state.
+  const totalActivities = activities.length;
+  const todayActsByUser = new Map<string, Set<string>>();
+  for (const p of posts) {
+    const tz = tzByUser.get(p.author_id) ?? "America/New_York";
+    if (localDate(p.created_at, tz) !== localDate(new Date(), tz)) continue;
+    const set = todayActsByUser.get(p.author_id) ?? new Set<string>();
+    for (const pa of p.post_activities)
+      if (activityById.has(pa.activity_id)) set.add(pa.activity_id);
+    todayActsByUser.set(p.author_id, set);
+  }
+
+  // Current user's remaining (un-logged) activities for today.
+  const myLoggedToday = todayActsByUser.get(user.id) ?? new Set<string>();
+  const remainingActivities = activities.filter((a) => !myLoggedToday.has(a.id));
+  const allDoneToday =
+    totalActivities > 0 && remainingActivities.length === 0;
+
   // Compute streak + today status per member, derive a display state, and sort
   // as a leaderboard (positive streaks on top, people slipping at the bottom).
   const roster = members
@@ -236,6 +256,10 @@ export default async function Home() {
 
       const sortKey = state === "out" ? -(value ?? 0) : (value ?? 0);
 
+      const logged = todayActsByUser.get(m.user_id)?.size ?? 0;
+      const progress = totalActivities > 0 ? logged / totalActivities : 0;
+      const ringDone = totalActivities > 0 && logged >= totalActivities;
+
       return {
         id: m.user_id,
         name: m.profiles?.display_name ?? "Member",
@@ -244,6 +268,9 @@ export default async function Home() {
         state,
         value,
         sortKey,
+        logged,
+        progress,
+        ringDone,
       };
     })
     .sort((a, b) => b.sortKey - a.sortKey || a.name.localeCompare(b.name));
@@ -279,25 +306,32 @@ export default async function Home() {
       <section className="roster-board">
         {roster.map((r) => (
           <Link key={r.id} href={`/u/${r.id}`} className={`rb-card rb-${r.state}`}>
-            <span className="rb-avatar">
-              <Avatar name={r.name} url={r.avatar} />
-              {r.state === "today" && <span className="rb-check">✓</span>}
-            </span>
+            <ProgressAvatar
+              name={r.name}
+              url={r.avatar}
+              progress={r.progress}
+              done={r.ringDone}
+            />
             <span className="rb-line">
               <span className="rb-name">{r.name.split(" ")[0]}</span>
               <StreakPill state={r.state} value={r.value} />
             </span>
-            <span className="rb-sub">{subLabel(r.state, r.value)}</span>
+            <span className="rb-sub">
+              {r.state === "today"
+                ? `${r.logged}/${totalActivities} today`
+                : subLabel(r.state, r.value)}
+            </span>
           </Link>
         ))}
       </section>
 
       {/* Compose */}
       <Composer
-        activities={activities}
+        activities={remainingActivities}
         groupId={groupId}
         userId={user.id}
-        postedToday={me?.postedToday ?? false}
+        done={allDoneToday}
+        remainingCount={remainingActivities.length}
       />
 
       {/* Feed */}
