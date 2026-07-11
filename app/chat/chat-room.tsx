@@ -6,6 +6,18 @@ import type { Message } from "@/lib/types";
 
 type Member = { name: string; avatar: string | null };
 
+function MsgAvatar({ name, url }: { name?: string; url?: string | null }) {
+  if (url) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img className="msg-avatar-img" src={url} alt={name ?? ""} />;
+  }
+  return (
+    <span className="msg-avatar-img fallback">
+      {(name ?? "?").trim().charAt(0).toUpperCase() || "?"}
+    </span>
+  );
+}
+
 export default function ChatRoom({
   groupId,
   userId,
@@ -92,13 +104,24 @@ export default function ChatRoom({
           const mine = m.author_id === userId;
           const author = members[m.author_id];
           const prev = messages[i - 1];
+          const next = messages[i + 1];
           const showAuthor = !mine && (!prev || prev.author_id !== m.author_id);
+          // Avatar sits on the last message of a consecutive run.
+          const showAvatar =
+            !mine && (!next || next.author_id !== m.author_id);
           return (
             <div key={m.id} className={`msg-row ${mine ? "mine" : ""}`}>
-              {showAuthor && (
-                <span className="msg-author">{author?.name ?? "Someone"}</span>
+              {!mine && (
+                <span className="msg-avatar">
+                  {showAvatar && <MsgAvatar name={author?.name} url={author?.avatar} />}
+                </span>
               )}
-              <div className="msg-bubble">{m.body}</div>
+              <div className="msg-content">
+                {showAuthor && (
+                  <span className="msg-author">{author?.name ?? "Someone"}</span>
+                )}
+                <div className="msg-bubble">{m.body}</div>
+              </div>
             </div>
           );
         })}

@@ -1324,14 +1324,41 @@ span.avatar-lg.avatar-fallback {
 
 .msg-row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 82%;
+  align-items: flex-end;
+  gap: 0.45rem;
+  max-width: 85%;
 }
 
 .msg-row.mine {
   align-self: flex-end;
-  align-items: flex-end;
+}
+
+.msg-avatar {
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.msg-avatar-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.msg-avatar-img.fallback {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--surface-2), var(--border));
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.msg-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .msg-author {
