@@ -1066,3 +1066,193 @@ a {
   font-size: 0.85rem;
   padding: 0.2rem 0.35rem;
 }
+
+/* ---- Profile links from board --------------------------------------------- */
+.head-avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.head-avatar .avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 0.9rem;
+}
+
+.rb-row {
+  text-decoration: none;
+  color: inherit;
+}
+
+.rb-row:active {
+  border-color: var(--accent);
+}
+
+.post-author-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+/* ---- Profile page --------------------------------------------------------- */
+.profile-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.avatar-lg {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+
+span.avatar-lg.avatar-fallback {
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+}
+
+.avatar-edit {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.avatar-edit-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+}
+
+.profile-name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.name-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.name-edit input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.4rem 0.7rem;
+  max-width: 200px;
+}
+
+.name-edit input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.saved-tick {
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.profile-streak {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1.1rem;
+  flex-shrink: 0;
+}
+
+.profile-streak-num {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.profile-streak .flame {
+  font-size: 1rem;
+  margin-top: -0.2rem;
+}
+
+.profile-streak-label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.2rem;
+}
+
+/* Tendencies */
+.tendencies {
+  margin-bottom: 1.75rem;
+}
+
+.hero-tendency {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: linear-gradient(120deg, var(--accent-dim), var(--surface) 70%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.tendency-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.tendency-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.tendency-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.tendency-chips .chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 500;
+}

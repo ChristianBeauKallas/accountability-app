@@ -452,6 +452,31 @@ create policy media_owner_read on storage.objects
     bucket_id = 'media' and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+-- Public bucket for profile pictures (avatars show all over the app, so a
+-- public URL avoids signing them everywhere). Files still land in a per-user
+-- folder that only the owner can write to.
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists avatars_write on storage.objects;
+create policy avatars_write on storage.objects
+  for insert to authenticated with check (
+    bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists avatars_update on storage.objects;
+create policy avatars_update on storage.objects
+  for update to authenticated using (
+    bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+drop policy if exists avatars_delete on storage.objects;
+create policy avatars_delete on storage.objects
+  for delete to authenticated using (
+    bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
 -- Anyone who can see the parent post/check-in can read its media object. This
 -- lets group members view each other's photos/voice notes via signed URLs
 -- while keeping the bucket private.

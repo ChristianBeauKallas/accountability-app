@@ -25,6 +25,19 @@ function addDays(ymd: string, delta: number): string {
   return dt.toISOString().slice(0, 10);
 }
 
+/** The longest run of consecutive days in a set of YYYY-MM-DD dates. */
+export function bestStreak(postDates: Set<string>): number {
+  if (postDates.size === 0) return 0;
+  const sorted = [...postDates].sort();
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    run = sorted[i] === addDays(sorted[i - 1], 1) ? run + 1 : 1;
+    if (run > best) best = run;
+  }
+  return best;
+}
+
 export type StreakInfo = {
   /** Consecutive days with a post, ending today (or yesterday if not yet posted today). */
   streak: number;

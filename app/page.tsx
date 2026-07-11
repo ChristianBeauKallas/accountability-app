@@ -194,14 +194,20 @@ export default async function Home() {
               ⚙ Activities
             </Link>
           )}
-          <SignOut compact />
+          <Link
+            className="head-avatar"
+            href={`/u/${user.id}`}
+            aria-label="Your profile"
+          >
+            <Avatar name={me?.name ?? "You"} url={me?.avatar ?? null} />
+          </Link>
         </div>
       </header>
 
       {/* Roster — everyone, whether they've checked in today, and their streak */}
       <section className="roster-board">
         {roster.map((r) => (
-          <div key={r.id} className={`rb-row rb-${r.state}`}>
+          <Link key={r.id} href={`/u/${r.id}`} className={`rb-row rb-${r.state}`}>
             <span className="rb-avatar">
               <Avatar name={r.name} url={r.avatar} />
               {r.state === "today" && <span className="rb-check">✓</span>}
@@ -211,7 +217,7 @@ export default async function Home() {
               <span className="rb-sub">{subLabel(r.state, r.value)}</span>
             </span>
             <StreakPill state={r.state} value={r.value} />
-          </div>
+          </Link>
         ))}
       </section>
 
@@ -232,8 +238,13 @@ export default async function Home() {
         {posts.map((p) => (
           <article className="post" key={p.id}>
             <div className="post-head">
-              <Avatar name={p.author?.display_name ?? "?"} url={p.author?.avatar_url ?? null} />
-              <span className="post-author">{p.author?.display_name}</span>
+              <Link className="post-author-link" href={`/u/${p.author_id}`}>
+                <Avatar
+                  name={p.author?.display_name ?? "?"}
+                  url={p.author?.avatar_url ?? null}
+                />
+                <span className="post-author">{p.author?.display_name}</span>
+              </Link>
               <span className="post-time">{timeAgo(p.created_at)}</span>
             </div>
             {p.post_activities.length > 0 && (
