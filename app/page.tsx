@@ -25,14 +25,7 @@ type PostRow = {
   caption: string | null;
   created_at: string;
   post_activities: { activity_id: string }[];
-  author: { display_name: string; avatar_url: string | null } | null;
   media: { id: string; type: string; storage_path: string }[];
-  comments: {
-    id: string;
-    body: string;
-    created_at: string;
-    author: { display_name: string; avatar_url: string | null } | null;
-  }[];
 };
 
 export default async function Home() {
@@ -98,7 +91,7 @@ export default async function Home() {
     supabase
       .from("group_posts")
       .select(
-        "id, author_id, caption, created_at, post_activities(activity_id), author:profiles(display_name, avatar_url), media(id, type, storage_path), comments(id, body, created_at, author:profiles(display_name, avatar_url))",
+        "id, author_id, caption, created_at, post_activities(activity_id), media(id, type, storage_path)",
       )
       .eq("group_id", groupId)
       .order("created_at", { ascending: false })
@@ -110,6 +103,42 @@ export default async function Home() {
   const posts = (postsRes.data ?? []) as unknown as PostRow[];
 
   const activityById = new Map(activities.map((a) => [a.id, a]));
+
+  // Author info comes from the members list (no fragile query embeds).
+  const memberInfo = new Map(
+    members.map((m) => [
+      m.user_id,
+      {
+        name: m.profiles?.display_name ?? "Member",
+        avatar: m.profiles?.avatar_url ?? null,
+      },
+    ]),
+  );
+
+  // Comments fetched separately and grouped by post.
+  const commentsByPost = new Map<
+    string,
+    { id: string; body: string; authorName: string }[]
+  >();
+  if (posts.length > 0) {
+    const { data: cdata } = await supabase
+      .from("comments")
+      .select("id, post_id, author_id, body, created_at")
+      .in(
+        "post_id",
+        posts.map((p) => p.id),
+      )
+      .order("created_at", { ascending: true });
+    for (const c of cdata ?? []) {
+      const arr = commentsByPost.get(c.post_id) ?? [];
+      arr.push({
+        id: c.id,
+        body: c.body,
+        authorName: memberInfo.get(c.author_id)?.name ?? "Someone",
+      });
+      commentsByPost.set(c.post_id, arr);
+    }
+  }
 
   // Batch-sign every media path once (bucket is private).
   const allPaths = posts.flatMap((p) => p.media.map((m) => m.storage_path));
@@ -257,10 +286,12 @@ export default async function Home() {
             <div className="post-head">
               <Link className="post-author-link" href={`/u/${p.author_id}`}>
                 <Avatar
-                  name={p.author?.display_name ?? "?"}
-                  url={p.author?.avatar_url ?? null}
+                  name={memberInfo.get(p.author_id)?.name ?? "?"}
+                  url={memberInfo.get(p.author_id)?.avatar ?? null}
                 />
-                <span className="post-author">{p.author?.display_name}</span>
+                <span className="post-author">
+                  {memberInfo.get(p.author_id)?.name}
+                </span>
               </Link>
               <span className="post-time">{timeAgo(p.created_at)}</span>
               <FireButton
@@ -303,13 +334,7 @@ export default async function Home() {
             <PostComments
               postId={p.id}
               userId={user.id}
-              comments={[...p.comments]
-                .sort((a, b) => a.created_at.localeCompare(b.created_at))
-                .map((c) => ({
-                  id: c.id,
-                  body: c.body,
-                  authorName: c.author?.display_name ?? "Someone",
-                }))}
+              comments={commentsByPost.get(p.id) ?? []}
             />
           </article>
         ))}
