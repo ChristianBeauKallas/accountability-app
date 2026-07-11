@@ -346,7 +346,7 @@ export default async function Home() {
 
               {p.caption && <p className="post-caption">{p.caption}</p>}
 
-              <ActivityRow items={activityItems} />
+              <ActivityRow items={activityItems} total={activities.length} />
 
               <PostComments
                 postId={p.id}

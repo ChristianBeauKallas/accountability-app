@@ -2026,3 +2026,53 @@ span.avatar-lg.avatar-fallback {
   flex-shrink: 0;
   gap: 0;
 }
+
+/* ---- Activity summary pill ------------------------------------------------ */
+.activity-summary {
+  margin: 0.35rem 0 0.1rem;
+}
+.activity-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.activity-pill.complete {
+  background: var(--accent-dim);
+  border-color: rgba(62, 232, 122, 0.32);
+  color: var(--accent);
+}
+.ap-check {
+  font-weight: 900;
+}
+.ap-word {
+  font-weight: 500;
+  opacity: 0.85;
+}
+.ap-chev {
+  font-size: 0.55rem;
+  opacity: 0.6;
+  margin-left: 0.1rem;
+}
+.activity-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+.activity-tag {
+  font-size: 0.8rem;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  color: var(--text);
+}
