@@ -9,10 +9,12 @@ export default function CommentBox({
   postId,
   userId,
   onSent,
+  leading,
 }: {
   postId: string;
   userId: string;
   onSent?: () => void;
+  leading?: React.ReactNode;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
@@ -40,6 +42,7 @@ export default function CommentBox({
 
   return (
     <form className="comment-box" onSubmit={send}>
+      {leading}
       <input
         value={body}
         onChange={(e) => setBody(e.target.value)}

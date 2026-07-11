@@ -355,16 +355,17 @@ export default async function Home() {
 
               <ActivityRow items={activityItems} />
 
-              <ReactionBar
-                postId={p.id}
-                userId={user.id}
-                initial={reactionsByPost.get(p.id) ?? {}}
-              />
-
               <PostComments
                 postId={p.id}
                 userId={user.id}
                 comments={commentsByPost.get(p.id) ?? []}
+                reactions={
+                  <ReactionBar
+                    postId={p.id}
+                    userId={user.id}
+                    initial={reactionsByPost.get(p.id) ?? {}}
+                  />
+                }
               />
             </article>
           );

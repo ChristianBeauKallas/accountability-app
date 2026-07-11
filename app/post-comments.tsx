@@ -9,10 +9,12 @@ export default function PostComments({
   comments,
   postId,
   userId,
+  reactions,
 }: {
   comments: C[];
   postId: string;
   userId: string;
+  reactions?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const count = comments.length;
@@ -40,7 +42,12 @@ export default function PostComments({
         </ul>
       )}
 
-      <CommentBox postId={postId} userId={userId} onSent={() => setOpen(true)} />
+      <CommentBox
+        postId={postId}
+        userId={userId}
+        onSent={() => setOpen(true)}
+        leading={reactions}
+      />
     </div>
   );
 }

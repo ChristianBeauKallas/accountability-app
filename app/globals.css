@@ -2013,3 +2013,19 @@ span.avatar-lg.avatar-fallback {
   font-weight: 800;
   color: var(--text);
 }
+
+/* Reactions inline with the comment box */
+.comment-box {
+  align-items: center;
+}
+.comment-box input {
+  min-width: 0;
+}
+.comment-box .reaction-bar {
+  margin: 0;
+  flex-shrink: 0;
+  gap: 0.25rem;
+}
+.comment-box .react-btn {
+  padding: 0.28rem 0.45rem;
+}
