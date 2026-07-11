@@ -34,6 +34,7 @@ export type Activity = {
   group_id: string;
   name: string;
   emoji: string | null;
+  description: string | null;
   sort_order: number;
   active: boolean;
   created_at: string;

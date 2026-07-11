@@ -277,7 +277,12 @@ export default function Composer({
                 onClick={() => toggle(a.id)}
               >
                 <span className="toggle-emoji">{a.emoji ?? "✅"}</span>
-                {a.name}
+                <span className="toggle-text">
+                  <span className="toggle-name">{a.name}</span>
+                  {a.description && (
+                    <span className="toggle-desc">{a.description}</span>
+                  )}
+                </span>
               </button>
             ))}
           </div>

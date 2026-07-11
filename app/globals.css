@@ -2310,3 +2310,53 @@ span.avatar-lg.avatar-fallback {
     transform: translate(-50%, 0);
   }
 }
+
+/* ---- Activity descriptions ------------------------------------------------ */
+.toggle {
+  align-items: flex-start;
+}
+.toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.toggle-name {
+  font-weight: 600;
+}
+.toggle-desc {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.25;
+}
+
+/* Editor: description line under each activity */
+.activity-edit-item,
+.activity-add-item {
+  list-style: none;
+  margin-bottom: 0.6rem;
+}
+.activity-edit-item .activity-row,
+.activity-add-item .activity-row {
+  margin-bottom: 0.35rem;
+}
+.desc-input {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 0.5rem 0.7rem;
+}
+.desc-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  color: var(--text);
+}
+.activity-add-item {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-soft);
+}

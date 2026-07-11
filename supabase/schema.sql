@@ -606,3 +606,6 @@ alter table public.media add column if not exists transcript text;
 
 -- Optional short bio ("What are you working on?")
 alter table public.profiles add column if not exists bio text;
+
+-- Optional one-line description per activity
+alter table public.activities add column if not exists description text;

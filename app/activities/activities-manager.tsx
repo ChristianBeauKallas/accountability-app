@@ -16,6 +16,7 @@ export default function ActivitiesManager({
   const [rows, setRows] = useState<Activity[]>(initial);
   const [newEmoji, setNewEmoji] = useState("");
   const [newName, setNewName] = useState("");
+  const [newDesc, setNewDesc] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +29,11 @@ export default function ActivitiesManager({
     const supabase = createClient();
     const { error } = await supabase
       .from("activities")
-      .update({ name: a.name.trim(), emoji: a.emoji || null })
+      .update({
+        name: a.name.trim(),
+        emoji: a.emoji || null,
+        description: a.description?.trim() || null,
+      })
       .eq("id", a.id);
     if (error) setError(error.message);
     else router.refresh();
@@ -37,7 +42,6 @@ export default function ActivitiesManager({
   async function remove(id: string) {
     setError(null);
     const supabase = createClient();
-    // Non-destructive: hide from check-in but keep it on past posts.
     const { error } = await supabase
       .from("activities")
       .update({ active: false })
@@ -64,6 +68,7 @@ export default function ActivitiesManager({
         group_id: groupId,
         name: newName.trim(),
         emoji: newEmoji || null,
+        description: newDesc.trim() || null,
         sort_order: nextOrder,
       })
       .select("*")
@@ -76,6 +81,7 @@ export default function ActivitiesManager({
     setRows((rs) => [...rs, data as Activity]);
     setNewEmoji("");
     setNewName("");
+    setNewDesc("");
     router.refresh();
   }
 
@@ -83,59 +89,80 @@ export default function ActivitiesManager({
     <div>
       <p className="subtitle" style={{ marginBottom: "1rem" }}>
         These are what your crew taps each day. Keep it short — 3 to 6 works
-        best.
+        best. Add a one-line description so everyone knows what each means.
       </p>
 
       <ul className="activity-editor">
         {rows.map((a) => (
-          <li key={a.id} className="activity-row">
+          <li key={a.id} className="activity-edit-item">
+            <div className="activity-row">
+              <input
+                className="emoji-input"
+                value={a.emoji ?? ""}
+                maxLength={2}
+                placeholder="✅"
+                onChange={(e) => edit(a.id, { emoji: e.target.value })}
+                onBlur={() => save(a)}
+                aria-label="Emoji"
+              />
+              <input
+                className="name-input"
+                value={a.name}
+                onChange={(e) => edit(a.id, { name: e.target.value })}
+                onBlur={() => save(a)}
+                aria-label="Activity name"
+              />
+              <button
+                type="button"
+                className="remove-activity"
+                onClick={() => remove(a.id)}
+                aria-label="Remove activity"
+              >
+                ✕
+              </button>
+            </div>
             <input
-              className="emoji-input"
-              value={a.emoji ?? ""}
-              maxLength={2}
-              placeholder="✅"
-              onChange={(e) => edit(a.id, { emoji: e.target.value })}
+              className="desc-input"
+              value={a.description ?? ""}
+              placeholder="One-line description (optional)"
+              maxLength={80}
+              onChange={(e) => edit(a.id, { description: e.target.value })}
               onBlur={() => save(a)}
-              aria-label="Emoji"
+              aria-label="Description"
             />
-            <input
-              className="name-input"
-              value={a.name}
-              onChange={(e) => edit(a.id, { name: e.target.value })}
-              onBlur={() => save(a)}
-              aria-label="Activity name"
-            />
-            <button
-              type="button"
-              className="remove-activity"
-              onClick={() => remove(a.id)}
-              aria-label="Remove activity"
-            >
-              ✕
-            </button>
           </li>
         ))}
       </ul>
 
-      <form onSubmit={add} className="activity-add">
+      <form onSubmit={add} className="activity-add-item">
+        <div className="activity-row">
+          <input
+            className="emoji-input"
+            value={newEmoji}
+            maxLength={2}
+            placeholder="✨"
+            onChange={(e) => setNewEmoji(e.target.value)}
+            aria-label="New emoji"
+          />
+          <input
+            className="name-input"
+            value={newName}
+            placeholder="Add an activity…"
+            onChange={(e) => setNewName(e.target.value)}
+            aria-label="New activity name"
+          />
+          <button type="submit" disabled={busy || !newName.trim()}>
+            Add
+          </button>
+        </div>
         <input
-          className="emoji-input"
-          value={newEmoji}
-          maxLength={2}
-          placeholder="✨"
-          onChange={(e) => setNewEmoji(e.target.value)}
-          aria-label="New emoji"
+          className="desc-input"
+          value={newDesc}
+          placeholder="One-line description (optional)"
+          maxLength={80}
+          onChange={(e) => setNewDesc(e.target.value)}
+          aria-label="New description"
         />
-        <input
-          className="name-input"
-          value={newName}
-          placeholder="Add an activity…"
-          onChange={(e) => setNewName(e.target.value)}
-          aria-label="New activity name"
-        />
-        <button type="submit" disabled={busy || !newName.trim()}>
-          Add
-        </button>
       </form>
 
       {error && <p className="auth-error">{error}</p>}
