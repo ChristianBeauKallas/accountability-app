@@ -283,10 +283,13 @@ export default function Composer({
         </>
       )}
 
-      {/* STEP 2 — how'd it go (dictate or type) */}
+      {/* STEP 2 — what did you do (dictate or type) */}
       {step === "context" && (
         <>
-          <p className="composer-label">How&apos;d it go?</p>
+          <p className="composer-label">What did you do?</p>
+          <p className="composer-sub">
+            Let the group know what you did in each area.
+          </p>
           {!typing ? (
             <div className="dictate-wrap">
               {!recording ? (

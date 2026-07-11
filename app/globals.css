@@ -2076,3 +2076,9 @@ span.avatar-lg.avatar-fallback {
   padding: 0.28rem 0.65rem;
   color: var(--text);
 }
+
+.composer-sub {
+  margin: -0.5rem 0 0.25rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
