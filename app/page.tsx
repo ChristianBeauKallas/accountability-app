@@ -66,13 +66,11 @@ export default async function Home() {
     | undefined;
 
   if (!membership) {
+    const meta = user.user_metadata as { display_name?: string } | undefined;
+    const firstName = meta?.display_name?.trim().split(" ")[0];
     return (
-      <main>
-        <h1>Welcome 👋</h1>
-        <p className="subtitle">
-          Start a group for your crew, or join one with an invite code.
-        </p>
-        <Onboarding />
+      <main className="auth">
+        <Onboarding name={firstName} />
         <SignOut />
       </main>
     );

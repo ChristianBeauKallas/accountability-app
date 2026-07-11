@@ -14,7 +14,7 @@ const DEFAULT_ACTIVITIES = [
   { name: "Read / grow", emoji: "📖", sort_order: 4 },
 ];
 
-export default function Onboarding() {
+export default function Onboarding({ name }: { name?: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<"create" | "join">("create");
   const [groupName, setGroupName] = useState("");
@@ -73,20 +73,29 @@ export default function Onboarding() {
 
   return (
     <div className="onboarding">
-      <div className="tabs">
+      <div className="welcome-head">
+        <h2>You&apos;re in{name ? `, ${name}` : ""} 👋</h2>
+        <p>Last step — start your crew or join one.</p>
+      </div>
+
+      <div className="choice-cards">
         <button
-          className={mode === "create" ? "active" : ""}
-          onClick={() => setMode("create")}
           type="button"
+          className={`choice-card ${mode === "create" ? "active" : ""}`}
+          onClick={() => setMode("create")}
         >
-          Create a group
+          <span className="choice-icon">🚀</span>
+          <span className="choice-title">Start a group</span>
+          <span className="choice-sub">Name it, invite your people</span>
         </button>
         <button
-          className={mode === "join" ? "active" : ""}
-          onClick={() => setMode("join")}
           type="button"
+          className={`choice-card ${mode === "join" ? "active" : ""}`}
+          onClick={() => setMode("join")}
         >
-          Join with a code
+          <span className="choice-icon">🔑</span>
+          <span className="choice-title">Join a group</span>
+          <span className="choice-sub">Paste an invite code</span>
         </button>
       </div>
 

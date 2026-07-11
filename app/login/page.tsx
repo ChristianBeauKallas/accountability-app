@@ -81,8 +81,38 @@ export default function LoginPage() {
 
   return (
     <main className="auth">
-      <h1>Get Better</h1>
-      <p className="subtitle">Show up. Every day.</p>
+      <div className="auth-hero">
+        <svg className="auth-ring" width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="23" className="auth-ring-bg" strokeWidth="4" fill="none" />
+          <circle
+            cx="26"
+            cy="26"
+            r="23"
+            className="auth-ring-fg"
+            strokeWidth="4"
+            fill="none"
+            strokeDasharray={2 * Math.PI * 23}
+            strokeDashoffset={2 * Math.PI * 23 * 0.28}
+            strokeLinecap="round"
+            transform="rotate(-90 26 26)"
+          />
+        </svg>
+        <h1>Get Better</h1>
+        <p className="auth-tagline">
+          Daily check-ins with your crew. Build streaks. Keep each other honest.
+        </p>
+        <ul className="auth-proof">
+          <li>
+            <span>✅</span> Log your day in seconds
+          </li>
+          <li>
+            <span>🔥</span> Streaks that reward showing up
+          </li>
+          <li>
+            <span>👥</span> Your crew, cheering you on
+          </li>
+        </ul>
+      </div>
 
       <div className="tabs">
         <button

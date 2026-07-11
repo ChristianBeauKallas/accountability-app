@@ -2838,3 +2838,107 @@ button.head-icon {
   font-family: inherit;
   white-space: nowrap;
 }
+
+/* Auth hero (login front door) */
+.auth-hero {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+.auth-ring {
+  margin-bottom: 0.6rem;
+}
+.auth-ring-bg {
+  stroke: var(--border);
+}
+.auth-ring-fg {
+  stroke: var(--accent);
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+.auth-hero h1 {
+  font-size: 2.4rem;
+  margin: 0;
+  background: linear-gradient(120deg, var(--text) 30%, var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.auth-tagline {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.45;
+  margin: 0.5rem auto 1.1rem;
+  max-width: 32ch;
+}
+.auth-proof {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  text-align: left;
+  max-width: 20rem;
+  margin-inline: auto;
+}
+.auth-proof li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+.auth-proof li span {
+  flex-shrink: 0;
+}
+
+/* Create-or-join welcome + choice cards */
+.welcome-head {
+  text-align: center;
+  margin-bottom: 1.1rem;
+}
+.welcome-head h2 {
+  font-size: 1.6rem;
+  margin: 0 0 0.3rem;
+}
+.welcome-head p {
+  color: var(--muted);
+  margin: 0;
+}
+.choice-cards {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.choice-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.choice-card.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.choice-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+.choice-title {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+.choice-sub {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
