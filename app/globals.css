@@ -2648,3 +2648,193 @@ button.head-icon {
   cursor: pointer;
   font-family: inherit;
 }
+
+/* Tour — profile setup card */
+.tour-avatar-btn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  margin: 0 auto 0.9rem;
+}
+.tour-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
+  display: grid;
+  place-items: center;
+}
+.tour-avatar.fallback {
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 2rem;
+  font-weight: 700;
+}
+.tour-avatar-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  border: 2px solid var(--bg);
+}
+.tour-bio {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  margin-bottom: 0.4rem;
+}
+.tour-bio:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* Tour — in-card previews */
+.tour-preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.9rem;
+  margin: 0 auto 1rem;
+  width: 100%;
+}
+.tour-chat-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.tcp-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+.tcp-row.mine {
+  justify-content: flex-end;
+}
+.tcp-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tcp-bubble {
+  background: var(--bg-2);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+}
+.tcp-bubble.mine {
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+}
+.tour-profile-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.tpp-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.tpp-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tpp-tiles {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.tpp-tile {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+/* Tour — action buttons + hints */
+.tour-action {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 0.5rem;
+}
+.tour-action:active {
+  background: var(--accent-dim);
+}
+.tour-hint {
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: 0.2rem 0 0.6rem;
+}
+.tour-invite-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.tour-invite-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+.tour-invite-copy {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}

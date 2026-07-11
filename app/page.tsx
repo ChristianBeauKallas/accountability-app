@@ -313,7 +313,13 @@ export default async function Home() {
           </p>
         </div>
         <div className="head-actions">
-          <Tour userId={user.id} groupName={membership.groups.name} />
+          <Tour
+            userId={user.id}
+            groupName={membership.groups.name}
+            displayName={me?.name ?? "there"}
+            avatarUrl={me?.avatar ?? null}
+            inviteCode={membership.groups.invite_code}
+          />
           <HeaderBell userId={user.id} />
           <Link className="head-icon" href="/activities" aria-label="Settings">
             ⚙
