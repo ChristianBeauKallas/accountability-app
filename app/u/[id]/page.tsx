@@ -112,6 +112,9 @@ export default async function ProfilePage({
       (Date.now() - new Date(profile.created_at).getTime()) / 86400000,
     ) + 1,
   );
+  // Don't penalize days before they joined: "possible" days this month are
+  // capped at how long they've had the account.
+  const possibleThisMonth = Math.min(dayOfMonth, accountDays);
 
   // ---- Media / transcripts / reactions / comments (mirror the feed) ----
   const allPaths = posts.flatMap((p) => p.media.map((m) => m.storage_path));
@@ -248,7 +251,7 @@ export default async function ProfilePage({
         </div>
         <div className="stat-tile mini">
           <span className="mini-num">
-            {thisMonth}/{dayOfMonth}
+            {thisMonth}/{possibleThisMonth}
           </span>
           <span className="mini-label">📅 This mo.</span>
         </div>
