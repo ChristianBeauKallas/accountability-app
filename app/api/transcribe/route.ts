@@ -23,8 +23,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "no audio" }, { status: 400 });
   }
 
+  // Preserve the uploaded filename (extension matters for Whisper's format detection).
+  const filename =
+    audio instanceof File && audio.name ? audio.name : "audio.webm";
   const oaiForm = new FormData();
-  oaiForm.append("file", audio, "audio.webm");
+  oaiForm.append("file", audio, filename);
   oaiForm.append("model", "whisper-1");
   oaiForm.append("response_format", "json");
 
