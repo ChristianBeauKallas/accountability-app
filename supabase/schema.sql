@@ -609,3 +609,20 @@ alter table public.profiles add column if not exists bio text;
 
 -- Optional one-line description per activity
 alter table public.activities add column if not exists description text;
+
+-- =============================================================================
+-- Chat message media (image / voice note)
+-- =============================================================================
+alter table public.messages add column if not exists image_path text;
+alter table public.messages add column if not exists audio_path text;
+
+-- Group members can read chat media objects (private bucket, signed URLs).
+drop policy if exists chat_media_read on storage.objects;
+create policy chat_media_read on storage.objects
+  for select to authenticated using (
+    bucket_id = 'media' and exists (
+      select 1 from public.messages m
+      where (m.image_path = name or m.audio_path = name)
+        and public.is_group_member(m.group_id)
+    )
+  );

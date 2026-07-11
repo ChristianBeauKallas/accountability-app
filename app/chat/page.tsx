@@ -42,7 +42,7 @@ export default async function ChatPage() {
       .eq("group_id", groupId),
     supabase
       .from("messages")
-      .select("id, group_id, author_id, body, created_at")
+      .select("*")
       .eq("group_id", groupId)
       .order("created_at", { ascending: true })
       .limit(200),

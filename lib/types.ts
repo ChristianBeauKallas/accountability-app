@@ -80,6 +80,8 @@ export type Message = {
   group_id: string;
   author_id: string;
   body: string;
+  image_path: string | null;
+  audio_path: string | null;
   created_at: string;
 };
 
