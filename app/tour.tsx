@@ -1,11 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 // First-run walkthrough. Auto-opens once per account (tracked in localStorage
 // so it needs no schema change), and can be replayed anytime from the header
 // "?" button. Card one leaves room for a personal intro video later.
-type Card = { icon: string; title: string; body: string };
+type Card = { icon?: string; ring?: boolean; title: string; body: string };
+
+// A neon progress ring, matching the roster avatars, used as a card visual.
+function NeonRing() {
+  const size = 66;
+  const stroke = 4;
+  const r = (size - stroke) / 2;
+  const c = size / 2;
+  const circ = 2 * Math.PI * r;
+  return (
+    <svg className="tour-ring" width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={c} cy={c} r={r} className="tour-ring-bg" strokeWidth={stroke} fill="none" />
+      <circle
+        cx={c}
+        cy={c}
+        r={r}
+        className="tour-ring-fg"
+        strokeWidth={stroke}
+        fill="none"
+        strokeDasharray={circ}
+        strokeDashoffset={circ * 0.32}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${c} ${c})`}
+      />
+    </svg>
+  );
+}
 
 function cards(groupName: string): Card[] {
   return [
@@ -15,9 +42,9 @@ function cards(groupName: string): Card[] {
       body: "This is your crew's daily accountability board. Show up each day, log what you did, keep your streak, and cheer each other on.",
     },
     {
-      icon: "⭕",
+      ring: true,
       title: "Your ring is your day",
-      body: "Tap the ＋ button and check off what you did. Each activity fills the ring around your photo a little more. Fill it all the way and you've completed the day.",
+      body: "Tap the ＋ button and check off what you did — each activity fills the ring around your photo. Fill it all the way and you've completed the day.",
     },
     {
       icon: "🔥",
@@ -45,9 +72,13 @@ export default function Tour({
   groupName: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [i, setI] = useState(0);
   const deck = cards(groupName);
   const key = `gb_tour_done_${userId}`;
+
+  // Portal target only exists after mount (avoids SSR document access).
+  useEffect(() => setMounted(true), []);
 
   // Auto-open the first time this account sees the board.
   useEffect(() => {
@@ -91,8 +122,10 @@ export default function Tour({
         ?
       </button>
 
-      {open && (
-        <div className="tour-overlay" role="dialog" aria-modal="true">
+      {mounted &&
+        open &&
+        createPortal(
+          <div className="tour-overlay" role="dialog" aria-modal="true">
           <div className="tour-card">
             <button
               type="button"
@@ -103,7 +136,13 @@ export default function Tour({
               Skip
             </button>
 
-            <div className="tour-icon">{card.icon}</div>
+            {card.ring ? (
+              <div className="tour-icon">
+                <NeonRing />
+              </div>
+            ) : (
+              <div className="tour-icon">{card.icon}</div>
+            )}
             <h2 className="tour-title">{card.title}</h2>
             <p className="tour-body">{card.body}</p>
 
@@ -144,8 +183,9 @@ export default function Tour({
               )}
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

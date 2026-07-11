@@ -2567,6 +2567,18 @@ button.head-icon {
   font-size: 2.6rem;
   line-height: 1;
   margin-bottom: 0.9rem;
+  display: grid;
+  place-items: center;
+  min-height: 66px;
+}
+
+.tour-ring-bg {
+  stroke: var(--border);
+}
+
+.tour-ring-fg {
+  stroke: var(--accent);
+  filter: drop-shadow(0 0 6px var(--accent-glow));
 }
 
 .tour-title {
