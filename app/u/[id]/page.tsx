@@ -99,9 +99,11 @@ export default async function ProfilePage({
   const best = bestStreak(dates);
   const totalDays = dates.size;
 
-  // Days logged this calendar month (in the user's timezone).
-  const monthPrefix = localDate(new Date(), tz).slice(0, 7);
+  // Days logged this calendar month, out of days elapsed so far this month.
+  const nowLocal = localDate(new Date(), tz);
+  const monthPrefix = nowLocal.slice(0, 7);
   const thisMonth = [...dates].filter((d) => d.slice(0, 7) === monthPrefix).length;
+  const dayOfMonth = Number(nowLocal.slice(8, 10));
 
   // How many days they've had the account (for the "logged / days" ratio).
   const accountDays = Math.max(
@@ -245,14 +247,16 @@ export default async function ProfilePage({
           <span className="mini-label">🏆 Best</span>
         </div>
         <div className="stat-tile mini">
-          <span className="mini-num">{thisMonth}</span>
+          <span className="mini-num">
+            {thisMonth}/{dayOfMonth}
+          </span>
           <span className="mini-label">📅 This mo.</span>
         </div>
         <div className="stat-tile mini">
           <span className="mini-num">
             {totalDays}/{accountDays}
           </span>
-          <span className="mini-label">✅ Logged</span>
+          <span className="mini-label">✅ All time</span>
         </div>
       </section>
 
