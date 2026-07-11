@@ -2505,3 +2505,134 @@ span.avatar-lg.avatar-fallback {
   cursor: default;
   box-shadow: 0 6px 20px rgba(62, 232, 122, 0.3);
 }
+
+/* First-run walkthrough (Tour) */
+button.head-icon {
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(3, 6, 10, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: tour-fade 0.2s ease;
+}
+
+@keyframes tour-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tour-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg));
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 2.25rem 1.5rem 1.4rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px var(--accent-dim);
+  animation: tour-pop 0.22s cubic-bezier(0.2, 0.8, 0.3, 1.2);
+}
+
+@keyframes tour-pop {
+  from { transform: translateY(10px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.tour-skip {
+  position: absolute;
+  top: 0.85rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.tour-icon {
+  font-size: 2.6rem;
+  line-height: 1;
+  margin-bottom: 0.9rem;
+}
+
+.tour-title {
+  font-size: 1.3rem;
+  margin: 0 0 0.6rem;
+  color: var(--text);
+}
+
+.tour-body {
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.5;
+  margin: 0 auto 1.4rem;
+  max-width: 30ch;
+}
+
+.tour-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 1.3rem;
+}
+
+.tour-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s ease, width 0.2s ease;
+}
+
+.tour-dot.on {
+  width: 20px;
+  border-radius: 4px;
+  background: var(--accent);
+}
+
+.tour-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.tour-back {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.tour-next {
+  flex: 1;
+  max-width: 60%;
+  margin-left: auto;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}

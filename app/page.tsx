@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Onboarding from "./onboarding";
 import Composer from "./composer";
+import Tour from "./tour";
 import PostCard from "./post-card";
 import { Avatar } from "./avatar";
 import { ProgressAvatar } from "./progress-avatar";
@@ -312,6 +313,7 @@ export default async function Home() {
           </p>
         </div>
         <div className="head-actions">
+          <Tour userId={user.id} groupName={membership.groups.name} />
           <HeaderBell userId={user.id} />
           <Link className="head-icon" href="/activities" aria-label="Settings">
             ⚙
