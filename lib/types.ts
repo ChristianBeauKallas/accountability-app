@@ -9,6 +9,7 @@ export type Profile = {
   id: string;
   display_name: string;
   avatar_url: string | null;
+  bio: string | null;
   timezone: string;
   created_at: string;
 };

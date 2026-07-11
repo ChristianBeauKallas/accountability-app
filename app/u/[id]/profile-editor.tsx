@@ -8,18 +8,33 @@ export default function ProfileEditor({
   userId,
   displayName,
   avatarUrl,
+  bio,
 }: {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
+  bio: string | null;
 }) {
   const router = useRouter();
   const fileInput = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(displayName);
+  const [bioText, setBioText] = useState(bio ?? "");
   const [preview, setPreview] = useState<string | null>(avatarUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedName, setSavedName] = useState(false);
+
+  async function saveBio() {
+    const trimmed = bioText.trim();
+    if (trimmed === (bio ?? "")) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("profiles")
+      .update({ bio: trimmed || null })
+      .eq("id", userId);
+    if (error) setError(error.message);
+    else router.refresh();
+  }
 
   async function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -93,20 +108,30 @@ export default function ProfileEditor({
         onChange={onPhoto}
       />
 
-      <div className="name-edit">
+      <div className="profile-id-text">
+        <div className="name-edit">
+          <input
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setSavedName(false);
+            }}
+            onBlur={saveName}
+            aria-label="Display name"
+          />
+          {savedName && <span className="saved-tick">saved ✓</span>}
+        </div>
         <input
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setSavedName(false);
-          }}
-          onBlur={saveName}
-          aria-label="Display name"
+          className="bio-edit"
+          value={bioText}
+          maxLength={90}
+          placeholder="What are you working on?"
+          onChange={(e) => setBioText(e.target.value)}
+          onBlur={saveBio}
+          aria-label="Bio"
         />
-        {savedName && <span className="saved-tick">saved ✓</span>}
+        {error && <p className="auth-error">{error}</p>}
       </div>
-
-      {error && <p className="auth-error">{error}</p>}
     </div>
   );
 }

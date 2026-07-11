@@ -603,3 +603,6 @@ create policy post_reactions_delete on public.post_reactions
 -- Transcript for voice-note media (Whisper). Enables "read transcription".
 -- =============================================================================
 alter table public.media add column if not exists transcript text;
+
+-- Optional short bio ("What are you working on?")
+alter table public.profiles add column if not exists bio text;

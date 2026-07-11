@@ -37,6 +37,17 @@ export default async function ProfilePage({
     .single();
   if (!profile) notFound();
 
+  // Bio fetched separately so a missing column can never break the page.
+  let bio: string | null = null;
+  {
+    const { data: bioRow } = await supabase
+      .from("profiles")
+      .select("bio")
+      .eq("id", id)
+      .maybeSingle();
+    bio = (bioRow as { bio?: string | null } | null)?.bio ?? null;
+  }
+
   const { data: memberships } = await supabase
     .from("group_members")
     .select("group_id")
@@ -207,6 +218,7 @@ export default async function ProfilePage({
             userId={profile.id}
             displayName={profile.display_name}
             avatarUrl={profile.avatar_url}
+            bio={bio}
           />
         ) : (
           <div className="profile-editor">
@@ -218,7 +230,10 @@ export default async function ProfilePage({
                 {profile.display_name.charAt(0).toUpperCase()}
               </span>
             )}
-            <h2 className="profile-name">{profile.display_name}</h2>
+            <div className="profile-id-text">
+              <h2 className="profile-name">{profile.display_name}</h2>
+              {bio && <p className="profile-bio">{bio}</p>}
+            </div>
           </div>
         )}
       </section>

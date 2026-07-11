@@ -2178,3 +2178,32 @@ span.avatar-lg.avatar-fallback {
   border-color: rgba(62, 232, 122, 0.3);
   background: linear-gradient(180deg, rgba(62, 232, 122, 0.06), var(--surface) 75%);
 }
+
+/* Bio under the name */
+.profile-id-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+.bio-edit {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 0.1rem 0;
+  width: 100%;
+}
+.bio-edit:focus {
+  outline: none;
+  color: var(--text);
+}
+.bio-edit::placeholder {
+  color: var(--faint);
+}
+.profile-bio {
+  margin: 0.1rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
