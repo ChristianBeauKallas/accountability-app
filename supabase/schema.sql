@@ -498,3 +498,37 @@ create policy media_group_read on storage.objects
       )
     )
   );
+
+-- =============================================================================
+-- Chat — casual group conversation, separate from the accountability feed.
+-- =============================================================================
+create table if not exists public.messages (
+  id         uuid primary key default gen_random_uuid(),
+  group_id   uuid not null references public.groups (id) on delete cascade,
+  author_id  uuid not null references public.profiles (id) on delete cascade,
+  body       text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_messages_group_created
+  on public.messages (group_id, created_at);
+
+alter table public.messages enable row level security;
+
+drop policy if exists messages_select on public.messages;
+create policy messages_select on public.messages
+  for select to authenticated using (public.is_group_member(group_id));
+
+drop policy if exists messages_insert on public.messages;
+create policy messages_insert on public.messages
+  for insert to authenticated
+  with check (author_id = auth.uid() and public.is_group_member(group_id));
+
+drop policy if exists messages_delete on public.messages;
+create policy messages_delete on public.messages
+  for delete to authenticated using (author_id = auth.uid());
+
+-- Enable Realtime so new messages appear instantly. Ignore if already added.
+do $$ begin
+  alter publication supabase_realtime add table public.messages;
+exception when others then null; end $$;

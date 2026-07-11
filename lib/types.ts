@@ -73,6 +73,14 @@ export type Checkin = {
   created_at: string;
 };
 
+export type Message = {
+  id: string;
+  group_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+};
+
 export type Media = {
   id: string;
   owner_id: string;

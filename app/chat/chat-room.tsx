@@ -1,0 +1,109 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { Message } from "@/lib/types";
+
+type Member = { name: string; avatar: string | null };
+
+export default function ChatRoom({
+  groupId,
+  userId,
+  initial,
+  members,
+}: {
+  groupId: string;
+  userId: string;
+  initial: Message[];
+  members: Record<string, Member>;
+}) {
+  const [messages, setMessages] = useState<Message[]>(initial);
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Live updates.
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`messages:${groupId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `group_id=eq.${groupId}`,
+        },
+        (payload) => {
+          const msg = payload.new as Message;
+          setMessages((prev) =>
+            prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
+          );
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [groupId]);
+
+  // Auto-scroll on new messages.
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length]);
+
+  async function send(e: React.FormEvent) {
+    e.preventDefault();
+    const text = body.trim();
+    if (!text) return;
+    setSending(true);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("messages")
+      .insert({ group_id: groupId, author_id: userId, body: text });
+    setSending(false);
+    if (!error) setBody("");
+  }
+
+  return (
+    <div className="chat-room">
+      <div className="chat-scroll">
+        {messages.length === 0 && (
+          <p className="empty chat-empty">
+            No messages yet. Say hey 👋 — this is the space for banter, ideas, and
+            jokes.
+          </p>
+        )}
+        {messages.map((m, i) => {
+          const mine = m.author_id === userId;
+          const author = members[m.author_id];
+          const prev = messages[i - 1];
+          const showAuthor = !mine && (!prev || prev.author_id !== m.author_id);
+          return (
+            <div key={m.id} className={`msg-row ${mine ? "mine" : ""}`}>
+              {showAuthor && (
+                <span className="msg-author">{author?.name ?? "Someone"}</span>
+              )}
+              <div className="msg-bubble">{m.body}</div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      <form className="chat-input" onSubmit={send}>
+        <input
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Message…"
+          aria-label="Message"
+        />
+        <button type="submit" disabled={sending || !body.trim()}>
+          Send
+        </button>
+      </form>
+    </div>
+  );
+}

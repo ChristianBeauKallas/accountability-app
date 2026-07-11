@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import SwRegister from "./sw-register";
 import InstallPrompt from "./install-prompt";
+import BottomNav from "./nav";
 
 export const metadata: Metadata = {
   applicationName: "Accountability",
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
+        <BottomNav />
         <InstallPrompt />
         <SwRegister />
       </body>
