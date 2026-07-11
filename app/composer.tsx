@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { notify } from "@/lib/push";
 import type { Activity } from "@/lib/types";
 
 function pickAudioMime(): string {
@@ -160,6 +161,9 @@ export default function Composer({
       });
       if (mErr) return fail(mErr.message);
     }
+
+    // Notify the group (best-effort).
+    notify("post", postId);
 
     // Reset
     setSelected(new Set());

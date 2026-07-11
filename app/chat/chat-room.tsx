@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { notify } from "@/lib/push";
 import type { Message } from "@/lib/types";
 
 type Member = { name: string; avatar: string | null };
@@ -85,6 +86,7 @@ export default function ChatRoom({
       return;
     }
     setBody("");
+    notify("message", data.id);
     // Show it immediately; realtime dedup below prevents a double.
     setMessages((prev) =>
       prev.some((m) => m.id === data.id) ? prev : [...prev, data as Message],

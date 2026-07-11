@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { computeStreak, bestStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 import ProfileEditor from "./profile-editor";
+import NotificationsToggle from "./notifications-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -170,6 +171,8 @@ export default async function ProfilePage({
           <span className="profile-streak-label">day streak</span>
         </div>
       </section>
+
+      {isMe && <NotificationsToggle userId={profile.id} />}
 
       {/* Tendencies */}
       {posts.length > 0 && (

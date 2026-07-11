@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { notify } from "@/lib/push";
 
 export default function CommentBox({
   postId,
@@ -21,13 +22,14 @@ export default function CommentBox({
     if (!text) return;
     setBusy(true);
     const supabase = createClient();
-    const { error } = await supabase.from("comments").insert({
-      post_id: postId,
-      author_id: userId,
-      body: text,
-    });
+    const { data, error } = await supabase
+      .from("comments")
+      .insert({ post_id: postId, author_id: userId, body: text })
+      .select("id")
+      .single();
     setBusy(false);
-    if (!error) {
+    if (!error && data) {
+      notify("comment", data.id);
       setBody("");
       router.refresh();
     }
