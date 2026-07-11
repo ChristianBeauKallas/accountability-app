@@ -270,13 +270,6 @@ export default async function Home() {
           <Link className="head-icon" href="/activities" aria-label="Settings">
             ⚙
           </Link>
-          <Link
-            className="head-avatar"
-            href={`/u/${user.id}`}
-            aria-label="Your profile"
-          >
-            <Avatar name={me?.name ?? "You"} url={me?.avatar ?? null} />
-          </Link>
         </div>
       </header>
 

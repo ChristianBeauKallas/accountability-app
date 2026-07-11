@@ -7,7 +7,6 @@ type ReactState = { count: number; mine: boolean };
 
 const TYPES = [
   { type: "fire", emoji: "🔥" },
-  { type: "heart", emoji: "❤️" },
   { type: "like", emoji: "👍" },
 ] as const;
 
@@ -22,7 +21,6 @@ export default function ReactionBar({
 }) {
   const [state, setState] = useState<Record<string, ReactState>>(() => ({
     fire: initial.fire ?? { count: 0, mine: false },
-    heart: initial.heart ?? { count: 0, mine: false },
     like: initial.like ?? { count: 0, mine: false },
   }));
   const [busy, setBusy] = useState(false);

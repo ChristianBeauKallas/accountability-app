@@ -10,12 +10,18 @@ export default function BottomNav() {
   if (pathname.startsWith("/login") || pathname.startsWith("/auth")) return null;
 
   const items = [
-    { href: "/", label: "Board", icon: "🏠", match: (p: string) => p === "/" },
+    { href: "/", label: "Feed", icon: "🏠", match: (p: string) => p === "/" },
     {
       href: "/chat",
       label: "Chat",
       icon: "💬",
       match: (p: string) => p.startsWith("/chat"),
+    },
+    {
+      href: "/me",
+      label: "My Profile",
+      icon: "👤",
+      match: (p: string) => p.startsWith("/me") || p.startsWith("/u/"),
     },
   ];
 
