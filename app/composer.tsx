@@ -235,8 +235,12 @@ export default function Composer({
   // ---- Render ----
   if (!open) {
     return (
-      <button className="post-cta" onClick={() => setOpen(true)}>
-        {postedToday ? "Update again" : "Log today ›"}
+      <button
+        className={`fab ${postedToday ? "done" : ""}`}
+        onClick={() => setOpen(true)}
+        aria-label={postedToday ? "Add another update" : "Log today"}
+      >
+        <span className="fab-plus">＋</span>
       </button>
     );
   }
@@ -246,7 +250,9 @@ export default function Composer({
   ];
 
   return (
-    <div className="composer">
+    <>
+      <div className="sheet-backdrop" onClick={reset} />
+      <div className="composer composer-sheet">
       <div className="wizard-top">
         <div className="wizard-dots">
           {[1, 2, 3].map((n) => (
@@ -427,7 +433,8 @@ export default function Composer({
         </>
       )}
 
-      {error && <p className="auth-error">{error}</p>}
-    </div>
+        {error && <p className="auth-error">{error}</p>}
+      </div>
+    </>
   );
 }
