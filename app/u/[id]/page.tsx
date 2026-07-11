@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { computeStreak, bestStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 import ProfileEditor from "./profile-editor";
-import NotificationsToggle from "./notifications-toggle";
 import PostCard from "@/app/post-card";
 
 export const dynamic = "force-dynamic";
@@ -100,20 +99,17 @@ export default async function ProfilePage({
   const best = bestStreak(dates);
   const totalDays = dates.size;
 
-  const counts = new Map<string, number>();
-  for (const p of posts)
-    for (const { activity_id } of p.post_activities)
-      counts.set(activity_id, (counts.get(activity_id) ?? 0) + 1);
-  const topActivity = [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([aid]) => activityById.get(aid))
-    .filter(Boolean)[0] as Activity | undefined;
+  // Days logged this calendar month (in the user's timezone).
+  const monthPrefix = localDate(new Date(), tz).slice(0, 7);
+  const thisMonth = [...dates].filter((d) => d.slice(0, 7) === monthPrefix).length;
 
-  const last30 = new Set(
-    [...dates].filter(
-      (d) => (Date.now() - new Date(d + "T12:00:00Z").getTime()) / 86400000 <= 30,
-    ),
-  ).size;
+  // How many days they've had the account (for the "logged / days" ratio).
+  const accountDays = Math.max(
+    1,
+    Math.floor(
+      (Date.now() - new Date(profile.created_at).getTime()) / 86400000,
+    ) + 1,
+  );
 
   // ---- Media / transcripts / reactions / comments (mirror the feed) ----
   const allPaths = posts.flatMap((p) => p.media.map((m) => m.storage_path));
@@ -238,32 +234,27 @@ export default async function ProfilePage({
         )}
       </section>
 
-      {/* Stats: streak · most logged · notifications */}
-      <section className="profile-stats">
-        <div className="stat-tile">
-          <span className="stat-num">
-            {streak}
-            <span className="flame">🔥</span>
-          </span>
-          <span className="stat-label">day streak</span>
+      {/* Stats — four tiles */}
+      <section className="profile-stats stats-4">
+        <div className="stat-tile mini">
+          <span className="mini-num">{streak}</span>
+          <span className="mini-label">🔥 Streak</span>
         </div>
-        <div className="stat-tile">
-          <span className="stat-cap">Most logged</span>
-          <span className="stat-value">
-            {topActivity ? `${topActivity.emoji ?? "✅"} ${topActivity.name}` : "—"}
-          </span>
+        <div className="stat-tile mini">
+          <span className="mini-num">{best}</span>
+          <span className="mini-label">🏆 Best</span>
         </div>
-        {isMe && <NotificationsToggle userId={profile.id} />}
+        <div className="stat-tile mini">
+          <span className="mini-num">{thisMonth}</span>
+          <span className="mini-label">📅 This mo.</span>
+        </div>
+        <div className="stat-tile mini">
+          <span className="mini-num">
+            {totalDays}/{accountDays}
+          </span>
+          <span className="mini-label">✅ Logged</span>
+        </div>
       </section>
-
-      {/* Pills */}
-      {posts.length > 0 && (
-        <div className="stat-pills">
-          <span className="chip">🔥 Best: {best}</span>
-          <span className="chip">📅 {last30}/30 last month</span>
-          <span className="chip">✅ {totalDays} total days</span>
-        </div>
-      )}
 
       {/* Updates — identical to the feed */}
       <section className="panel">

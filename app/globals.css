@@ -2207,3 +2207,43 @@ span.avatar-lg.avatar-fallback {
   font-size: 0.9rem;
   color: var(--muted);
 }
+
+/* ---- Four-tile stat row --------------------------------------------------- */
+.profile-stats.stats-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+.stat-tile.mini {
+  align-items: center;
+  text-align: center;
+  padding: 0.75rem 0.25rem;
+  gap: 0.22rem;
+}
+.mini-num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.mini-label {
+  font-size: 0.62rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Header notification bell */
+.head-icon.bell {
+  font-size: 1rem;
+}
+.head-icon.bell.on {
+  border-color: rgba(62, 232, 122, 0.45);
+  background: var(--accent-dim);
+}
+.head-icon.bell.off {
+  opacity: 0.55;
+  filter: grayscale(1);
+}

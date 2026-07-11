@@ -4,6 +4,8 @@ import Onboarding from "./onboarding";
 import Composer from "./composer";
 import PostCard from "./post-card";
 import { Avatar } from "./avatar";
+import HeaderBell from "./header-bell";
+import NotifPrompt from "./notif-prompt";
 import { computeStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 
@@ -264,11 +266,14 @@ export default async function Home() {
           </p>
         </div>
         <div className="head-actions">
+          <HeaderBell userId={user.id} />
           <Link className="head-icon" href="/activities" aria-label="Settings">
             ⚙
           </Link>
         </div>
       </header>
+
+      <NotifPrompt userId={user.id} />
 
       {/* Roster — everyone, whether they've checked in today, and their streak */}
       <section className="roster-board">
