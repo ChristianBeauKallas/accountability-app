@@ -108,6 +108,20 @@ export default async function Home() {
 
   const activityById = new Map(activities.map((a) => [a.id, a]));
 
+  // Whether this member has already finished the onboarding tour (tolerant: a
+  // missing column just leaves it null, so the tour falls back to localStorage).
+  let onboardedAt: string | null = null;
+  try {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("onboarded_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    onboardedAt = (prof as { onboarded_at: string | null } | null)?.onboarded_at ?? null;
+  } catch {
+    /* column not migrated yet — ignore */
+  }
+
   // Author info comes from the members list (no fragile query embeds).
   const memberInfo = new Map(
     members.map((m) => [
@@ -319,6 +333,7 @@ export default async function Home() {
             displayName={me?.name ?? "there"}
             avatarUrl={me?.avatar ?? null}
             inviteCode={membership.groups.invite_code}
+            initialSeen={!!onboardedAt}
           />
           <HeaderBell userId={user.id} />
           <Link className="head-icon" href="/activities" aria-label="Settings">

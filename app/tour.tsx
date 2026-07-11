@@ -65,12 +65,14 @@ export default function Tour({
   displayName,
   avatarUrl,
   inviteCode,
+  initialSeen = false,
 }: {
   userId: string;
   groupName: string;
   displayName: string;
   avatarUrl: string | null;
   inviteCode: string;
+  initialSeen?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -103,14 +105,16 @@ export default function Tour({
     setLink(`${window.location.origin}/join/${inviteCode}`);
   }, [inviteCode]);
 
-  // Auto-open the first time this account sees the board.
+  // Auto-open the first time this account sees the board. The DB flag makes it
+  // stick across devices; localStorage is a fast local fallback.
   useEffect(() => {
+    if (initialSeen) return;
     try {
       if (!localStorage.getItem(key)) setOpen(true);
     } catch {
-      /* storage blocked — skip auto-open */
+      setOpen(true); // storage blocked — still show it the first time
     }
-  }, [key]);
+  }, [key, initialSeen]);
 
   function markSeen() {
     try {
@@ -118,6 +122,12 @@ export default function Tour({
     } catch {
       /* ignore */
     }
+    // Persist across devices (best-effort; column may not be migrated yet).
+    createClient()
+      .from("profiles")
+      .update({ onboarded_at: new Date().toISOString() })
+      .eq("id", userId)
+      .then(() => {});
   }
   function close() {
     markSeen();
