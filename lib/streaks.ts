@@ -38,6 +38,35 @@ export function bestStreak(postDates: Set<string>): number {
   return best;
 }
 
+/**
+ * The set of local days that count as "complete" for a member: days where they
+ * logged every activity that already existed as of that day.
+ *
+ * @param loggedByDay        YYYY-MM-DD -> distinct activity ids logged that day
+ * @param activityStartDays  the YYYY-MM-DD start day of each active activity
+ *
+ * The bar for a day is how many activities existed on it, so an activity added
+ * later only raises the requirement from its own start day forward — a day
+ * already won stays won.
+ */
+export function fullCompletionDays(
+  loggedByDay: Map<string, Set<string>>,
+  activityStartDays: string[],
+): Set<string> {
+  const starts = [...activityStartDays].sort();
+  const full = new Set<string>();
+  for (const [day, logged] of loggedByDay) {
+    // How many activities existed on or before this day.
+    let required = 0;
+    for (const s of starts) {
+      if (s <= day) required += 1;
+      else break;
+    }
+    if (required > 0 && logged.size >= required) full.add(day);
+  }
+  return full;
+}
+
 export type StreakInfo = {
   /** Consecutive days with a post, ending today (or yesterday if not yet posted today). */
   streak: number;

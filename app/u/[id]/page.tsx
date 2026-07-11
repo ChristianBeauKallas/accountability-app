@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { computeStreak, bestStreak, localDate } from "@/lib/streaks";
+import {
+  computeStreak,
+  bestStreak,
+  localDate,
+  fullCompletionDays,
+} from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 import ProfileEditor from "./profile-editor";
 import PostCard from "@/app/post-card";
@@ -94,10 +99,9 @@ export default async function ProfilePage({
   const tz = profile.timezone ?? "America/New_York";
 
   // ---- Stats ----
-  // A day only counts toward streaks/tallies when ALL activities were logged
-  // that day. Aggregate this member's logged activities per local day, then
-  // keep the days that covered the full set.
-  const totalActivities = activities.length;
+  // A day only counts toward streaks/tallies when the member logged every
+  // activity that existed as of that day. Aggregate their logged activities per
+  // local day, then keep the days that met that day's bar.
   const actsByDay = new Map<string, Set<string>>();
   for (const p of posts) {
     const day = localDate(p.created_at, tz);
@@ -109,9 +113,8 @@ export default async function ProfilePage({
     for (const pa of p.post_activities ?? [])
       if (activityById.has(pa.activity_id)) set.add(pa.activity_id);
   }
-  const dates = new Set<string>();
-  for (const [day, set] of actsByDay)
-    if (totalActivities > 0 && set.size >= totalActivities) dates.add(day);
+  const startDays = activities.map((a) => localDate(a.created_at, tz));
+  const dates = fullCompletionDays(actsByDay, startDays);
   const { streak } = computeStreak(dates, tz);
   const best = bestStreak(dates);
   const totalDays = dates.size;

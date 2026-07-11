@@ -7,7 +7,7 @@ import { Avatar } from "./avatar";
 import { ProgressAvatar } from "./progress-avatar";
 import HeaderBell from "./header-bell";
 import NotifPrompt from "./notif-prompt";
-import { computeStreak, localDate } from "@/lib/streaks";
+import { computeStreak, localDate, fullCompletionDays } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -227,10 +227,9 @@ export default async function Home() {
   }
   const datesByUser = new Map<string, Set<string>>();
   for (const [uid, byDay] of actsByUserDay) {
-    const full = new Set<string>();
-    for (const [day, set] of byDay)
-      if (totalActivities > 0 && set.size >= totalActivities) full.add(day);
-    datesByUser.set(uid, full);
+    const tz = tzByUser.get(uid) ?? "America/New_York";
+    const startDays = activities.map((a) => localDate(a.created_at, tz));
+    datesByUser.set(uid, fullCompletionDays(byDay, startDays));
   }
 
   // Distinct activities each member has logged TODAY (their timezone). Drives
