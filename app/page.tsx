@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import Onboarding from "./onboarding";
 import Composer from "./composer";
 import PostComments from "./post-comments";
-import FireButton from "./fire-button";
+import ReactionBar from "./reaction-bar";
 import VoiceNote from "./voice-note";
 import ActivityRow from "./activity-row";
 import PostGallery from "./post-gallery";
@@ -171,21 +171,32 @@ export default async function Home() {
     }
   }
 
-  // Fire reactions — fetched separately so a missing table never breaks the feed.
-  const reactionsByPost = new Map<string, { count: number; mine: boolean }>();
+  // Reactions (fire/heart/like) — fetched separately & tolerantly so a missing
+  // table/column never breaks the feed.
+  const reactionsByPost = new Map<
+    string,
+    Record<string, { count: number; mine: boolean }>
+  >();
   if (posts.length > 0) {
     const { data: reactions } = await supabase
       .from("post_reactions")
-      .select("post_id, user_id")
+      .select("post_id, user_id, type")
       .in(
         "post_id",
         posts.map((p) => p.id),
       );
-    for (const r of reactions ?? []) {
-      const cur = reactionsByPost.get(r.post_id) ?? { count: 0, mine: false };
+    for (const r of (reactions ?? []) as {
+      post_id: string;
+      user_id: string;
+      type: string | null;
+    }[]) {
+      const rec = reactionsByPost.get(r.post_id) ?? {};
+      const t = r.type ?? "fire";
+      const cur = rec[t] ?? { count: 0, mine: false };
       cur.count += 1;
       if (r.user_id === user.id) cur.mine = true;
-      reactionsByPost.set(r.post_id, cur);
+      rec[t] = cur;
+      reactionsByPost.set(r.post_id, rec);
     }
   }
 
@@ -332,12 +343,6 @@ export default async function Home() {
                   <span className="post-author">{author?.name}</span>
                 </Link>
                 <span className="post-time">{timeAgo(p.created_at)}</span>
-                <FireButton
-                  postId={p.id}
-                  userId={user.id}
-                  initialCount={reactionsByPost.get(p.id)?.count ?? 0}
-                  initialMine={reactionsByPost.get(p.id)?.mine ?? false}
-                />
               </div>
 
               {photos.length > 0 && <PostGallery photos={photos} />}
@@ -349,6 +354,12 @@ export default async function Home() {
               {p.caption && <p className="post-caption">{p.caption}</p>}
 
               <ActivityRow items={activityItems} />
+
+              <ReactionBar
+                postId={p.id}
+                userId={user.id}
+                initial={reactionsByPost.get(p.id) ?? {}}
+              />
 
               <PostComments
                 postId={p.id}

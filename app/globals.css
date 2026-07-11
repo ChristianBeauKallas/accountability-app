@@ -1979,3 +1979,37 @@ span.avatar-lg.avatar-fallback {
 .activity-emojis { display: inline-flex; gap: 0.12rem; font-size: 1.05rem; }
 .activity-count { color: var(--muted); font-weight: 600; font-size: 0.82rem; }
 .activity-names { color: var(--text); font-size: 0.82rem; text-align: left; }
+
+/* ---- Reaction bar (fire / heart / like) ----------------------------------- */
+.reaction-bar {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0.2rem;
+}
+.react-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.28rem 0.55rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.react-btn:active { transform: scale(0.9); }
+.react-btn .react-emoji {
+  font-size: 1rem;
+  filter: grayscale(0.55);
+  transition: filter 0.15s ease;
+}
+.react-btn.on {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.react-btn.on .react-emoji { filter: none; }
+.react-count {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+}

@@ -19,9 +19,14 @@ export default function PostComments({
 
   return (
     <div className="post-comments">
-      {count > 0 && !open && (
-        <button className="comments-toggle" onClick={() => setOpen(true)}>
-          View {count} comment{count > 1 ? "s" : ""}
+      {count > 0 && (
+        <button
+          className="comments-toggle"
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open
+            ? "Hide comments"
+            : `View ${count} comment${count > 1 ? "s" : ""}`}
         </button>
       )}
 
