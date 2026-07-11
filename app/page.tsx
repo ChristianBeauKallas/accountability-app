@@ -200,21 +200,41 @@ export default async function Home() {
     }
   }
 
-  // Bucket each member's post dates in their own timezone.
   const tzByUser = new Map(
     members.map((m) => [m.user_id, m.profiles?.timezone ?? "America/New_York"]),
   );
-  const datesByUser = new Map<string, Set<string>>();
+  const totalActivities = activities.length;
+
+  // A day only counts toward a streak when ALL activities were logged that day.
+  // Aggregate the distinct activities each member logged per local day, then
+  // keep only the days where they covered the full set.
+  const actsByUserDay = new Map<string, Map<string, Set<string>>>();
   for (const p of posts) {
     const tz = tzByUser.get(p.author_id) ?? "America/New_York";
-    const set = datesByUser.get(p.author_id) ?? new Set<string>();
-    set.add(localDate(p.created_at, tz));
-    datesByUser.set(p.author_id, set);
+    const day = localDate(p.created_at, tz);
+    let byDay = actsByUserDay.get(p.author_id);
+    if (!byDay) {
+      byDay = new Map();
+      actsByUserDay.set(p.author_id, byDay);
+    }
+    let set = byDay.get(day);
+    if (!set) {
+      set = new Set<string>();
+      byDay.set(day, set);
+    }
+    for (const pa of p.post_activities)
+      if (activityById.has(pa.activity_id)) set.add(pa.activity_id);
+  }
+  const datesByUser = new Map<string, Set<string>>();
+  for (const [uid, byDay] of actsByUserDay) {
+    const full = new Set<string>();
+    for (const [day, set] of byDay)
+      if (totalActivities > 0 && set.size >= totalActivities) full.add(day);
+    datesByUser.set(uid, full);
   }
 
   // Distinct activities each member has logged TODAY (their timezone). Drives
   // the progress ring and the compose button's "remaining/done" state.
-  const totalActivities = activities.length;
   const todayActsByUser = new Map<string, Set<string>>();
   for (const p of posts) {
     const tz = tzByUser.get(p.author_id) ?? "America/New_York";
