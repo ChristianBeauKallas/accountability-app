@@ -256,8 +256,8 @@ export default async function Home() {
           </p>
         </div>
         <div className="head-actions">
-          <Link className="head-link" href="/activities">
-            ⚙ Settings
+          <Link className="head-icon" href="/activities" aria-label="Settings">
+            ⚙
           </Link>
           <Link
             className="head-avatar"
