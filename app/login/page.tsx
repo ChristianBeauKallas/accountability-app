@@ -52,6 +52,17 @@ export default function LoginPage() {
       }
     }
 
+    // If they arrived via an invite link, join that group now.
+    try {
+      const pending = localStorage.getItem("pendingInvite");
+      if (pending) {
+        await supabase.rpc("join_group", { code: pending });
+        localStorage.removeItem("pendingInvite");
+      }
+    } catch {
+      /* ignore — they can still join from onboarding */
+    }
+
     router.push("/");
     router.refresh();
   }

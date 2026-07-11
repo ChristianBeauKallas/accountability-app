@@ -1600,3 +1600,88 @@ span.avatar-lg.avatar-fallback {
   outline: none;
   border-color: var(--accent);
 }
+
+/* ---- Invite ---------------------------------------------------------------- */
+.invite-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem 1.2rem;
+  margin-bottom: 1.75rem;
+}
+
+.invite-box h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.invite-hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.invite-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.invite-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 0.6rem 0.7rem;
+}
+
+.invite-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.invite-copy {
+  flex-shrink: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 0 0.9rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.invite-share {
+  width: 100%;
+  margin-top: 0.6rem;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.invite-code {
+  margin: 0.8rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.join-cta {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+  font-weight: 700;
+  margin-top: 1rem;
+}

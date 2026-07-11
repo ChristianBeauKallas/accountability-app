@@ -208,11 +208,9 @@ export default async function Home() {
           </p>
         </div>
         <div className="head-actions">
-          {membership.role === "owner" && (
-            <Link className="head-link" href="/activities">
-              ⚙ Activities
-            </Link>
-          )}
+          <Link className="head-link" href="/activities">
+            ⚙ Settings
+          </Link>
           <Link
             className="head-avatar"
             href={`/u/${user.id}`}

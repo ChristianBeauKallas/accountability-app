@@ -2,11 +2,12 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import ActivitiesManager from "./activities-manager";
 import GroupNameEditor from "./group-name-editor";
+import InviteLink from "./invite-link";
 import type { Activity } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function ActivitiesPage() {
+export default async function SettingsPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -15,11 +16,15 @@ export default async function ActivitiesPage() {
 
   const { data: memberships } = await supabase
     .from("group_members")
-    .select("group_id, role, groups(name)")
+    .select("group_id, role, groups(name, invite_code)")
     .eq("user_id", user.id);
 
   const membership = memberships?.[0] as
-    | { group_id: string; role: string; groups: { name: string } }
+    | {
+        group_id: string;
+        role: string;
+        groups: { name: string; invite_code: string };
+      }
     | undefined;
 
   if (!membership) return null;
@@ -39,12 +44,18 @@ export default async function ActivitiesPage() {
     <main className="board">
       <header className="board-head">
         <div>
-          <h1>Activities</h1>
+          <h1>Settings</h1>
           <p className="subtitle">
             <Link href="/">‹ {membership.groups.name}</Link>
           </p>
         </div>
       </header>
+
+      {/* Invite — available to every member */}
+      <InviteLink
+        code={membership.groups.invite_code}
+        groupName={membership.groups.name}
+      />
 
       {isOwner ? (
         <>
@@ -56,8 +67,7 @@ export default async function ActivitiesPage() {
         </>
       ) : (
         <div className="notice">
-          These are your group&apos;s daily activities. Only the group owner can
-          change them.
+          Your group&apos;s daily activities (only the owner can change these):
           <ul className="roster" style={{ marginTop: "1rem" }}>
             {activities.map((a) => (
               <li key={a.id} className="roster-row">
