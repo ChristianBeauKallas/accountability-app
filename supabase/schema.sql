@@ -598,3 +598,8 @@ create policy post_reactions_insert on public.post_reactions
 drop policy if exists post_reactions_delete on public.post_reactions;
 create policy post_reactions_delete on public.post_reactions
   for delete to authenticated using (user_id = auth.uid());
+
+-- =============================================================================
+-- Transcript for voice-note media (Whisper). Enables "read transcription".
+-- =============================================================================
+alter table public.media add column if not exists transcript text;

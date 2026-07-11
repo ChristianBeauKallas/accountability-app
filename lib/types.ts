@@ -86,6 +86,7 @@ export type Media = {
   owner_id: string;
   type: MediaType;
   storage_path: string;
+  transcript: string | null;
   post_id: string | null;
   checkin_id: string | null;
   created_at: string;

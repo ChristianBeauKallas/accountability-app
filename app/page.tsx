@@ -4,6 +4,8 @@ import Onboarding from "./onboarding";
 import Composer from "./composer";
 import PostComments from "./post-comments";
 import FireButton from "./fire-button";
+import VoiceNote from "./voice-note";
+import ActivityRow from "./activity-row";
 import { computeStreak, localDate } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 
@@ -152,6 +154,22 @@ export default async function Home() {
     }
   }
 
+  // Voice-note transcripts — fetched separately & tolerantly (the column may
+  // not exist yet), so this can never break the feed.
+  const transcriptById = new Map<string, string>();
+  const audioIds = posts.flatMap((p) =>
+    p.media.filter((m) => m.type === "audio").map((m) => m.id),
+  );
+  if (audioIds.length > 0) {
+    const { data: trows } = await supabase
+      .from("media")
+      .select("id, transcript")
+      .in("id", audioIds);
+    for (const r of (trows ?? []) as { id: string; transcript: string | null }[]) {
+      if (r.transcript) transcriptById.set(r.id, r.transcript);
+    }
+  }
+
   // Fire reactions — fetched separately so a missing table never breaks the feed.
   const reactionsByPost = new Map<string, { count: number; mine: boolean }>();
   if (posts.length > 0) {
@@ -281,63 +299,73 @@ export default async function Home() {
         {posts.length === 0 && (
           <p className="empty">No updates yet. Be the first to log today.</p>
         )}
-        {posts.map((p) => (
-          <article className="post" key={p.id}>
-            <div className="post-head">
-              <Link className="post-author-link" href={`/u/${p.author_id}`}>
-                <Avatar
-                  name={memberInfo.get(p.author_id)?.name ?? "?"}
-                  url={memberInfo.get(p.author_id)?.avatar ?? null}
+        {posts.map((p) => {
+          const author = memberInfo.get(p.author_id);
+          const photos = p.media
+            .filter((m) => m.type === "image")
+            .map((m) => signedByPath.get(m.storage_path))
+            .filter((s): s is string => !!s);
+          const audios = p.media
+            .filter((m) => m.type === "audio")
+            .map((m) => ({
+              id: m.id,
+              src: signedByPath.get(m.storage_path),
+              transcript: transcriptById.get(m.id) ?? null,
+            }))
+            .filter(
+              (a): a is { id: string; src: string; transcript: string | null } =>
+                !!a.src,
+            );
+          const activityItems = p.post_activities
+            .map(({ activity_id }) => {
+              const a = activityById.get(activity_id);
+              return a ? { emoji: a.emoji ?? "✅", name: a.name } : null;
+            })
+            .filter((x): x is { emoji: string; name: string } => !!x);
+
+          return (
+            <article className="post" key={p.id}>
+              <div className="post-head">
+                <Link className="post-author-link" href={`/u/${p.author_id}`}>
+                  <Avatar name={author?.name ?? "?"} url={author?.avatar ?? null} />
+                  <span className="post-author">{author?.name}</span>
+                </Link>
+                <span className="post-time">{timeAgo(p.created_at)}</span>
+                <FireButton
+                  postId={p.id}
+                  userId={user.id}
+                  initialCount={reactionsByPost.get(p.id)?.count ?? 0}
+                  initialMine={reactionsByPost.get(p.id)?.mine ?? false}
                 />
-                <span className="post-author">
-                  {memberInfo.get(p.author_id)?.name}
-                </span>
-              </Link>
-              <span className="post-time">{timeAgo(p.created_at)}</span>
-              <FireButton
+              </div>
+
+              {photos.length > 0 && (
+                <div
+                  className={`post-gallery ${photos.length > 1 ? "multi" : ""}`}
+                >
+                  {photos.map((src, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="gallery-photo" key={i} src={src} alt="" />
+                  ))}
+                </div>
+              )}
+
+              {audios.map((a) => (
+                <VoiceNote key={a.id} src={a.src} transcript={a.transcript} />
+              ))}
+
+              {p.caption && <p className="post-caption">{p.caption}</p>}
+
+              <ActivityRow items={activityItems} />
+
+              <PostComments
                 postId={p.id}
                 userId={user.id}
-                initialCount={reactionsByPost.get(p.id)?.count ?? 0}
-                initialMine={reactionsByPost.get(p.id)?.mine ?? false}
+                comments={commentsByPost.get(p.id) ?? []}
               />
-            </div>
-            {p.post_activities.length > 0 && (
-              <div className="chips">
-                {p.post_activities.map(({ activity_id }) => {
-                  const a = activityById.get(activity_id);
-                  if (!a) return null;
-                  return (
-                    <span className="chip" key={activity_id}>
-                      {a.emoji ?? "✅"} {a.name}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-            {p.caption && <p className="post-caption">{p.caption}</p>}
-
-            {p.media.map((m) => {
-              const src = signedByPath.get(m.storage_path);
-              if (!src) return null;
-              if (m.type === "image") {
-                // eslint-disable-next-line @next/next/no-img-element
-                return <img className="post-photo" key={m.id} src={src} alt="" />;
-              }
-              if (m.type === "audio") {
-                return (
-                  <audio className="post-audio" key={m.id} controls src={src} />
-                );
-              }
-              return null;
-            })}
-
-            <PostComments
-              postId={p.id}
-              userId={user.id}
-              comments={commentsByPost.get(p.id) ?? []}
-            />
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </section>
     </main>
   );
