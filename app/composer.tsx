@@ -40,7 +40,9 @@ export default function Composer({
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioDuration, setAudioDuration] = useState(0);
   const recorderRef = useRef<MediaRecorder | null>(null);
+  const recStartRef = useRef(0);
   const chunksRef = useRef<Blob[]>([]);
 
   const [photos, setPhotos] = useState<File[]>([]);
@@ -58,6 +60,7 @@ export default function Composer({
     setAttachAudio(true);
     setAudioBlob(null);
     setAudioUrl(null);
+    setAudioDuration(0);
     setPhotos([]);
     setPreviews([]);
     setError(null);
@@ -85,6 +88,7 @@ export default function Composer({
         const blob = new Blob(chunksRef.current, { type: mime || "audio/webm" });
         setAudioBlob(blob);
         setAudioUrl(URL.createObjectURL(blob));
+        setAudioDuration(Math.round((Date.now() - recStartRef.current) / 1000));
         setAttachAudio(true);
         stream.getTracks().forEach((t) => t.stop());
         setStep("caption");
@@ -92,6 +96,7 @@ export default function Composer({
       };
       recorderRef.current = rec;
       rec.start();
+      recStartRef.current = Date.now();
       setRecording(true);
     } catch {
       setError("Microphone access denied — you can type instead.");
@@ -190,6 +195,14 @@ export default function Composer({
         .select("id")
         .single();
       if (mErr) return fail(mErr.message);
+      // Store the recorded length so the feed can show it (iOS won't preload
+      // audio metadata). Best-effort; ignore if the column isn't there yet.
+      if (audioDuration && m) {
+        await supabase
+          .from("media")
+          .update({ duration_seconds: audioDuration })
+          .eq("id", m.id);
+      }
       // Store the caption as the transcript too, so a voice-only post is still
       // readable. Best-effort; ignore if the column isn't there yet.
       if (hasCaption && m) {

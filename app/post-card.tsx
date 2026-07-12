@@ -15,7 +15,12 @@ export type PostCardData = {
   authorAvatar: string | null;
   createdAt: string;
   photos: string[];
-  audios: { id: string; src: string; transcript: string | null }[];
+  audios: {
+    id: string;
+    src: string;
+    transcript: string | null;
+    duration: number | null;
+  }[];
   caption: string | null;
   activityItems: { emoji: string; name: string }[];
   activityTotal: number;
@@ -68,6 +73,7 @@ export default function PostCard({
               key={a.id}
               src={a.src}
               transcript={caption ? null : a.transcript}
+              duration={a.duration}
             />
           ))}
         </div>

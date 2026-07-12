@@ -604,6 +604,10 @@ create policy post_reactions_delete on public.post_reactions
 -- =============================================================================
 alter table public.media add column if not exists transcript text;
 
+-- Voice-note length in seconds, captured at record time (iOS won't preload
+-- audio metadata, so we can't read it reliably in the feed).
+alter table public.media add column if not exists duration_seconds int;
+
 -- Optional short bio ("What are you working on?")
 alter table public.profiles add column if not exists bio text;
 

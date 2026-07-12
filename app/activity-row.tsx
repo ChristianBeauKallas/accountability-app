@@ -26,14 +26,10 @@ export default function ActivityRow({
           .join(", ")}`}
       >
         <span className="ap-check">✓</span>
-        <span className="ap-emojis">
-          {items.map((a, i) => (
-            <span key={i}>{a.emoji}</span>
-          ))}
-        </span>
         <span className="ap-frac">
           {items.length}/{denom}
         </span>
+        <span className="ap-word">done</span>
         <span className="ap-chev">{open ? "▲" : "▼"}</span>
       </button>
 

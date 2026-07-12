@@ -186,6 +186,21 @@ export default async function Home() {
     }
   }
 
+  // Voice-note durations — also fetched separately & tolerantly.
+  const durationById = new Map<string, number>();
+  if (audioIds.length > 0) {
+    const { data: drows } = await supabase
+      .from("media")
+      .select("id, duration_seconds")
+      .in("id", audioIds);
+    for (const r of (drows ?? []) as {
+      id: string;
+      duration_seconds: number | null;
+    }[]) {
+      if (r.duration_seconds) durationById.set(r.id, r.duration_seconds);
+    }
+  }
+
   // Reactions (fire/heart/like) — fetched separately & tolerantly so a missing
   // table/column never breaks the feed.
   const reactionsByPost = new Map<
@@ -393,10 +408,17 @@ export default async function Home() {
               id: m.id,
               src: signedByPath.get(m.storage_path),
               transcript: transcriptById.get(m.id) ?? null,
+              duration: durationById.get(m.id) ?? null,
             }))
             .filter(
-              (a): a is { id: string; src: string; transcript: string | null } =>
-                !!a.src,
+              (
+                a,
+              ): a is {
+                id: string;
+                src: string;
+                transcript: string | null;
+                duration: number | null;
+              } => !!a.src,
             );
           const activityItems = p.post_activities
             .map(({ activity_id }) => {

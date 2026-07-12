@@ -2,26 +2,35 @@
 
 import { useRef, useState } from "react";
 
+function mmss(d: number) {
+  const m = Math.floor(d / 60);
+  const s = Math.floor(d % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export default function VoiceNote({
   src,
   transcript,
+  duration,
 }: {
   src: string;
   transcript: string | null;
+  duration?: number | null;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [showText, setShowText] = useState(false);
-  const [dur, setDur] = useState<string | null>(null);
+  // Prefer the length stored at record time; fall back to reading the file.
+  const [dur, setDur] = useState<string | null>(
+    duration && duration > 0 ? mmss(duration) : null,
+  );
 
   function fmt(d: number) {
-    if (!isFinite(d) || d <= 0) return;
-    const m = Math.floor(d / 60);
-    const s = Math.floor(d % 60);
-    setDur(`${m}:${s.toString().padStart(2, "0")}`);
+    if (isFinite(d) && d > 0) setDur(mmss(d));
   }
 
   function onMeta() {
+    if (dur) return; // already have the stored length
     const a = audioRef.current;
     if (!a) return;
     // MediaRecorder webm often reports Infinity until you seek — nudge it once.
