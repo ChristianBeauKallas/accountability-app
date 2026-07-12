@@ -1966,7 +1966,7 @@ span.avatar-lg.avatar-fallback {
 /* Compact square photo carousel */
 .pg {
   margin: 1rem auto 0.4rem;
-  max-width: 340px;
+  max-width: 300px;
 }
 .pg-track {
   display: flex;

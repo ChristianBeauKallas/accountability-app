@@ -108,27 +108,32 @@ export default function Composer({
     setRecording(false);
   }
 
-  // ---- After dictation: auto transcribe + clean into an editable caption ----
+  // ---- After dictation: transcribe, then clean up in the background ----
   async function processDictation(blob: Blob) {
     setWorking(true);
     setError(null);
+    let raw = "";
     try {
-      const raw = await transcribe(blob);
-      let text = raw;
-      try {
-        text = await polish(raw);
-      } catch {
-        /* if cleanup fails, keep the raw transcript */
-      }
-      setCaption(text);
+      raw = await transcribe(blob);
     } catch (e) {
       setError(
         e instanceof Error
           ? e.message
           : "Couldn't transcribe — type your note instead.",
       );
+      setWorking(false);
+      return;
     }
+    // Show the transcript right away so it feels instant…
+    setCaption(raw);
     setWorking(false);
+    // …then quietly upgrade it to the cleaned-up version (unless they've edited).
+    try {
+      const cleaned = await polish(raw);
+      setCaption((prev) => (prev === raw ? cleaned : prev));
+    } catch {
+      /* keep the raw transcript */
+    }
   }
 
   async function doPolish() {
@@ -184,7 +189,15 @@ export default function Composer({
 
     // Voice note (optional — the caption is the readable version)
     if (hasAudio && audioBlob) {
-      const path = `${userId}/${postId}-voice.webm`;
+      const t = audioBlob.type;
+      const ext = t.includes("mp4") || t.includes("m4a")
+        ? "mp4"
+        : t.includes("ogg")
+          ? "ogg"
+          : t.includes("mpeg")
+            ? "mp3"
+            : "webm";
+      const path = `${userId}/${postId}-voice.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("media")
         .upload(path, audioBlob, { contentType: audioBlob.type });

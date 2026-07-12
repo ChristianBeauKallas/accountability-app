@@ -25,29 +25,10 @@ export default function VoiceNote({
     duration && duration > 0 ? mmss(duration) : null,
   );
 
-  function fmt(d: number) {
-    if (isFinite(d) && d > 0) setDur(mmss(d));
-  }
-
   function onMeta() {
     if (dur) return; // already have the stored length
-    const a = audioRef.current;
-    if (!a) return;
-    // MediaRecorder webm often reports Infinity until you seek — nudge it once.
-    if (a.duration === Infinity) {
-      a.currentTime = 1e101;
-      a.addEventListener(
-        "timeupdate",
-        function once() {
-          a.removeEventListener("timeupdate", once);
-          a.currentTime = 0;
-          fmt(a.duration);
-        },
-        { once: true },
-      );
-    } else {
-      fmt(a.duration);
-    }
+    const d = audioRef.current?.duration;
+    if (d && isFinite(d) && d > 0) setDur(mmss(d));
   }
 
   function toggle() {
