@@ -11,6 +11,17 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return output;
 }
 
+// Broadcast that this device's push state changed, so any UI reflecting it
+// (e.g. the header bell) can re-check — even when the change was triggered from
+// a different component like the onboarding tour or the install modal.
+export function broadcastPushChange(): void {
+  try {
+    window.dispatchEvent(new Event("gb-push-changed"));
+  } catch {
+    /* no window (SSR) — nothing to do */
+  }
+}
+
 export function pushSupported(): boolean {
   return (
     typeof window !== "undefined" &&
@@ -85,6 +96,7 @@ export async function enablePush(userId: string): Promise<EnableResult> {
       { onConflict: "endpoint" },
     );
     if (error) return "error";
+    broadcastPushChange();
     return "granted";
   } catch {
     return "error";
@@ -105,6 +117,7 @@ export async function disablePush(userId: string): Promise<void> {
       .eq("user_id", userId)
       .eq("endpoint", sub.endpoint);
     await sub.unsubscribe();
+    broadcastPushChange();
   } catch {
     /* best-effort */
   }

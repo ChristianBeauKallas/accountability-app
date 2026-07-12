@@ -18,7 +18,12 @@ export default function HeaderBell({ userId }: { userId: string }) {
       setSupported(false);
       return;
     }
-    pushSubscribed().then(setOn);
+    const refresh = () => pushSubscribed().then(setOn);
+    refresh();
+    // Re-check whenever push is enabled/disabled anywhere (the onboarding tour,
+    // the install modal, etc.) so the bell lights up the moment they opt in.
+    window.addEventListener("gb-push-changed", refresh);
+    return () => window.removeEventListener("gb-push-changed", refresh);
   }, []);
 
   async function toggle() {
