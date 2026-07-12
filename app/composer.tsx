@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { notify } from "@/lib/push";
 import { transcribe, polish } from "@/lib/ai";
+import { tourDone } from "@/lib/tours";
 import type { Activity } from "@/lib/types";
 
 function pickAudioMime(): string {
@@ -51,6 +52,28 @@ export default function Composer({
 
   const [working, setWorking] = useState(false); // transcribe/polish/post
   const [error, setError] = useState<string | null>(null);
+
+  // The posting walkthrough opens the composer for first-time posters once they
+  // finish it (Option B). Listen for that hand-off.
+  useEffect(() => {
+    const openIt = () => setOpen(true);
+    window.addEventListener("gb-open-composer", openIt);
+    return () => window.removeEventListener("gb-open-composer", openIt);
+  }, []);
+
+  // Tapping ＋ before finishing the posting walkthrough runs it first; it opens
+  // the composer when done. Otherwise open straight away.
+  function openComposer() {
+    if (!tourDone("posting", userId)) {
+      try {
+        window.dispatchEvent(new Event("gb-posting-tour"));
+        return;
+      } catch {
+        /* storage/events blocked — just open */
+      }
+    }
+    setOpen(true);
+  }
 
   function reset() {
     setStep("activities");
@@ -255,7 +278,7 @@ export default function Composer({
     return (
       <button
         className="fab"
-        onClick={() => setOpen(true)}
+        onClick={openComposer}
         aria-label="Log today"
       >
         <span className="fab-plus">＋</span>

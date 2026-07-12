@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { Message } from "@/lib/types";
 import ChatRoom from "./chat-room";
+import ChatTour from "../chat-tour";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,7 @@ export default async function ChatPage() {
 
   return (
     <main className="board chat-page">
+      <ChatTour userId={user.id} />
       <header className="board-head">
         <div>
           <h1>Chat</h1>

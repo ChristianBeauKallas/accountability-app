@@ -4,60 +4,32 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { enablePush, pushSupported } from "@/lib/push";
+import { flagKey, markTourDone, resetTours } from "@/lib/tours";
 
-// First-run onboarding. Auto-opens once per account (tracked in localStorage so
-// it needs no schema change) and can be replayed anytime from the header "?".
-// It walks a new member through setting up their profile and how the app works,
-// with in-card previews of Chat and Profile plus one-tap install / notifications
-// / invite actions.
+// First-run Welcome tour. Auto-opens once per account (tracked in localStorage
+// and mirrored to profiles.onboarded_at so it sticks across devices) and can be
+// replayed from Settings. It sets up the member's profile and frames the idea,
+// then hands off: how posting/rings work is taught contextually the next time
+// they open the board and when they post, so this stays short.
 
 type Kind =
-  | "profile"
-  | "ring"
-  | "streaks"
-  | "chat"
-  | "profileview"
+  | "photo"
+  | "bio"
+  | "idea"
   | "install"
   | "notifications"
   | "invite"
   | "done";
 
 const DECK: Kind[] = [
-  "profile",
-  "ring",
-  "streaks",
-  "chat",
-  "profileview",
+  "photo",
+  "bio",
+  "idea",
   "install",
   "notifications",
   "invite",
   "done",
 ];
-
-// A neon progress ring, matching the roster avatars, used as a card visual.
-function NeonRing({ size = 66 }: { size?: number }) {
-  const stroke = 4;
-  const r = (size - stroke) / 2;
-  const c = size / 2;
-  const circ = 2 * Math.PI * r;
-  return (
-    <svg className="tour-ring" width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={c} cy={c} r={r} className="tour-ring-bg" strokeWidth={stroke} fill="none" />
-      <circle
-        cx={c}
-        cy={c}
-        r={r}
-        className="tour-ring-fg"
-        strokeWidth={stroke}
-        fill="none"
-        strokeDasharray={circ}
-        strokeDashoffset={circ * 0.32}
-        strokeLinecap="round"
-        transform={`rotate(-90 ${c} ${c})`}
-      />
-    </svg>
-  );
-}
 
 export default function Tour({
   userId,
@@ -81,7 +53,7 @@ export default function Tour({
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [i, setI] = useState(0);
-  const key = `gb_tour_done_${userId}`;
+  const key = flagKey("tour", userId);
 
   // Profile-setup state.
   const fileInput = useRef<HTMLInputElement>(null);
@@ -91,7 +63,6 @@ export default function Tour({
   const [pErr, setPErr] = useState<string | null>(null);
 
   // Environment + action state.
-  const [isIOS, setIsIOS] = useState(false);
   const [standalone, setStandalone] = useState(false);
   const [notifState, setNotifState] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -99,8 +70,6 @@ export default function Tour({
 
   useEffect(() => {
     setMounted(true);
-    const ua = navigator.userAgent.toLowerCase();
-    setIsIOS(/iphone|ipad|ipod/.test(ua));
     const nav = window.navigator as Navigator & { standalone?: boolean };
     setStandalone(
       window.matchMedia("(display-mode: standalone)").matches ||
@@ -121,11 +90,7 @@ export default function Tour({
   }, [key, initialSeen, autoOpen]);
 
   function markSeen() {
-    try {
-      localStorage.setItem(key, "1");
-    } catch {
-      /* ignore */
-    }
+    markTourDone("tour", userId);
     // Persist across devices (best-effort; column may not be migrated yet).
     createClient()
       .from("profiles")
@@ -145,6 +110,9 @@ export default function Tour({
     }
   }
   function replay() {
+    // Replaying from Settings resets the contextual walkthroughs too, so they
+    // re-fire as the member revisits the board, their profile, and chat.
+    resetTours(userId);
     setI(0);
     setOpen(true);
   }
@@ -221,11 +189,10 @@ export default function Tour({
 
   const kind = DECK[i];
   const last = i === DECK.length - 1;
-  const first = i === 0;
 
   function nextLabel() {
     if (last) return "Get started";
-    if (first) return "Show me around →";
+    if (kind === "bio") return "Show me around →";
     return "Next";
   }
 
@@ -243,7 +210,7 @@ export default function Tour({
       )}
       {trigger === "button" && (
         <button type="button" className="settings-replay" onClick={replay}>
-          ▶ Replay the walkthrough
+          ▶ Replay the walkthroughs
         </button>
       )}
 
@@ -261,8 +228,8 @@ export default function Tour({
                 Skip
               </button>
 
-              {/* ---- Profile setup ---- */}
-              {kind === "profile" && (
+              {/* ---- Profile photo ---- */}
+              {kind === "photo" && (
                 <>
                   <button
                     type="button"
@@ -290,95 +257,43 @@ export default function Tour({
                   />
                   <h2 className="tour-title">Welcome to {groupName}</h2>
                   <p className="tour-body">
-                    Add a profile picture so your crew knows it&apos;s you, and a
-                    quick line about what you&apos;re working on.
+                    First, add a profile picture by tapping the circle so your
+                    crew knows it&apos;s you.
+                  </p>
+                  {pErr && <p className="auth-error">{pErr}</p>}
+                </>
+              )}
+
+              {/* ---- Bio ---- */}
+              {kind === "bio" && (
+                <>
+                  <div className="tour-icon">✍️</div>
+                  <h2 className="tour-title">What are you working on?</h2>
+                  <p className="tour-body">
+                    Include a short bio or line on what you&apos;re working
+                    towards.
                   </p>
                   <input
                     className="tour-bio"
                     value={bio}
                     maxLength={90}
-                    placeholder="What are you working on?"
+                    placeholder="e.g. Training for a half-marathon"
                     onChange={(e) => setBio(e.target.value)}
                     onBlur={saveBio}
                     aria-label="Bio"
                   />
-                  {pErr && <p className="auth-error">{pErr}</p>}
                 </>
               )}
 
-              {/* ---- Ring ---- */}
-              {kind === "ring" && (
+              {/* ---- The idea ---- */}
+              {kind === "idea" && (
                 <>
-                  <div className="tour-icon">
-                    <NeonRing />
-                  </div>
-                  <h2 className="tour-title">Your ring is your day</h2>
+                  <div className="tour-icon">💡</div>
+                  <h2 className="tour-title">Here&apos;s the idea</h2>
                   <p className="tour-body">
-                    Tap the ＋ button and check off what you did — each activity
-                    fills the ring around your photo. Add a photo, voice note, or
-                    caption if you like. Fill it all the way and the day&apos;s
-                    complete.
-                  </p>
-                </>
-              )}
-
-              {/* ---- Streaks ---- */}
-              {kind === "streaks" && (
-                <>
-                  <div className="tour-icon">🔥</div>
-                  <h2 className="tour-title">Streaks reward showing up</h2>
-                  <p className="tour-body">
-                    Log everything in a day and it counts toward your streak.
-                    Miss one and the ring won&apos;t close — but a day you&apos;ve
-                    already won stays won, even if new activities get added later.
-                  </p>
-                </>
-              )}
-
-              {/* ---- Chat preview ---- */}
-              {kind === "chat" && (
-                <>
-                  <div className="tour-preview tour-chat-preview">
-                    <div className="tcp-row">
-                      <span className="tcp-avatar">A</span>
-                      <span className="tcp-bubble">Big day everyone 💪</span>
-                    </div>
-                    <div className="tcp-row mine">
-                      <span className="tcp-bubble mine">On it 🔥</span>
-                    </div>
-                  </div>
-                  <h2 className="tour-title">Chat with the crew</h2>
-                  <p className="tour-body">
-                    The Chat tab is for banter, ideas, and hype — send messages,
-                    photos, and voice notes. It&apos;s the outlet once you&apos;re
-                    done logging for the day.
-                  </p>
-                </>
-              )}
-
-              {/* ---- Profile preview ---- */}
-              {kind === "profileview" && (
-                <>
-                  <div className="tour-preview tour-profile-preview">
-                    <span className="tpp-avatar">
-                      {preview ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={preview} alt="" />
-                      ) : (
-                        displayName.trim().charAt(0).toUpperCase() || "?"
-                      )}
-                    </span>
-                    <div className="tpp-tiles">
-                      <span className="tpp-tile">🔥 Streak</span>
-                      <span className="tpp-tile">🏅 Best</span>
-                      <span className="tpp-tile">📅 Month</span>
-                    </div>
-                  </div>
-                  <h2 className="tour-title">Your profile</h2>
-                  <p className="tour-body">
-                    My Profile is your history — current and best streaks, this
-                    month, all-time, and every update you&apos;ve posted. Change
-                    your photo or bio there anytime.
+                    Each day, log what you complete, fill your ring, and build a
+                    streak — we&apos;ll show you exactly how when you post your
+                    first one.
                   </p>
                 </>
               )}
@@ -392,17 +307,11 @@ export default function Tour({
                     <p className="tour-body">
                       You&apos;re all set — the app is already installed. 🎉
                     </p>
-                  ) : isIOS ? (
-                    <p className="tour-body">
-                      Tap the <b>Share</b> button, then{" "}
-                      <b>Add to Home Screen</b>. It&apos;ll open like a real app —
-                      full screen, with its own icon.
-                    </p>
                   ) : (
                     <p className="tour-body">
-                      Open your browser menu and tap <b>Install app</b> (or{" "}
-                      <b>Add to Home Screen</b>) for one-tap access with its own
-                      icon.
+                      Get Better works best as an app on your home screen — and
+                      it&apos;s what powers notifications. We&apos;ll show you how
+                      to set this up shortly.
                     </p>
                   )}
                 </>
@@ -412,10 +321,10 @@ export default function Tour({
               {kind === "notifications" && (
                 <>
                   <div className="tour-icon">🔔</div>
-                  <h2 className="tour-title">Stay in the loop</h2>
+                  <h2 className="tour-title">Turn on notifications</h2>
                   <p className="tour-body">
-                    Get a nudge when your crew posts, reacts, or messages — so you
-                    never miss a day or leave someone hanging.
+                    Get a nudge when your crew checks in, reacts, or messages — so
+                    you never miss a day or leave someone hanging.
                   </p>
                   {pushSupported() ? (
                     <button
@@ -440,8 +349,9 @@ export default function Tour({
                   <div className="tour-icon">🧑‍🤝‍🧑</div>
                   <h2 className="tour-title">Bring your crew</h2>
                   <p className="tour-body">
-                    Accountability works better together. Anyone with your link
-                    can join {groupName}.
+                    It works better together. Anyone with your link can join{" "}
+                    {groupName}. You always have access to this link in the
+                    settings icon.
                   </p>
                   <div className="tour-invite-row">
                     <input className="tour-invite-input" value={link} readOnly />
@@ -469,8 +379,8 @@ export default function Tour({
                   <div className="tour-icon">🚀</div>
                   <h2 className="tour-title">You&apos;re all set</h2>
                   <p className="tour-body">
-                    Tap the ＋ to log your first day. You can replay this anytime
-                    from the “?” at the top of the board.
+                    Tap the ＋ to log your first day — we&apos;ll walk you through
+                    it. Replay this anytime from Settings.
                   </p>
                 </>
               )}

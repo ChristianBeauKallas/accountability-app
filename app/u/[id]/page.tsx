@@ -10,6 +10,7 @@ import {
 import type { Activity } from "@/lib/types";
 import ProfileEditor from "./profile-editor";
 import PostCard from "@/app/post-card";
+import ProfileTour from "@/app/profile-tour";
 
 export const dynamic = "force-dynamic";
 
@@ -252,6 +253,7 @@ export default async function ProfilePage({
 
   return (
     <main className="board profile">
+      {isMe && <ProfileTour userId={user.id} />}
       <header className="board-head">
         <div className="board-head-top">
           <div>

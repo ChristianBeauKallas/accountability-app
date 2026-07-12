@@ -4,6 +4,7 @@ import Onboarding from "./onboarding";
 import Composer from "./composer";
 import Tour from "./tour";
 import InstallModal from "./install-modal";
+import PostingTour from "./posting-tour";
 import PostCard from "./post-card";
 import { Avatar } from "./avatar";
 import { ProgressAvatar } from "./progress-avatar";
@@ -379,6 +380,7 @@ export default async function Home() {
 
       <NotifPrompt userId={user.id} />
       <InstallModal userId={user.id} onboarded={!!onboardedAt} />
+      <PostingTour userId={user.id} />
 
       {/* Roster — everyone, whether they've checked in today, and their streak */}
       <section className="roster-board">

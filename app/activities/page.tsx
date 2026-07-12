@@ -108,7 +108,8 @@ export default async function SettingsPage() {
       <section className="settings-card">
         <h2 className="settings-title">How it works</h2>
         <p className="settings-hint">
-          New here, or want a refresher? Take the quick walkthrough again.
+          Want a refresher? This replays the welcome tour and brings back the
+          posting, profile, and chat walkthroughs as you revisit each screen.
         </p>
         <Tour
           userId={user.id}

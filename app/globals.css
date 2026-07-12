@@ -2874,6 +2874,135 @@ button.head-icon {
   color: var(--muted);
 }
 
+/* Posting tour — mini roster (read-the-board card) */
+.tour-mini-roster {
+  display: flex;
+  justify-content: center;
+  gap: 1.1rem;
+  font-size: 1rem;
+  width: 100%;
+}
+.tmr-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+.tmr-ring-wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.tmr-ring-wrap svg {
+  position: absolute;
+  inset: 0;
+}
+.tmr-initial {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.tmr-name {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Posting tour — mock post-card (what's-on-a-post card) */
+.tour-mockpost {
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.75rem;
+  font-size: 0.85rem;
+}
+.tmp-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+.tmp-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tmp-head-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.tmp-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.tmp-date {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.tmp-dots {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+}
+.tmp-photo {
+  height: 74px;
+  border-radius: 12px;
+  background: var(--bg-2);
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  margin-bottom: 0.55rem;
+}
+.tmp-caption {
+  margin: 0 0 0.55rem;
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.35;
+}
+.tmp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+.tmp-pill {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.tmp-listen {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.tmp-react {
+  display: flex;
+  gap: 0.4rem;
+}
+.tmp-chip {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 /* Tour — action buttons + hints */
 .tour-action {
   width: 100%;
