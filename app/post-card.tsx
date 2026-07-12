@@ -56,19 +56,22 @@ export default function PostCard({
 
       {photos.length > 0 && <PostGallery photos={photos} />}
 
-      {audios.map((a) => (
-        // The caption already shows the readable text, so only offer the
-        // transcript toggle for older voice notes that have no caption.
-        <VoiceNote
-          key={a.id}
-          src={a.src}
-          transcript={caption ? null : a.transcript}
-        />
-      ))}
-
       {caption && <p className="post-caption">{caption}</p>}
 
-      <ActivityRow items={activityItems} total={activityTotal} />
+      {(activityItems.length > 0 || audios.length > 0) && (
+        <div className="post-meta">
+          <ActivityRow items={activityItems} total={activityTotal} />
+          {audios.map((a) => (
+            // The caption already shows the readable text, so only offer the
+            // transcript toggle for older voice notes that have no caption.
+            <VoiceNote
+              key={a.id}
+              src={a.src}
+              transcript={caption ? null : a.transcript}
+            />
+          ))}
+        </div>
+      )}
 
       <PostComments
         postId={postId}

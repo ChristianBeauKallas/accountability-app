@@ -25,7 +25,7 @@ export default function VoiceNote({
       <div className="voice-row">
         <button className="voice-play" onClick={toggle}>
           <span className="voice-ic">{playing ? "⏸" : "▶"}</span>
-          {playing ? "Playing…" : "Listen to voice note"}
+          {playing ? "Playing…" : "Listen"}
         </button>
         {transcript && (
           <button
