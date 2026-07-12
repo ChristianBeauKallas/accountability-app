@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function BottomNav() {
+export default function BottomNav({ userId }: { userId?: string | null }) {
   const pathname = usePathname();
   const [pending, setPending] = useState<string | null>(null);
 
@@ -23,7 +23,9 @@ export default function BottomNav() {
       match: (p: string) => p.startsWith("/chat"),
     },
     {
-      href: "/me",
+      // Link straight to the user's profile when we know it, skipping the
+      // /me redirect hop; fall back to /me if not signed in yet.
+      href: userId ? `/u/${userId}` : "/me",
       label: "My Profile",
       icon: "👤",
       match: (p: string) => p.startsWith("/me") || p.startsWith("/u/"),

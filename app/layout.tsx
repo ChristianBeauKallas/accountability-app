@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { createClient } from "@/lib/supabase/server";
 import SwRegister from "./sw-register";
 import InstallPrompt from "./install-prompt";
 import BottomNav from "./nav";
@@ -28,16 +29,23 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Fetch the current user once so the nav can link straight to their profile
+  // (skips the /me → /u/[id] redirect hop).
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <html lang="en">
       <body>
         {children}
-        <BottomNav />
+        <BottomNav userId={user?.id ?? null} />
         <InstallPrompt />
         <SwRegister />
       </body>
