@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import webpush from "web-push";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { vapidSubject } from "@/lib/vapid";
 
 export const runtime = "nodejs";
 
 // Diagnostic: sends a push to the CURRENT user's own devices and reports the
 // result. Bypasses the "you never notify yourself" rule so you can prove
 // delivery end-to-end. Visit /api/notify/test while logged in.
-export async function GET() {
+export async function GET(req: Request) {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   if (!publicKey || !privateKey || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -17,11 +18,8 @@ export async function GET() {
       { status: 503 },
     );
   }
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:notifications@accountability.app",
-    publicKey,
-    privateKey,
-  );
+  const subject = vapidSubject(req);
+  webpush.setVapidDetails(subject, publicKey, privateKey);
 
   const server = await createServerClient();
   const {
@@ -77,6 +75,7 @@ export async function GET() {
   const sent = results.filter((r) => r.ok).length;
   return NextResponse.json({
     ok: sent > 0,
+    subject,
     devices: subs.length,
     sent,
     results,

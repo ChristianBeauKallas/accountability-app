@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { vapidSubject } from "@/lib/vapid";
 
 export const runtime = "nodejs";
 
@@ -106,11 +107,7 @@ export async function POST(req: Request) {
     // Notifications not configured yet — no-op so posting still works.
     return NextResponse.json({ ok: true, configured: false });
   }
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:notifications@accountability.app",
-    publicKey,
-    privateKey,
-  );
+  webpush.setVapidDetails(vapidSubject(req), publicKey, privateKey);
 
   // Authenticate the caller.
   const authHeader = req.headers.get("authorization") || "";
