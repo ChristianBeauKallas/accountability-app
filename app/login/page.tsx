@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -15,6 +15,24 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [inviteGroup, setInviteGroup] = useState<string | null>(null);
+
+  // If they got here from an invite link, carry the group name through so the
+  // whole signup keeps that context (the invite code is stashed by the joiner).
+  useEffect(() => {
+    let code: string | null = null;
+    try {
+      code = localStorage.getItem("pendingInvite");
+    } catch {
+      /* ignore */
+    }
+    if (!code) return;
+    createClient()
+      .rpc("group_name_by_code", { code })
+      .then(({ data }) => {
+        if (typeof data === "string" && data) setInviteGroup(data);
+      });
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,6 +124,16 @@ export default function LoginPage() {
           </li>
         </ul>
       </div>
+
+      {inviteGroup && (
+        <div className="auth-invite-banner">
+          <span className="aib-emoji">🎉</span>
+          <span>
+            You&apos;re joining <strong>{inviteGroup}</strong> — create your
+            account to jump in.
+          </span>
+        </div>
+      )}
 
       <div className="tabs">
         <button

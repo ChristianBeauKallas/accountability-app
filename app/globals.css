@@ -3114,6 +3114,30 @@ button.head-icon {
   flex-shrink: 0;
 }
 
+/* Invite context banner on the login/signup screen */
+.auth-invite-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: left;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  margin: 0 auto 1.1rem;
+  max-width: 22rem;
+}
+.auth-invite-banner strong {
+  color: var(--accent);
+}
+.aib-emoji {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
 /* Create-or-join welcome + choice cards */
 .welcome-head {
   text-align: center;
