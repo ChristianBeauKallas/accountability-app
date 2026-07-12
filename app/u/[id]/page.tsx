@@ -329,12 +329,12 @@ export default async function ProfilePage({
                 duration: number | null;
               } => !!a.src,
             );
-          const activityItems = p.post_activities
-            .map(({ activity_id }) => {
-              const a = activityById.get(activity_id);
-              return a ? { emoji: a.emoji ?? "✅", name: a.name } : null;
-            })
-            .filter((x): x is { emoji: string; name: string } => !!x);
+          // Whole-day progress, not just this single post (matches the ring).
+          const dayActIds =
+            actsByDay.get(localDate(p.created_at, tz)) ?? new Set<string>();
+          const activityItems = activities
+            .filter((a) => dayActIds.has(a.id))
+            .map((a) => ({ emoji: a.emoji ?? "✅", name: a.name }));
 
           return (
             <PostCard

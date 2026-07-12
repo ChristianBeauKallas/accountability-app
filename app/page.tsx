@@ -420,12 +420,15 @@ export default async function Home() {
                 duration: number | null;
               } => !!a.src,
             );
-          const activityItems = p.post_activities
-            .map(({ activity_id }) => {
-              const a = activityById.get(activity_id);
-              return a ? { emoji: a.emoji ?? "✅", name: a.name } : null;
-            })
-            .filter((x): x is { emoji: string; name: string } => !!x);
+          // Show the author's whole-day progress on the pill, not just what
+          // this single post logged (matches the ring/streak model).
+          const postTz = tzByUser.get(p.author_id) ?? "America/New_York";
+          const postDay = localDate(p.created_at, postTz);
+          const dayActIds =
+            actsByUserDay.get(p.author_id)?.get(postDay) ?? new Set<string>();
+          const activityItems = activities
+            .filter((a) => dayActIds.has(a.id))
+            .map((a) => ({ emoji: a.emoji ?? "✅", name: a.name }));
 
           return (
             <PostCard
