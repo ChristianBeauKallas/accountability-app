@@ -8,6 +8,7 @@ import PostCard from "./post-card";
 import { Avatar } from "./avatar";
 import { ProgressAvatar } from "./progress-avatar";
 import HeaderBell from "./header-bell";
+import HeaderDate from "./header-date";
 import NotifPrompt from "./notif-prompt";
 import { computeStreak, localDate, fullCompletionDays } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
@@ -309,7 +310,6 @@ export default async function Home() {
     .sort((a, b) => b.sortKey - a.sortKey || a.name.localeCompare(b.name));
 
   const me = roster.find((r) => r.id === user.id);
-  const checkedInCount = roster.filter((r) => r.postedToday).length;
 
   return (
     <main className="board">
@@ -336,9 +336,7 @@ export default async function Home() {
           {me && me.streak > 0 && (
             <span className="head-streak">{me.streak}🔥</span>
           )}
-          <span>
-            {checkedInCount} of {roster.length} checked in today
-          </span>
+          <HeaderDate />
         </p>
       </header>
 
