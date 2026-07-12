@@ -3019,3 +3019,104 @@ button.head-icon {
 .danger-actions .danger-btn {
   flex: 1;
 }
+
+/* Post owner menu (edit / delete) */
+.post-head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
+  margin-left: auto;
+}
+.post-menu-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0.15rem 0.35rem;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.post-menu-btn:active {
+  background: var(--surface);
+}
+.post-menu-catch {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.post-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 41;
+  margin-top: 0.25rem;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  min-width: 168px;
+}
+.post-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.9rem;
+  text-align: left;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.post-menu button:active {
+  background: var(--surface);
+}
+.post-menu button.danger {
+  color: var(--danger);
+  border-top: 1px solid var(--border);
+}
+
+/* Post edit/delete modal reuses .tour-overlay / .tour-card */
+.pm-card {
+  text-align: left;
+}
+.pm-textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 0.6rem;
+}
+.pm-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.pm-delete {
+  flex: 1;
+  max-width: 60%;
+  margin-left: auto;
+  background: var(--danger);
+  color: #2a0808;
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.pm-delete:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

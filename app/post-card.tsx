@@ -5,6 +5,7 @@ import VoiceNote from "./voice-note";
 import ActivityRow from "./activity-row";
 import PostComments from "./post-comments";
 import ReactionBar from "./reaction-bar";
+import PostMenu from "./post-menu";
 import { timeAgo } from "@/lib/format";
 
 export type PostCardData = {
@@ -45,7 +46,12 @@ export default function PostCard({
           <Avatar name={authorName} url={authorAvatar} />
           <span className="post-author">{authorName}</span>
         </Link>
-        <span className="post-time">{timeAgo(createdAt)}</span>
+        <div className="post-head-right">
+          <span className="post-time">{timeAgo(createdAt)}</span>
+          {viewerId === authorId && (
+            <PostMenu postId={postId} caption={caption} />
+          )}
+        </div>
       </div>
 
       {photos.length > 0 && <PostGallery photos={photos} />}
