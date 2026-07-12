@@ -66,6 +66,8 @@ export default function Tour({
   avatarUrl,
   inviteCode,
   initialSeen = false,
+  autoOpen = true,
+  trigger = "icon",
 }: {
   userId: string;
   groupName: string;
@@ -73,6 +75,8 @@ export default function Tour({
   avatarUrl: string | null;
   inviteCode: string;
   initialSeen?: boolean;
+  autoOpen?: boolean;
+  trigger?: "icon" | "button" | "none";
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -108,13 +112,13 @@ export default function Tour({
   // Auto-open the first time this account sees the board. The DB flag makes it
   // stick across devices; localStorage is a fast local fallback.
   useEffect(() => {
-    if (initialSeen) return;
+    if (!autoOpen || initialSeen) return;
     try {
       if (!localStorage.getItem(key)) setOpen(true);
     } catch {
       setOpen(true); // storage blocked — still show it the first time
     }
-  }, [key, initialSeen]);
+  }, [key, initialSeen, autoOpen]);
 
   function markSeen() {
     try {
@@ -227,14 +231,21 @@ export default function Tour({
 
   return (
     <>
-      <button
-        type="button"
-        className="head-icon"
-        aria-label="How it works"
-        onClick={replay}
-      >
-        ?
-      </button>
+      {trigger === "icon" && (
+        <button
+          type="button"
+          className="head-icon"
+          aria-label="How it works"
+          onClick={replay}
+        >
+          ?
+        </button>
+      )}
+      {trigger === "button" && (
+        <button type="button" className="settings-replay" onClick={replay}>
+          ▶ Replay the walkthrough
+        </button>
+      )}
 
       {mounted &&
         open &&

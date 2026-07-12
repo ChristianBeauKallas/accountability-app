@@ -34,7 +34,6 @@ export default function GroupNameEditor({
 
   return (
     <div className="group-name-editor">
-      <label htmlFor="groupName">Group name</label>
       <div className="group-name-row">
         <input
           id="groupName"

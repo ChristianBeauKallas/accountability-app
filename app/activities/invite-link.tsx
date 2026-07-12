@@ -46,8 +46,7 @@ export default function InviteLink({
   }
 
   return (
-    <div className="invite-box">
-      <h2>Invite people</h2>
+    <div className="invite-content">
       <p className="invite-hint">
         Anyone with this link can join {groupName}. Share it with your crew.
       </p>

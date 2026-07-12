@@ -333,6 +333,7 @@ export default async function Home() {
             avatarUrl={me?.avatar ?? null}
             inviteCode={membership.groups.invite_code}
             initialSeen={!!onboardedAt}
+            trigger="none"
           />
           <HeaderBell userId={user.id} />
           <Link className="head-icon" href="/activities" aria-label="Settings">
