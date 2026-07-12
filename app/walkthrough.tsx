@@ -70,7 +70,7 @@ export default function WalkThrough({
           <div className="tour-icon">{card.visual}</div>
         )}
         <h2 className="tour-title">{card.title}</h2>
-        <p className="tour-body">{card.body}</p>
+        <div className="tour-body">{card.body}</div>
 
         <div className="tour-dots">
           {cards.map((_, d) => (

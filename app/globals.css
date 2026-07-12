@@ -3470,6 +3470,33 @@ button.head-icon {
   white-space: nowrap;
 }
 
+/* Tour — definition list (e.g. "what the numbers mean") */
+.tour-body:has(.tour-defs) {
+  max-width: 32ch;
+}
+.tour-defs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+.tour-def {
+  font-size: 0.86rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.tour-def b {
+  color: var(--text);
+  font-weight: 700;
+}
+.tour-def.note {
+  margin-top: 0.15rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 /* Tour — action buttons + hints */
 .tour-action {
   width: 100%;

@@ -75,11 +75,26 @@ const CARDS: Card[] = [
     visual: <StatsMock />,
     title: "What the numbers mean",
     body: (
-      <>
-        🔥 Current streak · 🏆 Best streak ever · 📅 This month (full days / days
-        so far) · ✅ All time (full days / days on the app). Only days where you
-        finish everything count toward a streak.
-      </>
+      <span className="tour-defs">
+        <span className="tour-def">
+          <b>🔥 Current streak</b> — how many days in a row you&apos;ve completed
+          every activity.
+        </span>
+        <span className="tour-def">
+          <b>🏆 Best streak</b> — your longest run ever of finishing everything.
+        </span>
+        <span className="tour-def">
+          <b>📅 This month</b> — days you&apos;ve done every activity, out of the
+          days that have passed this month.
+        </span>
+        <span className="tour-def">
+          <b>✅ All time</b> — days you&apos;ve finished everything, out of how
+          long you&apos;ve been on the app.
+        </span>
+        <span className="tour-def note">
+          Only days where you finish everything count toward a streak.
+        </span>
+      </span>
     ),
   },
   {
