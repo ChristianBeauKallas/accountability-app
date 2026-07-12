@@ -630,3 +630,27 @@ create policy chat_media_read on storage.objects
         and public.is_group_member(m.group_id)
     )
   );
+
+-- =============================================================================
+-- Reactions: allow multiple reaction types per user per post (🔥 and 👍 both).
+-- Adds a `type` column and moves the primary key to include it. Idempotent.
+-- =============================================================================
+alter table public.post_reactions
+  add column if not exists type text not null default 'fire';
+
+do $$
+begin
+  -- Only swap the primary key if it doesn't already include `type`.
+  if not exists (
+    select 1
+    from pg_index i
+    join pg_attribute a
+      on a.attrelid = i.indrelid and a.attnum = any (i.indkey)
+    where i.indrelid = 'public.post_reactions'::regclass
+      and i.indisprimary
+      and a.attname = 'type'
+  ) then
+    alter table public.post_reactions drop constraint if exists post_reactions_pkey;
+    alter table public.post_reactions add primary key (post_id, user_id, type);
+  end if;
+end $$;
