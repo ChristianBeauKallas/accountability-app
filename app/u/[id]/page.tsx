@@ -115,6 +115,27 @@ export default async function ProfilePage({
   }
   const startDays = activities.map((a) => localDate(a.created_at, tz));
   const dates = fullCompletionDays(actsByDay, startDays);
+
+  // Running cumulative up to and including each post (chronological), so a
+  // post's pill shows where they were when they posted it.
+  const cumulativeByPost = new Map<string, Set<string>>();
+  {
+    const running = new Map<string, Set<string>>();
+    const asc = [...posts].sort((a, b) =>
+      a.created_at.localeCompare(b.created_at),
+    );
+    for (const p of asc) {
+      const day = localDate(p.created_at, tz);
+      let set = running.get(day);
+      if (!set) {
+        set = new Set<string>();
+        running.set(day, set);
+      }
+      for (const pa of p.post_activities ?? [])
+        if (activityById.has(pa.activity_id)) set.add(pa.activity_id);
+      cumulativeByPost.set(p.id, new Set(set));
+    }
+  }
   const { streak } = computeStreak(dates, tz);
   const best = bestStreak(dates);
   const totalDays = dates.size;
@@ -329,11 +350,10 @@ export default async function ProfilePage({
                 duration: number | null;
               } => !!a.src,
             );
-          // Whole-day progress, not just this single post (matches the ring).
-          const dayActIds =
-            actsByDay.get(localDate(p.created_at, tz)) ?? new Set<string>();
+          // Running total as of this post (chronological), not the whole day.
+          const cumActIds = cumulativeByPost.get(p.id) ?? new Set<string>();
           const activityItems = activities
-            .filter((a) => dayActIds.has(a.id))
+            .filter((a) => cumActIds.has(a.id))
             .map((a) => ({ emoji: a.emoji ?? "✅", name: a.name }));
 
           return (

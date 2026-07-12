@@ -262,6 +262,28 @@ export default async function Home() {
     datesByUser.set(uid, fullCompletionDays(byDay, startDays));
   }
 
+  // Running cumulative of an author's distinct activities up to and including
+  // each post — so a post's pill shows where they were at when they posted it.
+  const cumulativeByPost = new Map<string, Set<string>>();
+  {
+    const running = new Map<string, Set<string>>();
+    const asc = [...posts].sort((a, b) =>
+      a.created_at.localeCompare(b.created_at),
+    );
+    for (const p of asc) {
+      const tz = tzByUser.get(p.author_id) ?? "America/New_York";
+      const key = `${p.author_id}|${localDate(p.created_at, tz)}`;
+      let set = running.get(key);
+      if (!set) {
+        set = new Set();
+        running.set(key, set);
+      }
+      for (const pa of p.post_activities)
+        if (activityById.has(pa.activity_id)) set.add(pa.activity_id);
+      cumulativeByPost.set(p.id, new Set(set));
+    }
+  }
+
   // Distinct activities each member has logged TODAY (their timezone). Drives
   // the progress ring and the compose button's "remaining/done" state.
   const todayActsByUser = new Map<string, Set<string>>();
@@ -420,14 +442,10 @@ export default async function Home() {
                 duration: number | null;
               } => !!a.src,
             );
-          // Show the author's whole-day progress on the pill, not just what
-          // this single post logged (matches the ring/streak model).
-          const postTz = tzByUser.get(p.author_id) ?? "America/New_York";
-          const postDay = localDate(p.created_at, postTz);
-          const dayActIds =
-            actsByUserDay.get(p.author_id)?.get(postDay) ?? new Set<string>();
+          // Running total as of this post (chronological), not the whole day.
+          const cumActIds = cumulativeByPost.get(p.id) ?? new Set<string>();
           const activityItems = activities
-            .filter((a) => dayActIds.has(a.id))
+            .filter((a) => cumActIds.has(a.id))
             .map((a) => ({ emoji: a.emoji ?? "✅", name: a.name }));
 
           return (
