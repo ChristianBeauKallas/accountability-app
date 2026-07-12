@@ -49,16 +49,14 @@ export default function PostCard({
       <div className="post-head">
         <Link className="post-author-link" href={`/u/${authorId}`}>
           <Avatar name={authorName} url={authorAvatar} />
-          <span className="post-id">
-            <span className="post-author">{authorName}</span>
-            <PostDate iso={createdAt} />
-          </span>
+          <span className="post-author">{authorName}</span>
         </Link>
-        {viewerId === authorId && (
-          <div className="post-head-right">
+        <div className="post-head-right">
+          <PostDate iso={createdAt} />
+          {viewerId === authorId && (
             <PostMenu postId={postId} caption={caption} />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {photos.length > 0 && <PostGallery photos={photos} />}
