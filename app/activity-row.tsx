@@ -21,12 +21,19 @@ export default function ActivityRow({
         type="button"
         className={`activity-pill ${complete ? "complete" : ""}`}
         onClick={() => setOpen((o) => !o)}
+        aria-label={`${items.length} of ${denom} done — ${items
+          .map((a) => a.name)
+          .join(", ")}`}
       >
         <span className="ap-check">✓</span>
+        <span className="ap-emojis">
+          {items.map((a, i) => (
+            <span key={i}>{a.emoji}</span>
+          ))}
+        </span>
         <span className="ap-frac">
           {items.length}/{denom}
         </span>
-        <span className="ap-word">done</span>
         <span className="ap-chev">{open ? "▲" : "▼"}</span>
       </button>
 
