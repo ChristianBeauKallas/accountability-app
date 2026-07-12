@@ -1,10 +1,36 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
+
+// Whether NEXT_PUBLIC_VAPID_PUBLIC_KEY is the pair of VAPID_PRIVATE_KEY. A
+// mismatch is the classic cause of Apple's 403 BadJwtToken.
+function vapidKeysMatch(): boolean | null {
+  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !priv) return null;
+  try {
+    const privBuf = Buffer.from(
+      priv.replace(/-/g, "+").replace(/_/g, "/"),
+      "base64",
+    );
+    const ecdh = crypto.createECDH("prime256v1");
+    ecdh.setPrivateKey(privBuf);
+    const derived = ecdh
+      .getPublicKey()
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+    return derived === pub.replace(/=+$/, "");
+  } catch {
+    return false;
+  }
+}
 
 type Body = { type?: "post" | "comment" | "message"; id?: string };
 
@@ -20,6 +46,7 @@ export async function GET(req: Request) {
   };
   const configured =
     env.vapidPublicKey && env.vapidPrivateKey && env.serviceRoleKey;
+  const keysMatch = vapidKeysMatch();
 
   let yourDevices: number | null = null;
   let totalDevices: number | null = null;
@@ -59,12 +86,16 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     configured,
+    keysMatch,
     env,
     yourDevices,
     totalDevices,
-    hint: configured
-      ? "Config looks good. If you still get nothing: the recipient must have tapped Enable (yourDevices/totalDevices > 0), and on iPhone must have the app on their home screen. You never get notified of your own actions."
-      : "Missing env vars in Vercel — add the VAPID keys + SUPABASE_SERVICE_ROLE_KEY and redeploy.",
+    hint:
+      keysMatch === false
+        ? "VAPID keys do NOT match — the public key doesn't correspond to the private key. Regenerate a matching pair, set both in Vercel, delete old subscriptions, and re-enable. This causes Apple's 403 BadJwtToken."
+        : configured
+          ? "Config looks good. If you still get nothing: the recipient must have tapped Enable (totalDevices > 0), and on iPhone must have the app on their home screen. You never get notified of your own actions."
+          : "Missing env vars in Vercel — add the VAPID keys + SUPABASE_SERVICE_ROLE_KEY and redeploy.",
   });
 }
 
