@@ -2549,9 +2549,9 @@ span.avatar-lg.avatar-fallback {
   place-items: center;
 }
 .pa-inner .avatar {
-  width: 48px;
-  height: 48px;
-  font-size: 1.15rem;
+  width: 60px;
+  height: 60px;
+  font-size: 1.45rem;
 }
 .pa-check {
   position: absolute;
