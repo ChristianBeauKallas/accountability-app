@@ -133,6 +133,12 @@ export default function Tour({
     markSeen();
     setOpen(false);
     setI(0);
+    // Let the install nudge know onboarding just finished.
+    try {
+      window.dispatchEvent(new Event("gb-tour-done"));
+    } catch {
+      /* ignore */
+    }
   }
   function replay() {
     setI(0);
