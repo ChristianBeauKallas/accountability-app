@@ -164,8 +164,8 @@ export async function POST(req: Request) {
     if (!post) return NextResponse.json({ ok: true });
     actorId = post.author_id;
     recipientIds = await groupRecipients(post.group_id, actorId);
-    title = `${await nameOf(actorId)} got better today`;
-    text = post.caption || "Check the group's progress";
+    title = `${await nameOf(actorId)} just checked in`;
+    text = post.caption || "Tap to cheer them on 👏";
     url = "/";
     tag = `post-${post.id}`;
   } else if (body.type === "comment") {
