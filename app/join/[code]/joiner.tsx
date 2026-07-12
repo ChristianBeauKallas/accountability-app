@@ -53,13 +53,25 @@ export default function Joiner({ code }: { code: string }) {
   if (state === "need-auth") {
     return (
       <main className="auth">
-        <h1>
-          {groupName ? (
-            <>You&apos;re invited to join {groupName}! 🎉</>
-          ) : (
-            <>You&apos;re invited 🎉</>
-          )}
-        </h1>
+        <div className="auth-hero">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="auth-icon"
+            src="/icon-192.png"
+            alt="Get Better"
+            width={88}
+            height={88}
+          />
+          <h1>
+            {groupName ? (
+              <>
+                You&apos;re invited to join {groupName} on the Get Better app 💪
+              </>
+            ) : (
+              <>You&apos;re invited to Get Better 💪</>
+            )}
+          </h1>
+        </div>
         <p className="subtitle">Create an account (or sign in) to join.</p>
         <a className="join-cta" href="/login">
           Get started ›
