@@ -103,6 +103,65 @@ function MockPost() {
   );
 }
 
+// A mock of the board, showing where the ＋ button lives (bottom-right).
+function LogMock() {
+  return (
+    <div className="tour-phone" aria-hidden>
+      <div className="tph-roster">
+        <span className="tph-ring" />
+        <span className="tph-ring" />
+        <span className="tph-ring" />
+      </div>
+      <div className="tph-line" />
+      <div className="tph-line short" />
+      <span className="tph-fab">＋</span>
+    </div>
+  );
+}
+
+// A mock of the dictation step — mic button turning speech into a caption.
+function DictateMock() {
+  return (
+    <div className="tour-phone" aria-hidden>
+      <span className="tph-mic">🎙️</span>
+      <div className="tph-caption">
+        <span className="tph-caption-label">Your caption</span>
+        “Got my run in this morning — legs felt strong.”
+      </div>
+    </div>
+  );
+}
+
+// A mock of the add-photo step.
+function PhotoMock() {
+  return (
+    <div className="tour-phone tph-photorow" aria-hidden>
+      <span className="tph-thumb">🏞️</span>
+      <span className="tph-thumb">🍳</span>
+      <span className="tph-addphoto">
+        📷<small>Add</small>
+      </span>
+    </div>
+  );
+}
+
+// A mock of the ⋯ menu on your own post.
+function FixMock() {
+  return (
+    <div className="tour-phone" aria-hidden>
+      <div className="tph-fixhead">
+        <span className="tph-avatar">A</span>
+        <span className="tph-line grow" />
+        <span className="tph-dots">⋯</span>
+      </div>
+      <div className="tph-menu">
+        <span>✏️ Edit caption</span>
+        <span className="danger">🗑 Delete post</span>
+      </div>
+    </div>
+  );
+}
+
 const CARDS: Card[] = [
   {
     visual: <BoardVisual />,
@@ -117,27 +176,18 @@ const CARDS: Card[] = [
     ),
   },
   {
-    visual: "➕",
-    title: "Let's walk you through posting",
+    visual: <LogMock />,
+    title: "Log your day",
     body: (
       <>
-        It only takes about thirty seconds a day. Tap the ＋ each day, mark what
-        you did, and add as much or as little as you want.
+        Each day, tap the ＋ in the bottom-right and check off what you got done.
+        Every activity fills a slice of your ring — fill it all the way to win
+        the day. Takes about thirty seconds.
       </>
     ),
   },
   {
-    visual: "✅",
-    title: "Log what you did",
-    body: (
-      <>
-        Tap the ＋ and check off the activities you finished. Each one fills a
-        slice of your ring — fill it all the way to win the day.
-      </>
-    ),
-  },
-  {
-    visual: "🎙️",
+    visual: <DictateMock />,
     title: "Just talk — we'll write it",
     body: (
       <>
@@ -148,7 +198,7 @@ const CARDS: Card[] = [
     ),
   },
   {
-    visual: "📷",
+    visual: <PhotoMock />,
     title: "Add a photo (optional)",
     body: (
       <>
@@ -170,7 +220,7 @@ const CARDS: Card[] = [
     ),
   },
   {
-    visual: "⋯",
+    visual: <FixMock />,
     title: "Fix a post",
     body: (
       <>

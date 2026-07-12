@@ -3003,6 +3003,177 @@ button.head-icon {
   color: var(--muted);
 }
 
+/* Posting tour — small "phone screen" mock-ups (log / dictate / photo / fix) */
+.tour-phone {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+  min-height: 104px;
+  margin: 0 auto;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.8rem;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+/* Log mock — board layout with the + button bottom-right */
+.tph-roster {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+.tph-ring {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  background: var(--surface);
+}
+.tph-ring:nth-child(2) {
+  border-color: var(--border);
+  box-shadow: none;
+}
+.tph-ring:nth-child(3) {
+  border-color: var(--border);
+  box-shadow: none;
+  opacity: 0.7;
+}
+.tph-line {
+  height: 9px;
+  border-radius: 5px;
+  background: var(--surface);
+  margin-bottom: 0.45rem;
+}
+.tph-line.short {
+  width: 55%;
+}
+.tph-line.grow {
+  flex: 1;
+  margin: 0;
+}
+.tph-fab {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+/* Dictate mock — mic + generated caption */
+.tph-mic {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 0.6rem;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  font-size: 1.25rem;
+  border: 1px solid var(--accent);
+}
+.tph-caption {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.35;
+}
+.tph-caption-label {
+  display: block;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+/* Photo mock — thumbnails + add button */
+.tph-photorow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tph-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  font-size: 1.7rem;
+  flex-shrink: 0;
+}
+.tph-addphoto {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  border: 1px dashed var(--accent);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.tph-addphoto small {
+  font-size: 0.55rem;
+  font-weight: 700;
+}
+
+/* Fix mock — a post with the ⋯ menu open */
+.tph-fixhead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.tph-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tph-dots {
+  color: var(--text);
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+}
+.tph-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+.tph-menu span {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.76rem;
+  color: var(--text);
+}
+.tph-menu .danger {
+  color: #ff6b6b;
+}
+
 /* Tour — action buttons + hints */
 .tour-action {
   width: 100%;
