@@ -380,7 +380,7 @@ export default async function Home() {
 
       <NotifPrompt userId={user.id} />
       <InstallModal userId={user.id} onboarded={!!onboardedAt} />
-      <PostingTour userId={user.id} />
+      <PostingTour userId={user.id} onboarded={!!onboardedAt} />
 
       {/* Roster — everyone, whether they've checked in today, and their streak */}
       <section className="roster-board">

@@ -181,21 +181,38 @@ const CARDS: Card[] = [
   },
 ];
 
-export default function PostingTour({ userId }: { userId: string }) {
+export default function PostingTour({
+  userId,
+  onboarded,
+}: {
+  userId: string;
+  onboarded: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [viaPlus, setViaPlus] = useState(false);
 
-  // Auto-fire on the next board load after the install nudge is behind them.
+  // Auto-fire on the first board load after the Welcome tour is behind them.
+  // We key off `onboarded`, which comes from the DB (profiles.onboarded_at) and
+  // is read server-side — NOT localStorage. That matters because the installed
+  // home-screen app runs in a separate storage sandbox from Safari on iOS, so
+  // any localStorage flags set during the tour don't exist when they reopen
+  // from the icon. The DB flag carries across both. `onboarded` only flips true
+  // on the load *after* the tour finishes (the write happens client-side), so
+  // this naturally lands on the next open — including the reopen-from-icon.
   useEffect(() => {
-    if (
-      tourDone("tour", userId) &&
-      installSeen() &&
-      !tourDone("posting", userId)
-    ) {
-      const t = setTimeout(() => setOpen(true), 500);
-      return () => clearTimeout(t);
-    }
-  }, [userId]);
+    if (!onboarded || tourDone("posting", userId)) return;
+    // In a plain browser tab that hasn't dismissed the "add to home screen"
+    // nudge yet, let that go first — this fires on the next load (or once
+    // they're in the installed app). In the installed app itself (standalone),
+    // there's no nudge, so fire right away.
+    const nav = window.navigator as Navigator & { standalone?: boolean };
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      nav.standalone === true;
+    if (!standalone && !installSeen()) return;
+    const t = setTimeout(() => setOpen(true), 500);
+    return () => clearTimeout(t);
+  }, [userId, onboarded]);
 
   // Option B: tapping ＋ before completing it opens it here first.
   useEffect(() => {
