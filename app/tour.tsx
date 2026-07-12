@@ -332,11 +332,33 @@ export default function Tour({
               {/* ---- Bio ---- */}
               {kind === "bio" && (
                 <>
-                  <div className="tour-icon">✍️</div>
+                  <div className="tour-icon">
+                    {/* Live preview of how their profile line will read */}
+                    <div className="tour-phone tph-prof" aria-hidden>
+                      <span className="tph-pavatar">
+                        {preview ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={preview} alt="" />
+                        ) : (
+                          displayName.trim().charAt(0).toUpperCase() || "?"
+                        )}
+                      </span>
+                      <div className="tph-pmeta">
+                        <span className="tph-pname">
+                          {displayName.trim() || "You"}
+                        </span>
+                        <span
+                          className={`tph-pbio ${bio.trim() ? "" : "placeholder"}`}
+                        >
+                          {bio.trim() || "Training for a half-marathon 🏃"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                   <h2 className="tour-title">What are you working on?</h2>
                   <p className="tour-body">
-                    Include a short bio or line on what you&apos;re working
-                    towards.
+                    Add a short line on what you&apos;re working towards — so when
+                    people visit your profile, they know why you&apos;re here.
                   </p>
                   <input
                     className="tour-bio"

@@ -3226,9 +3226,19 @@ button.head-icon {
   font-weight: 700;
   color: var(--text);
 }
+.tph-pavatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 .tph-pbio {
   font-size: 0.78rem;
   color: var(--muted);
+}
+.tph-pbio.placeholder {
+  opacity: 0.5;
+  font-style: italic;
 }
 .tour-stats {
   display: grid;
