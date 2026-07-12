@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { notify } from "@/lib/push";
 import type { Message } from "@/lib/types";
@@ -49,7 +50,9 @@ export default function ChatRoom({
   const [error, setError] = useState<string | null>(null);
   const [signed, setSigned] = useState<Record<string, string>>({});
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Message | null>(null);
   const requestedRef = useRef<Set<string>>(new Set());
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Pending attachments
@@ -80,6 +83,17 @@ export default function ChatRoom({
           setMessages((prev) =>
             prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
           );
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages" },
+        (payload) => {
+          // DELETE payloads carry only the primary key, so we can't filter by
+          // group server-side — just drop it if it's one we're showing.
+          const old = payload.old as { id?: string };
+          if (old.id)
+            setMessages((prev) => prev.filter((m) => m.id !== old.id));
         },
       )
       .subscribe();
@@ -151,6 +165,24 @@ export default function ChatRoom({
   function clearAudio() {
     setAudioBlob(null);
     setAudioPreview(null);
+  }
+
+  // Long-press one of your own messages to delete it.
+  function startPress(m: Message) {
+    clearPress();
+    pressTimer.current = setTimeout(() => setConfirmDelete(m), 500);
+  }
+  function clearPress() {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  }
+  async function deleteMessage(id: string) {
+    setConfirmDelete(null);
+    setMessages((prev) => prev.filter((m) => m.id !== id));
+    const supabase = createClient();
+    await supabase.from("messages").delete().eq("id", id);
   }
 
   async function send(e: React.FormEvent) {
@@ -235,7 +267,20 @@ export default function ChatRoom({
                   )}
                 </span>
               )}
-              <div className="msg-content">
+              <div
+                className="msg-content"
+                onTouchStart={mine ? () => startPress(m) : undefined}
+                onTouchEnd={mine ? clearPress : undefined}
+                onTouchMove={mine ? clearPress : undefined}
+                onContextMenu={
+                  mine
+                    ? (e) => {
+                        e.preventDefault();
+                        setConfirmDelete(m);
+                      }
+                    : undefined
+                }
+              >
                 {first && !mine && (
                   <span className="msg-author">
                     {author?.name ?? "Someone"}{" "}
@@ -343,6 +388,44 @@ export default function ChatRoom({
           </button>
         </div>
       )}
+
+      {confirmDelete &&
+        createPortal(
+          <div
+            className="tour-overlay"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setConfirmDelete(null)}
+          >
+            <div
+              className="tour-card pm-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="tour-icon">🗑️</div>
+              <h2 className="tour-title">Delete message?</h2>
+              {confirmDelete.body && (
+                <p className="tour-body">“{confirmDelete.body}”</p>
+              )}
+              <div className="tour-nav">
+                <button
+                  type="button"
+                  className="tour-back"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="pm-delete"
+                  onClick={() => deleteMessage(confirmDelete.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
