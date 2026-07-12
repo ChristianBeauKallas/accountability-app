@@ -5,6 +5,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { vapidSubject } from "@/lib/vapid";
+import { localDate } from "@/lib/streaks";
 
 export const runtime = "nodejs";
 
@@ -158,14 +159,93 @@ export async function POST(req: Request) {
   if (body.type === "post") {
     const { data: post } = await admin
       .from("group_posts")
-      .select("id, group_id, author_id, caption")
+      .select("id, group_id, author_id, caption, created_at")
       .eq("id", body.id)
       .single();
     if (!post) return NextResponse.json({ ok: true });
     actorId = post.author_id;
     recipientIds = await groupRecipients(post.group_id, actorId);
-    title = `${await nameOf(actorId)} just checked in`;
-    text = "Tap to see their progress 👏";
+    const name = await nameOf(actorId);
+
+    // Figure out if this check-in is the FIRST of the day and/or the first to
+    // FINISH the day, to pick a special "first" message.
+    const { data: prof } = await admin
+      .from("profiles")
+      .select("timezone")
+      .eq("id", actorId)
+      .single();
+    const tz = prof?.timezone ?? "America/New_York";
+    const today = localDate(post.created_at, tz);
+
+    const { data: acts } = await admin
+      .from("activities")
+      .select("id")
+      .eq("group_id", post.group_id)
+      .eq("active", true);
+    const activeIds = new Set((acts ?? []).map((a) => a.id));
+    const required = activeIds.size;
+
+    const since = new Date(
+      new Date(post.created_at).getTime() - 40 * 60 * 60 * 1000,
+    ).toISOString();
+    const { data: dayPosts } = await admin
+      .from("group_posts")
+      .select("id, author_id, created_at, post_activities(activity_id)")
+      .eq("group_id", post.group_id)
+      .gte("created_at", since);
+
+    const now = new Date(post.created_at).getTime();
+    const todays = (dayPosts ?? []).filter(
+      (p) => localDate(p.created_at, tz) === today,
+    );
+
+    // First check-in of the day = nobody posted earlier today.
+    const firstCheckIn = !todays.some(
+      (p) => p.id !== post.id && new Date(p.created_at).getTime() <= now,
+    );
+
+    // Distinct active activities each member has logged today.
+    const byMember = new Map<string, Set<string>>();
+    for (const p of todays) {
+      const s = byMember.get(p.author_id) ?? new Set<string>();
+      for (const pa of (p.post_activities ?? []) as { activity_id: string }[])
+        if (activeIds.has(pa.activity_id)) s.add(pa.activity_id);
+      byMember.set(p.author_id, s);
+    }
+    const posterSet = byMember.get(actorId) ?? new Set<string>();
+    const completedNow = required > 0 && posterSet.size >= required;
+
+    // What the poster had logged BEFORE this post (their other posts today).
+    const beforeSet = new Set<string>();
+    for (const p of todays) {
+      if (p.author_id !== actorId || p.id === post.id) continue;
+      for (const pa of (p.post_activities ?? []) as { activity_id: string }[])
+        if (activeIds.has(pa.activity_id)) beforeSet.add(pa.activity_id);
+    }
+    const justCompleted = completedNow && beforeSet.size < required;
+
+    // Has anyone else already finished today?
+    let otherComplete = false;
+    for (const [uid, s] of byMember)
+      if (uid !== actorId && required > 0 && s.size >= required) {
+        otherComplete = true;
+        break;
+      }
+    const firstFinish = justCompleted && !otherComplete;
+
+    if (firstCheckIn && firstFinish) {
+      title = `🏆 ${name} won the day — first in, first done`;
+      text = "Catch up — tap to log yours 👀";
+    } else if (firstFinish) {
+      title = `🏆 ${name} won the day first`;
+      text = "Catch up — tap to log yours 👀";
+    } else if (firstCheckIn) {
+      title = `🥇 ${name} set the pace today`;
+      text = "Who's next to check in? 👀";
+    } else {
+      title = `${name} just checked in`;
+      text = "Tap to see their progress 👏";
+    }
     url = "/";
     tag = `post-${post.id}`;
   } else if (body.type === "comment") {
