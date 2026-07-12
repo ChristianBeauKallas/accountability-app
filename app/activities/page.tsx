@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import ActivitiesManager from "./activities-manager";
 import GroupNameEditor from "./group-name-editor";
 import InviteLink from "./invite-link";
+import DeleteAccount from "./delete-account";
 import type { Activity } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +79,8 @@ export default async function SettingsPage() {
           </ul>
         </div>
       )}
+
+      <DeleteAccount ownsGroup={isOwner} />
     </main>
   );
 }
