@@ -3363,6 +3363,113 @@ button.head-icon {
   flex-shrink: 0;
 }
 
+/* Welcome tour — idea mock (ring + streak) */
+.tour-idea-mock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+.tim-ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.tim-ring svg {
+  display: block;
+}
+.tim-check {
+  position: absolute;
+  font-size: 1.6rem;
+  color: var(--accent);
+}
+.tim-streak {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Welcome tour — notifications mock (push banner) */
+.tour-notif-mock {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.6rem 0.7rem;
+  backdrop-filter: blur(4px);
+}
+.tnm-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.tnm-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-align: left;
+  min-width: 0;
+}
+.tnm-app {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.tnm-msg {
+  font-size: 0.8rem;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+/* Welcome tour — install mock (home-screen icon) */
+.tour-install-mock {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.9rem;
+}
+.tis-slot {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+.tis-slot.gb {
+  position: relative;
+  opacity: 1;
+  background: none;
+  border: none;
+  display: grid;
+  justify-items: center;
+}
+.tis-slot.gb img {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+.tis-slot.gb small {
+  margin-top: 0.25rem;
+  font-size: 0.6rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
 /* Tour — action buttons + hints */
 .tour-action {
   width: 100%;

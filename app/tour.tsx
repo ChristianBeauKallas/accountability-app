@@ -26,6 +26,76 @@ type Kind =
 // be dropped back in here later. Invites still live in Settings.
 const DECK: Kind[] = ["photo", "bio", "idea", "install", "notifications", "done"];
 
+// The idea card's visual: a nearly-full ring with a streak chip, showing the
+// payoff — fill your ring each day, grow a streak, all tracked on your profile.
+function IdeaMock() {
+  const size = 92;
+  const stroke = 7;
+  const r = (size - stroke) / 2;
+  const c = size / 2;
+  const circ = 2 * Math.PI * r;
+  return (
+    <div className="tour-idea-mock" aria-hidden>
+      <span className="tim-ring">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <circle
+            cx={c}
+            cy={c}
+            r={r}
+            className="tour-ring-bg"
+            strokeWidth={stroke}
+            fill="none"
+          />
+          <circle
+            cx={c}
+            cy={c}
+            r={r}
+            className="tour-ring-fg"
+            strokeWidth={stroke}
+            fill="none"
+            strokeDasharray={circ}
+            strokeDashoffset={circ * 0.1}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${c} ${c})`}
+          />
+        </svg>
+        <span className="tim-check">✓</span>
+      </span>
+      <span className="tim-streak">🔥 7-day streak</span>
+    </div>
+  );
+}
+
+// The notifications card's visual: a mock push banner showing what a check-in
+// alert looks like.
+function NotifMock() {
+  return (
+    <div className="tour-notif-mock" aria-hidden>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="tnm-icon" src="/icon-192.png" alt="" />
+      <span className="tnm-text">
+        <span className="tnm-app">Get Better · now</span>
+        <span className="tnm-msg">Alex just checked in — 4 of 5 done 🔥</span>
+      </span>
+    </div>
+  );
+}
+
+// The install card's visual: the GB icon sitting on a home screen.
+function InstallMock() {
+  return (
+    <div className="tour-install-mock" aria-hidden>
+      <span className="tis-slot" />
+      <span className="tis-slot gb">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icon-192.png" alt="" />
+        <small>Get Better</small>
+      </span>
+      <span className="tis-slot" />
+    </div>
+  );
+}
+
 export default function Tour({
   userId,
   groupName,
@@ -283,12 +353,14 @@ export default function Tour({
               {/* ---- The idea ---- */}
               {kind === "idea" && (
                 <>
-                  <div className="tour-icon">💡</div>
+                  <div className="tour-icon">
+                    <IdeaMock />
+                  </div>
                   <h2 className="tour-title">Here&apos;s the idea</h2>
                   <p className="tour-body">
-                    Each day, log what you complete, fill your ring, and build a
-                    streak — we&apos;ll show you exactly how when you post your
-                    first one.
+                    Each day, log what you complete to fill your ring and grow
+                    your streak — it all adds up on your profile. We&apos;ll show
+                    you exactly how when you post your first one.
                   </p>
                 </>
               )}
@@ -296,7 +368,9 @@ export default function Tour({
               {/* ---- Install ---- */}
               {kind === "install" && (
                 <>
-                  <div className="tour-icon">📲</div>
+                  <div className="tour-icon">
+                    <InstallMock />
+                  </div>
                   <h2 className="tour-title">Add it to your home screen</h2>
                   {standalone ? (
                     <p className="tour-body">
@@ -315,7 +389,9 @@ export default function Tour({
               {/* ---- Notifications ---- */}
               {kind === "notifications" && (
                 <>
-                  <div className="tour-icon">🔔</div>
+                  <div className="tour-icon">
+                    <NotifMock />
+                  </div>
                   <h2 className="tour-title">Turn on notifications</h2>
                   <p className="tour-body">
                     Get a nudge when your crew checks in, reacts, or messages — so
