@@ -13,8 +13,7 @@ function pickAudioMime(): string {
   return c.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
 }
 
-type Step = "activities" | "context" | "choice" | "caption" | "photos";
-type Mode = "text" | "caption" | "voice" | null;
+type Step = "activities" | "context" | "caption" | "photos";
 
 export default function Composer({
   activities,
@@ -36,12 +35,11 @@ export default function Composer({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [typing, setTyping] = useState(false);
   const [caption, setCaption] = useState("");
-  const [mode, setMode] = useState<Mode>(null);
+  const [attachAudio, setAttachAudio] = useState(true);
 
   const [recording, setRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -57,10 +55,9 @@ export default function Composer({
     setSelected(new Set());
     setTyping(false);
     setCaption("");
-    setMode(null);
+    setAttachAudio(true);
     setAudioBlob(null);
     setAudioUrl(null);
-    setTranscript("");
     setPhotos([]);
     setPreviews([]);
     setError(null);
@@ -88,8 +85,10 @@ export default function Composer({
         const blob = new Blob(chunksRef.current, { type: mime || "audio/webm" });
         setAudioBlob(blob);
         setAudioUrl(URL.createObjectURL(blob));
+        setAttachAudio(true);
         stream.getTracks().forEach((t) => t.stop());
-        setStep("choice");
+        setStep("caption");
+        processDictation(blob);
       };
       recorderRef.current = rec;
       rec.start();
@@ -104,35 +103,27 @@ export default function Composer({
     setRecording(false);
   }
 
-  // ---- Choice after dictation ----
-  async function chooseCaption() {
-    if (!audioBlob) return;
+  // ---- After dictation: auto transcribe + clean into an editable caption ----
+  async function processDictation(blob: Blob) {
     setWorking(true);
     setError(null);
     try {
-      const text = await transcribe(audioBlob);
+      const raw = await transcribe(blob);
+      let text = raw;
+      try {
+        text = await polish(raw);
+      } catch {
+        /* if cleanup fails, keep the raw transcript */
+      }
       setCaption(text);
-      setMode("caption");
-      setAudioBlob(null);
-      setAudioUrl(null);
-      setStep("caption");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Transcription failed.");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Couldn't transcribe — type your note instead.",
+      );
     }
     setWorking(false);
-  }
-  async function chooseVoice() {
-    setMode("voice");
-    setStep("photos");
-    // Transcribe in the background so "read transcription" is instant on the feed.
-    if (audioBlob) {
-      try {
-        const text = await transcribe(audioBlob);
-        setTranscript(text);
-      } catch {
-        /* transcript is optional */
-      }
-    }
   }
 
   async function doPolish() {
@@ -157,9 +148,9 @@ export default function Composer({
 
   // ---- Post ----
   async function post() {
-    const hasCaption =
-      (mode === "caption" || mode === "text") && caption.trim().length > 0;
-    if (selected.size === 0 && !hasCaption && !audioBlob && photos.length === 0) {
+    const hasCaption = caption.trim().length > 0;
+    const hasAudio = attachAudio && !!audioBlob;
+    if (selected.size === 0 && !hasCaption && !hasAudio && photos.length === 0) {
       setError("Add at least one activity, a note, a voice note, or a photo.");
       return;
     }
@@ -186,8 +177,8 @@ export default function Composer({
       if (error) return fail(error.message);
     }
 
-    // Voice note
-    if (mode === "voice" && audioBlob) {
+    // Voice note (optional — the caption is the readable version)
+    if (hasAudio && audioBlob) {
       const path = `${userId}/${postId}-voice.webm`;
       const { error: upErr } = await supabase.storage
         .from("media")
@@ -199,20 +190,12 @@ export default function Composer({
         .select("id")
         .single();
       if (mErr) return fail(mErr.message);
-      // Use the background transcript if it finished; otherwise transcribe now
-      // so "Read transcription" is reliably available. Best-effort either way.
-      let finalTranscript = transcript;
-      if (!finalTranscript) {
-        try {
-          finalTranscript = await transcribe(audioBlob);
-        } catch {
-          /* transcript is optional */
-        }
-      }
-      if (finalTranscript && m) {
+      // Store the caption as the transcript too, so a voice-only post is still
+      // readable. Best-effort; ignore if the column isn't there yet.
+      if (hasCaption && m) {
         await supabase
           .from("media")
-          .update({ transcript: finalTranscript })
+          .update({ transcript: caption.trim() })
           .eq("id", m.id);
       }
     }
@@ -269,9 +252,7 @@ export default function Composer({
     );
   }
 
-  const stepNum = { activities: 1, context: 2, choice: 2, caption: 2, photos: 3 }[
-    step
-  ];
+  const stepNum = { activities: 1, context: 2, caption: 2, photos: 3 }[step];
   const selectedActivities = activities.filter((a) => selected.has(a.id));
 
   return (
@@ -356,10 +337,7 @@ export default function Composer({
               </button>
               <button
                 className="link-btn skip"
-                onClick={() => {
-                  setMode(null);
-                  setStep("photos");
-                }}
+                onClick={() => setStep("photos")}
               >
                 skip
               </button>
@@ -380,10 +358,7 @@ export default function Composer({
                 </button>
                 <button
                   className="wizard-next"
-                  onClick={() => {
-                    setMode(caption.trim() ? "text" : null);
-                    setStep("photos");
-                  }}
+                  onClick={() => setStep("photos")}
                 >
                   Next ›
                 </button>
@@ -393,46 +368,40 @@ export default function Composer({
         </>
       )}
 
-      {/* STEP 2b — choice after dictation */}
-      {step === "choice" && (
-        <>
-          <p className="composer-label">Nice — what should we do with that?</p>
-          {audioUrl && <audio className="post-audio" controls src={audioUrl} />}
-          <div className="choice-grid">
-            <button className="choice-btn" onClick={chooseCaption} disabled={working}>
-              ✍️ <span>Turn into caption</span>
-            </button>
-            <button className="choice-btn" onClick={chooseVoice} disabled={working}>
-              🎙️ <span>Keep as voice note</span>
-            </button>
-          </div>
-          {working && <p className="wizard-hint">Transcribing…</p>}
-          <button
-            className="link-btn"
-            onClick={() => {
-              setAudioBlob(null);
-              setAudioUrl(null);
-              setStep("context");
-            }}
-          >
-            ‹ re-record
-          </button>
-        </>
-      )}
-
-      {/* STEP 2c — caption review + polish */}
+      {/* STEP 2b — review the auto-generated caption + optional voice note */}
       {step === "caption" && (
         <>
-          <p className="composer-label">Your caption</p>
+          <p className="composer-label">What did you do?</p>
+          <p className="composer-sub">
+            {working ? "Writing it up…" : "Edit the text if you need to."}
+          </p>
           <textarea
             className="context-input typed"
             rows={4}
             value={caption}
+            placeholder={working ? "Transcribing…" : "Your note…"}
             onChange={(e) => setCaption(e.target.value)}
           />
+          {audioUrl && (
+            <div className="voice-attach">
+              <audio className="post-audio" controls src={audioUrl} />
+              <label className="attach-toggle">
+                <input
+                  type="checkbox"
+                  checked={attachAudio}
+                  onChange={(e) => setAttachAudio(e.target.checked)}
+                />
+                <span>Attach the voice recording</span>
+              </label>
+            </div>
+          )}
           <div className="wizard-actions">
-            <button className="polish-btn" onClick={doPolish} disabled={working}>
-              {working ? "Polishing…" : "✨ Polish"}
+            <button
+              className="polish-btn"
+              onClick={doPolish}
+              disabled={working || !caption.trim()}
+            >
+              {working ? "Working…" : "✨ Clean up"}
             </button>
             <button className="wizard-next" onClick={() => setStep("photos")}>
               Next ›

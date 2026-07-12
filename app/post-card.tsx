@@ -57,7 +57,13 @@ export default function PostCard({
       {photos.length > 0 && <PostGallery photos={photos} />}
 
       {audios.map((a) => (
-        <VoiceNote key={a.id} src={a.src} transcript={a.transcript} />
+        // The caption already shows the readable text, so only offer the
+        // transcript toggle for older voice notes that have no caption.
+        <VoiceNote
+          key={a.id}
+          src={a.src}
+          transcript={caption ? null : a.transcript}
+        />
       ))}
 
       {caption && <p className="post-caption">{caption}</p>}

@@ -1950,39 +1950,74 @@ span.avatar-lg.avatar-fallback {
 }
 
 /* ---- Feed: media-forward -------------------------------------------------- */
-.post-gallery {
-  /* Break out of the card's 1rem padding for a bigger, edge-to-edge photo. */
-  margin: 0.5rem -1rem;
+/* Compact square photo carousel */
+.pg {
+  margin: 0.6rem auto 0.4rem;
+  max-width: 300px;
 }
-.gallery-item {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  overflow: hidden;
-}
-.gallery-photo {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  display: block;
-}
-.post-gallery.multi {
+.pg-track {
   display: flex;
-  gap: 0.4rem;
-  padding: 0 1rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-}
-.post-gallery.multi::-webkit-scrollbar { display: none; }
-.post-gallery.multi .gallery-item {
-  flex: 0 0 88%;
-  scroll-snap-align: center;
   border-radius: var(--radius-sm);
+}
+.pg-track::-webkit-scrollbar {
+  display: none;
+}
+.pg-item {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: block;
+}
+.pg-photo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+.pg-dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 0.5rem;
+}
+.pg-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+.pg-dot.on {
+  width: 16px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+/* Composer — attach-voice toggle on the caption step */
+.voice-attach {
+  margin: 0.5rem 0 0.25rem;
+}
+.attach-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.attach-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
 }
 
 /* Fullscreen photo view */
