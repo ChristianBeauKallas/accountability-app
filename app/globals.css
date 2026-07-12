@@ -1189,11 +1189,13 @@ a {
 }
 
 .avatar-lg {
-  width: 94px;
-  height: 94px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--border);
+  /* Neon ring to lift the photo off the dark background */
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
   flex-shrink: 0;
 }
 
