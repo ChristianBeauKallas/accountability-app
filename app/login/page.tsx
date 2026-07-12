@@ -92,17 +92,17 @@ export default function LoginPage() {
         />
         <h1>Get Better</h1>
         <p className="auth-tagline">
-          Daily check-ins with your crew. Build streaks. Keep each other honest.
+          Real change is built one day at a time.
         </p>
         <ul className="auth-proof">
           <li>
-            <span>✅</span> Log your day in seconds
+            <span>✅</span> Track the habits that matter
           </li>
           <li>
-            <span>🔥</span> Streaks that reward showing up
+            <span>🔥</span> Momentum you can actually see
           </li>
           <li>
-            <span>👥</span> Your crew, cheering you on
+            <span>👥</span> Do it with people who show up too
           </li>
         </ul>
       </div>
