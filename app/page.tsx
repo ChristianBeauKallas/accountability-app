@@ -389,6 +389,7 @@ export default async function Home() {
               url={r.avatar}
               progress={r.progress}
               done={r.ringDone}
+              size={68}
             />
             <span className="rb-line">
               <span className="rb-name">{r.name.split(" ")[0]}</span>
