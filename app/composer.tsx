@@ -86,16 +86,22 @@ export default function Composer({
       rec.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
       rec.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: mime || "audio/webm" });
+        stream.getTracks().forEach((t) => t.stop());
+        if (blob.size === 0) {
+          setError("That recording came through empty — please try again.");
+          setStep("context");
+          return;
+        }
         setAudioBlob(blob);
         setAudioUrl(URL.createObjectURL(blob));
         setAudioDuration(Math.round((Date.now() - recStartRef.current) / 1000));
         setAttachAudio(true);
-        stream.getTracks().forEach((t) => t.stop());
         setStep("caption");
         processDictation(blob);
       };
       recorderRef.current = rec;
-      rec.start();
+      // Deliver audio in chunks — iOS can otherwise produce an empty file.
+      rec.start(500);
       recStartRef.current = Date.now();
       setRecording(true);
     } catch {
@@ -108,32 +114,27 @@ export default function Composer({
     setRecording(false);
   }
 
-  // ---- After dictation: transcribe, then clean up in the background ----
+  // ---- After dictation: transcribe + clean up, in one go ----
   async function processDictation(blob: Blob) {
     setWorking(true);
     setError(null);
-    let raw = "";
     try {
-      raw = await transcribe(blob);
+      const raw = await transcribe(blob);
+      let text = raw;
+      try {
+        text = await polish(raw);
+      } catch {
+        /* if cleanup fails, keep the raw transcript */
+      }
+      setCaption(text);
     } catch (e) {
       setError(
         e instanceof Error
           ? e.message
           : "Couldn't transcribe — type your note instead.",
       );
-      setWorking(false);
-      return;
     }
-    // Show the transcript right away so it feels instant…
-    setCaption(raw);
     setWorking(false);
-    // …then quietly upgrade it to the cleaned-up version (unless they've edited).
-    try {
-      const cleaned = await polish(raw);
-      setCaption((prev) => (prev === raw ? cleaned : prev));
-    } catch {
-      /* keep the raw transcript */
-    }
   }
 
   async function doPolish() {
