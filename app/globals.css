@@ -3236,3 +3236,87 @@ button.head-icon {
   padding-top: 0;
   border-top: none;
 }
+
+/* ============================================================================
+   Snappier, more "app-like" touch feel
+   ============================================================================ */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+a,
+button,
+.nav-item,
+.rb-card,
+[role="button"],
+summary {
+  touch-action: manipulation;
+}
+
+/* Instant press feedback on the most-tapped things */
+.nav-item {
+  transition: transform 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+}
+.nav-item:active {
+  transform: scale(0.9);
+}
+.nav-item.pending {
+  opacity: 0.65;
+}
+.rb-card {
+  transition: transform 0.1s ease;
+}
+.rb-card:active {
+  transform: scale(0.97);
+}
+.fab:active,
+.post-cta:active,
+.head-icon:active,
+.react-btn:active {
+  transform: scale(0.94);
+}
+
+/* Momentum scrolling on the horizontal/vertical scrollers */
+.roster-board,
+.chat-scroll,
+.today-strip {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================================
+   Loading skeletons (instant navigation response)
+   ============================================================================ */
+.skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+.skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: skel-shimmer 1.25s infinite;
+}
+@keyframes skel-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skel-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+.skel-roster {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
