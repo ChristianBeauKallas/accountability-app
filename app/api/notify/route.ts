@@ -165,7 +165,7 @@ export async function POST(req: Request) {
     actorId = post.author_id;
     recipientIds = await groupRecipients(post.group_id, actorId);
     title = `${await nameOf(actorId)} just checked in`;
-    text = "Tap to cheer them on 👏";
+    text = "Tap to see their progress 👏";
     url = "/";
     tag = `post-${post.id}`;
   } else if (body.type === "comment") {
