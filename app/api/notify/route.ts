@@ -244,7 +244,12 @@ export async function POST(req: Request) {
       text = "Who's next to check in? 👀";
     } else {
       title = `${name} just checked in`;
-      text = "Tap to see their progress 👏";
+      text =
+        required > 0
+          ? posterSet.size >= required
+            ? `${required} of ${required} — day complete! ✅`
+            : `${posterSet.size} of ${required} done today`
+          : "Tap to see their progress 👏";
     }
     url = "/";
     tag = `post-${post.id}`;
