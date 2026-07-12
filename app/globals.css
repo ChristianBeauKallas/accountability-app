@@ -3320,3 +3320,30 @@ summary {
   align-items: center;
   flex-shrink: 0;
 }
+
+/* Guided prompts on the dictation step */
+.dictate-prompts {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+.dictate-prompts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.35;
+}
+.dp-emoji {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}

@@ -614,6 +614,10 @@ alter table public.profiles add column if not exists onboarded_at timestamptz;
 -- Optional one-line description per activity
 alter table public.activities add column if not exists description text;
 
+-- Optional guided prompt shown on the dictation step (e.g. "Who did you
+-- connect with?"). Falls back to "What did you do for {name}?" when unset.
+alter table public.activities add column if not exists prompt text;
+
 -- =============================================================================
 -- Chat message media (image / voice note)
 -- =============================================================================

@@ -17,6 +17,7 @@ export default function ActivitiesManager({
   const [newEmoji, setNewEmoji] = useState("");
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [newPrompt, setNewPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +34,7 @@ export default function ActivitiesManager({
         name: a.name.trim(),
         emoji: a.emoji || null,
         description: a.description?.trim() || null,
+        prompt: a.prompt?.trim() || null,
       })
       .eq("id", a.id);
     if (error) setError(error.message);
@@ -69,6 +71,7 @@ export default function ActivitiesManager({
         name: newName.trim(),
         emoji: newEmoji || null,
         description: newDesc.trim() || null,
+        prompt: newPrompt.trim() || null,
         sort_order: nextOrder,
       })
       .select("*")
@@ -82,6 +85,7 @@ export default function ActivitiesManager({
     setNewEmoji("");
     setNewName("");
     setNewDesc("");
+    setNewPrompt("");
     router.refresh();
   }
 
@@ -130,6 +134,15 @@ export default function ActivitiesManager({
               onBlur={() => save(a)}
               aria-label="Description"
             />
+            <input
+              className="desc-input"
+              value={a.prompt ?? ""}
+              placeholder={`Voice prompt (e.g. "What did you do for ${a.name}?")`}
+              maxLength={80}
+              onChange={(e) => edit(a.id, { prompt: e.target.value })}
+              onBlur={() => save(a)}
+              aria-label="Voice prompt"
+            />
           </li>
         ))}
       </ul>
@@ -162,6 +175,14 @@ export default function ActivitiesManager({
           maxLength={80}
           onChange={(e) => setNewDesc(e.target.value)}
           aria-label="New description"
+        />
+        <input
+          className="desc-input"
+          value={newPrompt}
+          placeholder='Voice prompt (optional, e.g. "Who did you connect with?")'
+          maxLength={80}
+          onChange={(e) => setNewPrompt(e.target.value)}
+          aria-label="New voice prompt"
         />
       </form>
 

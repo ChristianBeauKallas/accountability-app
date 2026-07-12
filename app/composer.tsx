@@ -272,6 +272,7 @@ export default function Composer({
   const stepNum = { activities: 1, context: 2, choice: 2, caption: 2, photos: 3 }[
     step
   ];
+  const selectedActivities = activities.filter((a) => selected.has(a.id));
 
   return (
     <>
@@ -323,8 +324,22 @@ export default function Composer({
         <>
           <p className="composer-label">What did you do?</p>
           <p className="composer-sub">
-            Let the group know what you did in each area.
+            {selectedActivities.length > 0
+              ? "Talk through each one:"
+              : "Let the group know what you did."}
           </p>
+          {selectedActivities.length > 0 && (
+            <ul className="dictate-prompts">
+              {selectedActivities.map((a) => (
+                <li key={a.id}>
+                  <span className="dp-emoji">{a.emoji ?? "✅"}</span>
+                  <span>
+                    {a.prompt?.trim() || `What did you do for ${a.name}?`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
           {!typing ? (
             <div className="dictate-wrap">
               {!recording ? (

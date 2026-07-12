@@ -35,6 +35,7 @@ export type Activity = {
   name: string;
   emoji: string | null;
   description: string | null;
+  prompt: string | null;
   sort_order: number;
   active: boolean;
   created_at: string;
