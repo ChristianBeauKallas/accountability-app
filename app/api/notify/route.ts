@@ -164,8 +164,8 @@ export async function POST(req: Request) {
     if (!post) return NextResponse.json({ ok: true });
     actorId = post.author_id;
     recipientIds = await groupRecipients(post.group_id, actorId);
-    title = `${await nameOf(actorId)} checked in`;
-    text = post.caption || "Posted today's update";
+    title = `🔥 ${await nameOf(actorId)} showed up`;
+    text = post.caption || "Getting better today — tap to cheer them on 👏";
     url = "/";
     tag = `post-${post.id}`;
   } else if (body.type === "comment") {
@@ -182,7 +182,7 @@ export async function POST(req: Request) {
       .eq("id", comment.post_id)
       .single();
     if (post && post.author_id !== actorId) recipientIds = [post.author_id];
-    title = `${await nameOf(actorId)} commented`;
+    title = `💬 ${await nameOf(actorId)} replied`;
     text = comment.body;
     url = "/";
     tag = `comment-${comment.post_id}`;
