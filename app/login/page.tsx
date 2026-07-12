@@ -82,21 +82,14 @@ export default function LoginPage() {
   return (
     <main className="auth">
       <div className="auth-hero">
-        <svg className="auth-ring" width="52" height="52" viewBox="0 0 52 52">
-          <circle cx="26" cy="26" r="23" className="auth-ring-bg" strokeWidth="4" fill="none" />
-          <circle
-            cx="26"
-            cy="26"
-            r="23"
-            className="auth-ring-fg"
-            strokeWidth="4"
-            fill="none"
-            strokeDasharray={2 * Math.PI * 23}
-            strokeDashoffset={2 * Math.PI * 23 * 0.28}
-            strokeLinecap="round"
-            transform="rotate(-90 26 26)"
-          />
-        </svg>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="auth-icon"
+          src="/icon-192.png"
+          alt="Get Better"
+          width={88}
+          height={88}
+        />
         <h1>Get Better</h1>
         <p className="auth-tagline">
           Daily check-ins with your crew. Build streaks. Keep each other honest.

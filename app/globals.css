@@ -2932,6 +2932,15 @@ button.head-icon {
 .auth-ring {
   margin-bottom: 0.6rem;
 }
+.auth-icon {
+  display: block;
+  width: 88px;
+  height: 88px;
+  border-radius: 22px;
+  margin: 0 auto 0.7rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 24px rgba(62, 232, 122, 0.22);
+}
 .auth-ring-bg {
   stroke: var(--border);
 }
