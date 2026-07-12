@@ -85,7 +85,11 @@ export default function Composer({
       chunksRef.current = [];
       rec.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
       rec.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: mime || "audio/webm" });
+        // Trust the real mime from the recorded chunks — iOS records mp4/AAC
+        // even when isTypeSupported() reported nothing, and mislabelling it as
+        // webm makes the feed serve an undecodable content-type.
+        const realType = chunksRef.current[0]?.type || mime || "audio/mp4";
+        const blob = new Blob(chunksRef.current, { type: realType });
         stream.getTracks().forEach((t) => t.stop());
         if (blob.size === 0) {
           setError("That recording came through empty — please try again.");
