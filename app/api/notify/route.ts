@@ -182,7 +182,7 @@ export async function POST(req: Request) {
       .eq("id", comment.post_id)
       .single();
     if (post && post.author_id !== actorId) recipientIds = [post.author_id];
-    title = `💬 ${await nameOf(actorId)} replied`;
+    title = `${await nameOf(actorId)} replied to your check-in`;
     text = comment.body;
     url = "/";
     tag = `comment-${comment.post_id}`;
