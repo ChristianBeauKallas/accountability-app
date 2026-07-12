@@ -207,28 +207,18 @@ export default function Composer({
         .from("media")
         .upload(path, audioBlob, { contentType: audioBlob.type });
       if (upErr) return fail(upErr.message);
-      const { data: m, error: mErr } = await supabase
-        .from("media")
-        .insert({ owner_id: userId, type: "audio", storage_path: path, post_id: postId })
-        .select("id")
-        .single();
+      // Include the length + transcript in the INSERT itself. The media table
+      // has no UPDATE policy, so a follow-up update would be silently blocked
+      // by RLS — that's why the duration/transcript never saved.
+      const { error: mErr } = await supabase.from("media").insert({
+        owner_id: userId,
+        type: "audio",
+        storage_path: path,
+        post_id: postId,
+        duration_seconds: audioDuration || null,
+        transcript: hasCaption ? caption.trim() : null,
+      });
       if (mErr) return fail(mErr.message);
-      // Store the recorded length so the feed can show it (iOS won't preload
-      // audio metadata). Best-effort; ignore if the column isn't there yet.
-      if (audioDuration && m) {
-        await supabase
-          .from("media")
-          .update({ duration_seconds: audioDuration })
-          .eq("id", m.id);
-      }
-      // Store the caption as the transcript too, so a voice-only post is still
-      // readable. Best-effort; ignore if the column isn't there yet.
-      if (hasCaption && m) {
-        await supabase
-          .from("media")
-          .update({ transcript: caption.trim() })
-          .eq("id", m.id);
-      }
     }
 
     // Photos
