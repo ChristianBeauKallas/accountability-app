@@ -310,9 +310,17 @@ export default async function Home() {
       const tz = m.profiles?.timezone ?? "America/New_York";
       const info = computeStreak(datesByUser.get(m.user_id) ?? new Set(), tz);
 
+      const logged = todayActsByUser.get(m.user_id)?.size ?? 0;
+      const progress = totalActivities > 0 ? logged / totalActivities : 0;
+      const ringDone = totalActivities > 0 && logged >= totalActivities;
+      // Any activity logged today counts as "checked in", even a partial day —
+      // otherwise a 2/5 day reads as "no check-ins yet" while the ring shows
+      // progress. Streaks still require a full day; this is just the label.
+      const checkedInToday = logged > 0;
+
       let state: "today" | "pending" | "out" | "new";
       let value: number | null;
-      if (info.postedToday) {
+      if (checkedInToday) {
         state = "today";
         value = info.streak;
       } else if (info.streak > 0) {
@@ -327,10 +335,6 @@ export default async function Home() {
       }
 
       const sortKey = state === "out" ? -(value ?? 0) : (value ?? 0);
-
-      const logged = todayActsByUser.get(m.user_id)?.size ?? 0;
-      const progress = totalActivities > 0 ? logged / totalActivities : 0;
-      const ringDone = totalActivities > 0 && logged >= totalActivities;
 
       return {
         id: m.user_id,
@@ -497,7 +501,8 @@ function StreakPill({
   state: RosterState;
   value: number | null;
 }) {
-  if (state === "new") return <span className="pill pill-new">—</span>;
+  // "new", or checked in today but no full-day streak yet (value 0/null).
+  if (state === "new" || !value) return <span className="pill pill-new">—</span>;
   if (state === "out")
     return <span className="pill pill-out">−{value}</span>;
   // today or pending — positive streak
