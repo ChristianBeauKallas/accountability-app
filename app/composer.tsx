@@ -141,13 +141,6 @@ export default function Composer({
     setWorking(false);
   }
 
-  async function doPolish() {
-    if (!caption.trim()) return;
-    setWorking(true);
-    setCaption(await polish(caption));
-    setWorking(false);
-  }
-
   // ---- Photos ----
   function onPhotos(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -327,8 +320,8 @@ export default function Composer({
           <p className="composer-label">What did you do?</p>
           <p className="composer-sub">
             {selectedActivities.length > 0
-              ? "Talk through each one:"
-              : "Let the group know what you did."}
+              ? "Talk through each one — we'll clean it up into a caption you can publish or edit."
+              : "Talk it out — we'll clean it up into a caption you can publish or edit."}
           </p>
           {selectedActivities.length > 0 && (
             <ul className="dictate-prompts">
@@ -417,13 +410,6 @@ export default function Composer({
             </div>
           )}
           <div className="wizard-actions">
-            <button
-              className="polish-btn"
-              onClick={doPolish}
-              disabled={working || !caption.trim()}
-            >
-              {working ? "Working…" : "✨ Clean up"}
-            </button>
             <button className="wizard-next" onClick={() => setStep("photos")}>
               Next ›
             </button>
