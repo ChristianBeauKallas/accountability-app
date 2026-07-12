@@ -253,6 +253,22 @@ begin
 end;
 $$;
 
+-- Look up a group's display name from an invite code, so the join screen can
+-- say "You're invited to join {name}" before the visitor has signed in. The
+-- groups table is member-only via RLS; this SECURITY DEFINER function exposes
+-- only the name to anyone holding the code (which they need to join anyway).
+create or replace function public.group_name_by_code(code text)
+returns text
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select name from public.groups where invite_code = code;
+$$;
+
+grant execute on function public.group_name_by_code(text) to anon, authenticated;
+
 -- =============================================================================
 -- Row Level Security
 -- =============================================================================
