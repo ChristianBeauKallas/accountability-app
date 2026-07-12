@@ -199,9 +199,21 @@ export default function Composer({
         .select("id")
         .single();
       if (mErr) return fail(mErr.message);
-      if (transcript && m) {
-        // Best-effort; ignore if the transcript column isn't there yet.
-        await supabase.from("media").update({ transcript }).eq("id", m.id);
+      // Use the background transcript if it finished; otherwise transcribe now
+      // so "Read transcription" is reliably available. Best-effort either way.
+      let finalTranscript = transcript;
+      if (!finalTranscript) {
+        try {
+          finalTranscript = await transcribe(audioBlob);
+        } catch {
+          /* transcript is optional */
+        }
+      }
+      if (finalTranscript && m) {
+        await supabase
+          .from("media")
+          .update({ transcript: finalTranscript })
+          .eq("id", m.id);
       }
     }
 
