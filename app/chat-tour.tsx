@@ -4,11 +4,45 @@ import { useEffect, useState } from "react";
 import WalkThrough, { type Card } from "./walkthrough";
 import { tourDone, markTourDone } from "@/lib/tours";
 
-// Fires the first time a member opens the Chat tab.
+// Fires the first time a member opens the Chat tab — with mock-ups of the
+// thread and the composer so it's concrete.
+
+// A mock of the chat thread: a couple of message bubbles.
+function ThreadMock() {
+  return (
+    <div className="tour-phone tph-chat" aria-hidden>
+      <div className="tph-msg">
+        <span className="tph-msg-av">J</span>
+        <span className="tph-bubble">Big session this morning 💪</span>
+      </div>
+      <div className="tph-msg mine">
+        <span className="tph-bubble mine">Let&apos;s go 🔥</span>
+      </div>
+      <div className="tph-msg">
+        <span className="tph-msg-av">M</span>
+        <span className="tph-bubble">On my way now</span>
+      </div>
+    </div>
+  );
+}
+
+// A mock of the chat composer bar: text, photo, voice.
+function ComposerMock() {
+  return (
+    <div className="tour-phone tph-chatbar-wrap" aria-hidden>
+      <div className="tph-chatbar">
+        <span className="tph-chatinput">Message the crew…</span>
+        <span className="tph-chatbtn">📷</span>
+        <span className="tph-chatbtn">🎙️</span>
+        <span className="tph-chatsend">➤</span>
+      </div>
+    </div>
+  );
+}
 
 const CARDS: Card[] = [
   {
-    visual: "💬",
+    visual: <ThreadMock />,
     title: "The crew's group chat",
     body: (
       <>
@@ -18,7 +52,7 @@ const CARDS: Card[] = [
     ),
   },
   {
-    visual: "🎙️",
+    visual: <ComposerMock />,
     title: "Say it your way",
     body: (
       <>

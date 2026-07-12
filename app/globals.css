@@ -3174,6 +3174,195 @@ button.head-icon {
   color: #ff6b6b;
 }
 
+/* Profile tour — mock-ups */
+.tph-prof {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 0;
+}
+.tph-pavatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+  position: relative;
+}
+.tph-pavatar.big {
+  width: 60px;
+  height: 60px;
+  font-size: 1.5rem;
+}
+.tph-pcam {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  border: 2px solid var(--bg-2);
+  box-shadow: none;
+}
+.tph-pmeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.tph-pname {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.tph-pbio {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.tour-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 240px;
+  margin: 0 auto;
+}
+.ts-tile {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.55rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+.ts-num {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.ts-label {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.tph-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 0;
+}
+.tph-editfields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 1;
+}
+.tph-editrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.tph-editrow.muted {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.tph-pencil {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Chat tour — mock-ups */
+.tph-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.tph-msg {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+.tph-msg.mine {
+  justify-content: flex-end;
+}
+.tph-msg-av {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tph-bubble {
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  max-width: 78%;
+}
+.tph-bubble.mine {
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+}
+.tph-chatbar-wrap {
+  display: grid;
+  place-items: center;
+}
+.tph-chatbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.4rem 0.5rem 0.4rem 0.9rem;
+}
+.tph-chatinput {
+  flex: 1;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.tph-chatbtn {
+  font-size: 1rem;
+}
+.tph-chatsend {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
 /* Tour — action buttons + hints */
 .tour-action {
   width: 100%;
