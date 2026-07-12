@@ -16,17 +16,18 @@ export default function Joiner({ code }: { code: string }) {
     (async () => {
       const supabase = createClient();
 
-      // Look up the group's name from the code (works even when signed out) so
-      // the invite screen can greet them by group.
-      supabase
-        .rpc("group_name_by_code", { code })
-        .then(({ data }) => {
-          if (typeof data === "string" && data) setGroupName(data);
-        });
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      // Resolve the group name AND the session together before we decide what
+      // to render. The name lookup (works signed-out) is a network round-trip
+      // while getSession() is instant — awaiting both up front means the invite
+      // screen paints once, already greeting them by group, instead of flashing
+      // the generic fallback first and then swapping the name in.
+      const [nameRes, sessionRes] = await Promise.all([
+        supabase.rpc("group_name_by_code", { code }),
+        supabase.auth.getSession(),
+      ]);
+      if (typeof nameRes.data === "string" && nameRes.data)
+        setGroupName(nameRes.data);
+      const session = sessionRes.data.session;
 
       if (!session) {
         // Remember the invite so we can join right after they sign up.
