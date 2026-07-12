@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -22,17 +23,23 @@ export async function GET(req: Request) {
 
   let yourDevices: number | null = null;
   let totalDevices: number | null = null;
-  const authHeader = req.headers.get("authorization") || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-  if (token && env.serviceRoleKey) {
+  if (env.serviceRoleKey) {
     try {
-      const anon = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      );
-      const {
-        data: { user },
-      } = await anon.auth.getUser(token);
+      // Prefer the logged-in session (cookies) so just visiting the URL works;
+      // fall back to a bearer token if one was passed.
+      const authHeader = req.headers.get("authorization") || "";
+      const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+      let user = null;
+      if (token) {
+        const anon = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        );
+        user = (await anon.auth.getUser(token)).data.user;
+      } else {
+        const server = await createServerClient();
+        user = (await server.auth.getUser()).data.user;
+      }
       const admin = createAdminClient();
       if (user) {
         const { count } = await admin
