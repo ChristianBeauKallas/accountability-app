@@ -7,6 +7,60 @@ export const runtime = "nodejs";
 
 type Body = { type?: "post" | "comment" | "message"; id?: string };
 
+// Diagnostic: GET /api/notify tells you what's configured and (if you pass your
+// bearer token) how many devices you've subscribed. Values are never exposed —
+// only whether each secret is present. Visit /api/notify in the app to see it.
+export async function GET(req: Request) {
+  const env = {
+    vapidPublicKey: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    vapidPrivateKey: !!process.env.VAPID_PRIVATE_KEY,
+    vapidSubject: !!process.env.VAPID_SUBJECT,
+    serviceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  };
+  const configured =
+    env.vapidPublicKey && env.vapidPrivateKey && env.serviceRoleKey;
+
+  let yourDevices: number | null = null;
+  let totalDevices: number | null = null;
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (token && env.serviceRoleKey) {
+    try {
+      const anon = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      );
+      const {
+        data: { user },
+      } = await anon.auth.getUser(token);
+      const admin = createAdminClient();
+      if (user) {
+        const { count } = await admin
+          .from("push_subscriptions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        yourDevices = count ?? 0;
+      }
+      const { count: total } = await admin
+        .from("push_subscriptions")
+        .select("id", { count: "exact", head: true });
+      totalDevices = total ?? 0;
+    } catch {
+      /* leave counts null */
+    }
+  }
+
+  return NextResponse.json({
+    configured,
+    env,
+    yourDevices,
+    totalDevices,
+    hint: configured
+      ? "Config looks good. If you still get nothing: the recipient must have tapped Enable (yourDevices/totalDevices > 0), and on iPhone must have the app on their home screen. You never get notified of your own actions."
+      : "Missing env vars in Vercel — add the VAPID keys + SUPABASE_SERVICE_ROLE_KEY and redeploy.",
+  });
+}
+
 export async function POST(req: Request) {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
