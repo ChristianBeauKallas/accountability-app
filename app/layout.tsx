@@ -46,7 +46,9 @@ export default async function RootLayout({
       <body>
         {children}
         <BottomNav userId={user?.id ?? null} />
-        <InstallPrompt />
+        {/* Only nudge to install once they're signed in — it must never sit on
+            top of the login / signup / invite flow. */}
+        {user && <InstallPrompt />}
         <SwRegister />
       </body>
     </html>

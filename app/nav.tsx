@@ -11,8 +11,13 @@ export default function BottomNav({ userId }: { userId?: string | null }) {
   // Clear the pending highlight once navigation lands.
   useEffect(() => setPending(null), [pathname]);
 
-  // Hidden on auth screens.
-  if (pathname.startsWith("/login") || pathname.startsWith("/auth")) return null;
+  // Hidden on auth / invite screens (nothing to navigate to before joining).
+  if (
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/join")
+  )
+    return null;
 
   const items = [
     { href: "/", label: "Feed", icon: "🏠", match: (p: string) => p === "/" },

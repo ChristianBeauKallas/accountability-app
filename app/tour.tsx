@@ -21,15 +21,10 @@ type Kind =
   | "invite"
   | "done";
 
-const DECK: Kind[] = [
-  "photo",
-  "bio",
-  "idea",
-  "install",
-  "notifications",
-  "invite",
-  "done",
-];
+// Note: "invite" is intentionally left out of the first-run flow for now — we
+// don't want new members inviting others yet. The card below is kept so it can
+// be dropped back in here later. Invites still live in Settings.
+const DECK: Kind[] = ["photo", "bio", "idea", "install", "notifications", "done"];
 
 export default function Tour({
   userId,
