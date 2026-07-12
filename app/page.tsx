@@ -314,32 +314,32 @@ export default async function Home() {
   return (
     <main className="board">
       <header className="board-head">
-        <div>
+        <div className="board-head-top">
           <h1>{membership.groups.name}</h1>
-          <p className="subtitle">
-            {me && me.streak > 0 && (
-              <span className="head-streak">{me.streak}🔥</span>
-            )}
-            <span>
-              {checkedInCount} of {roster.length} checked in today
-            </span>
-          </p>
+          <div className="head-actions">
+            <Tour
+              userId={user.id}
+              groupName={membership.groups.name}
+              displayName={me?.name ?? "there"}
+              avatarUrl={me?.avatar ?? null}
+              inviteCode={membership.groups.invite_code}
+              initialSeen={!!onboardedAt}
+              trigger="none"
+            />
+            <HeaderBell userId={user.id} />
+            <Link className="head-icon" href="/activities" aria-label="Settings">
+              ⚙
+            </Link>
+          </div>
         </div>
-        <div className="head-actions">
-          <Tour
-            userId={user.id}
-            groupName={membership.groups.name}
-            displayName={me?.name ?? "there"}
-            avatarUrl={me?.avatar ?? null}
-            inviteCode={membership.groups.invite_code}
-            initialSeen={!!onboardedAt}
-            trigger="none"
-          />
-          <HeaderBell userId={user.id} />
-          <Link className="head-icon" href="/activities" aria-label="Settings">
-            ⚙
-          </Link>
-        </div>
+        <p className="subtitle">
+          {me && me.streak > 0 && (
+            <span className="head-streak">{me.streak}🔥</span>
+          )}
+          <span>
+            {checkedInCount} of {roster.length} checked in today
+          </span>
+        </p>
       </header>
 
       <NotifPrompt userId={user.id} />

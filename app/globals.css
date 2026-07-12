@@ -239,10 +239,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  display: block;
   padding: calc(1.15rem + env(safe-area-inset-top)) 0 0.9rem;
   margin-bottom: 0.5rem;
   background: linear-gradient(
@@ -253,13 +250,21 @@ a {
   backdrop-filter: blur(8px);
 }
 
+.board-head-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .board-head h1 {
-  font-size: 1.4rem;
+  font-size: 1.7rem;
   margin: 0;
+  line-height: 1.1;
 }
 
 .board-head .subtitle {
-  margin: 0.2rem 0 0;
+  margin: 0.35rem 0 0;
   font-size: 0.82rem;
   display: flex;
   align-items: center;
