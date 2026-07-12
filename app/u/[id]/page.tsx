@@ -219,17 +219,23 @@ export default async function ProfilePage({
   return (
     <main className="board profile">
       <header className="board-head">
-        <div>
-          <h1>Profile</h1>
-          <p className="subtitle">
-            <Link href="/">‹ Feed</Link>
-          </p>
+        <div className="board-head-top">
+          <div>
+            <h1>Profile</h1>
+            <p className="subtitle">
+              <Link href="/">‹ Feed</Link>
+            </p>
+          </div>
+          {isMe && (
+            <form
+              action="/auth/signout"
+              method="post"
+              className="signout-compact"
+            >
+              <button type="submit">Sign out</button>
+            </form>
+          )}
         </div>
-        {isMe && (
-          <form action="/auth/signout" method="post" className="signout-compact">
-            <button type="submit">Sign out</button>
-          </form>
-        )}
       </header>
 
       {/* Identity: avatar + name */}
