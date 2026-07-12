@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { enablePush, pushSupported } from "@/lib/push";
+import {
+  enablePush,
+  disablePush,
+  pushSubscribed,
+  pushSupported,
+} from "@/lib/push";
 
 export default function HeaderBell({ userId }: { userId: string }) {
   const [supported, setSupported] = useState(true);
@@ -13,14 +18,19 @@ export default function HeaderBell({ userId }: { userId: string }) {
       setSupported(false);
       return;
     }
-    setOn(Notification.permission === "granted");
+    pushSubscribed().then(setOn);
   }, []);
 
   async function toggle() {
-    if (on || busy) return;
+    if (busy) return;
     setBusy(true);
-    const r = await enablePush(userId);
-    setOn(r === "granted");
+    if (on) {
+      await disablePush(userId);
+      setOn(false);
+    } else {
+      const r = await enablePush(userId);
+      setOn(r === "granted");
+    }
     setBusy(false);
   }
 
@@ -29,11 +39,19 @@ export default function HeaderBell({ userId }: { userId: string }) {
   return (
     <button
       type="button"
-      className={`head-icon bell ${on ? "on" : "off"}`}
+      className={`head-icon bell ${on ? "on" : "off"} ${busy ? "busy" : ""}`}
       onClick={toggle}
-      aria-label={on ? "Notifications on" : "Turn on notifications"}
+      disabled={busy}
+      aria-busy={busy}
+      aria-label={
+        busy
+          ? "Updating notifications…"
+          : on
+            ? "Notifications on — tap to turn off"
+            : "Turn on notifications"
+      }
     >
-      🔔
+      {on ? "🔔" : "🔕"}
     </button>
   );
 }

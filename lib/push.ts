@@ -22,6 +22,27 @@ export function pushSupported(): boolean {
 
 export type EnableResult = "granted" | "denied" | "unsupported" | "error";
 
+/** True if this device currently has an active push subscription. */
+export async function pushSubscribed(): Promise<boolean> {
+  if (!pushSupported()) return false;
+  if (Notification.permission !== "granted") return false;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    return !!(await reg.pushManager.getSubscription());
+  } catch {
+    return false;
+  }
+}
+
+/** Whether an existing subscription was made with the given server key. */
+function keyMatches(existing: ArrayBuffer | null | undefined, want: Uint8Array) {
+  if (!existing) return false;
+  const have = new Uint8Array(existing);
+  if (have.length !== want.length) return false;
+  for (let i = 0; i < have.length; i++) if (have[i] !== want[i]) return false;
+  return true;
+}
+
 /** Asks permission, subscribes this device, and stores the subscription. */
 export async function enablePush(userId: string): Promise<EnableResult> {
   if (!pushSupported()) return "unsupported";
@@ -32,14 +53,27 @@ export async function enablePush(userId: string): Promise<EnableResult> {
     const permission = await Notification.requestPermission();
     if (permission !== "granted") return "denied";
 
+    const wantKey = urlBase64ToUint8Array(key);
     const reg = await navigator.serviceWorker.ready;
-    const existing = await reg.pushManager.getSubscription();
-    const sub =
-      existing ??
-      (await reg.pushManager.subscribe({
+
+    // Re-use the current subscription only if it was made with THIS server key.
+    // After a VAPID key rotation the old one is stale — drop it and re-subscribe,
+    // otherwise the push service rejects delivery (Apple 403 BadJwtToken).
+    let sub = await reg.pushManager.getSubscription();
+    if (sub && !keyMatches(sub.options.applicationServerKey, wantKey)) {
+      try {
+        await sub.unsubscribe();
+      } catch {
+        /* ignore */
+      }
+      sub = null;
+    }
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(key) as BufferSource,
-      }));
+        applicationServerKey: wantKey as BufferSource,
+      });
+    }
 
     const supabase = createClient();
     const { error } = await supabase.from("push_subscriptions").upsert(
@@ -54,6 +88,25 @@ export async function enablePush(userId: string): Promise<EnableResult> {
     return "granted";
   } catch {
     return "error";
+  }
+}
+
+/** Unsubscribes this device and removes the stored subscription. */
+export async function disablePush(userId: string): Promise<void> {
+  if (!pushSupported()) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+    const supabase = createClient();
+    await supabase
+      .from("push_subscriptions")
+      .delete()
+      .eq("user_id", userId)
+      .eq("endpoint", sub.endpoint);
+    await sub.unsubscribe();
+  } catch {
+    /* best-effort */
   }
 }
 
