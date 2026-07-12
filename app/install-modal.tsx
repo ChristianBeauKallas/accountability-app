@@ -70,8 +70,8 @@ export default function InstallModal({
         <div className="tour-icon">📲</div>
         <h2 className="tour-title">Add it to your home screen</h2>
         <p className="tour-body">
-          The app works best installed — full screen, its own icon, and it&apos;s
-          what turns on notifications so you never miss the crew.
+          The app works best installed — it&apos;s what turns on notifications so
+          you never miss an update from the group.
         </p>
         <ol className="install-steps">
           {isIOS ? (
