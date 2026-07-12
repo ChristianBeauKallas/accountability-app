@@ -6,7 +6,7 @@ import ActivityRow from "./activity-row";
 import PostComments from "./post-comments";
 import ReactionBar from "./reaction-bar";
 import PostMenu from "./post-menu";
-import { timeAgo } from "@/lib/format";
+import PostDate from "./post-date";
 
 export type PostCardData = {
   postId: string;
@@ -49,14 +49,16 @@ export default function PostCard({
       <div className="post-head">
         <Link className="post-author-link" href={`/u/${authorId}`}>
           <Avatar name={authorName} url={authorAvatar} />
-          <span className="post-author">{authorName}</span>
+          <span className="post-id">
+            <span className="post-author">{authorName}</span>
+            <PostDate iso={createdAt} />
+          </span>
         </Link>
-        <div className="post-head-right">
-          <span className="post-time">{timeAgo(createdAt)}</span>
-          {viewerId === authorId && (
+        {viewerId === authorId && (
+          <div className="post-head-right">
             <PostMenu postId={postId} caption={caption} />
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {photos.length > 0 && <PostGallery photos={photos} />}
