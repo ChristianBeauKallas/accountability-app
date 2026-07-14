@@ -1,11 +1,9 @@
 import { ImageResponse } from "next/og";
 import { NextResponse } from "next/server";
-import fs from "node:fs/promises";
-import path from "node:path";
-import sharp from "sharp";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { computeStreak, localDate, fullCompletionDays } from "@/lib/streaks";
+import { interMedium, interBold, interExtraBold } from "@/lib/story-fonts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +38,20 @@ function ringDataUri(
 }
 
 export async function GET(
+  req: Request,
+  ctx: { params: Promise<{ postId: string }> },
+) {
+  try {
+    return await render(req, ctx);
+  } catch (e) {
+    // Surface the reason so the client can show something actionable instead of
+    // a blank failure.
+    const msg = e instanceof Error ? e.message : "unknown error";
+    return new NextResponse(`story render failed: ${msg}`, { status: 500 });
+  }
+}
+
+async function render(
   _req: Request,
   { params }: { params: Promise<{ postId: string }> },
 ) {
@@ -146,6 +158,9 @@ export async function GET(
   ).find((m) => m.type === "image");
   if (imgMedia) {
     try {
+      // Load sharp defensively — if the native binary isn't available on the
+      // runtime, we skip the photo rather than failing the whole render.
+      const sharp = (await import("sharp")).default;
       const { data: blob } = await admin.storage
         .from("media")
         .download(imgMedia.storage_path);
@@ -177,13 +192,6 @@ export async function GET(
     month: "short",
     day: "numeric",
   }).format(new Date(post.created_at));
-
-  const fontDir = path.join(process.cwd(), "assets/fonts");
-  const [medium, bold, extrabold] = await Promise.all([
-    fs.readFile(path.join(fontDir, "Inter-Medium.ttf")),
-    fs.readFile(path.join(fontDir, "Inter-Bold.ttf")),
-    fs.readFile(path.join(fontDir, "Inter-ExtraBold.ttf")),
-  ]);
 
   return new ImageResponse(
     (
@@ -432,9 +440,9 @@ export async function GET(
       height: H,
       emoji: "twemoji",
       fonts: [
-        { name: "Inter", data: medium, weight: 500, style: "normal" },
-        { name: "Inter", data: bold, weight: 700, style: "normal" },
-        { name: "Inter", data: extrabold, weight: 800, style: "normal" },
+        { name: "Inter", data: interMedium, weight: 500, style: "normal" },
+        { name: "Inter", data: interBold, weight: 700, style: "normal" },
+        { name: "Inter", data: interExtraBold, weight: 800, style: "normal" },
       ],
       headers: { "Cache-Control": "private, no-store, max-age=0" },
     },

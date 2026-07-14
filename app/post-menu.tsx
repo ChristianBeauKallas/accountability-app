@@ -35,7 +35,10 @@ export default function PostMenu({
     setSharing(true);
     try {
       const res = await fetch(`/api/story/${postId}`, { cache: "no-store" });
-      if (!res.ok) throw new Error("build failed");
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(detail || `HTTP ${res.status}`);
+      }
       const blob = await res.blob();
       const file = new File([blob], "getbetter-story.png", {
         type: "image/png",
@@ -55,8 +58,14 @@ export default function PostMenu({
       }
     } catch (e) {
       // User cancelling the share sheet throws AbortError — not an error.
-      if ((e as Error)?.name !== "AbortError")
-        setShareErr("Couldn't create the story image — try again.");
+      if ((e as Error)?.name !== "AbortError") {
+        const detail = (e as Error)?.message ?? "";
+        setShareErr(
+          detail
+            ? `Couldn't create the story image. (${detail.slice(0, 140)})`
+            : "Couldn't create the story image — try again.",
+        );
+      }
     } finally {
       setSharing(false);
     }
