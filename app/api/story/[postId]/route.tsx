@@ -239,7 +239,7 @@ async function render(
             alignItems: "center",
             width: W,
             height: H,
-            padding: "120px 96px 96px",
+            padding: "104px 96px 104px",
           }}
         >
           {/* GB logo */}
@@ -277,6 +277,8 @@ async function render(
             {groupName.toUpperCase()}
           </div>
 
+          <div style={{ display: "flex", flexGrow: 0.85 }} />
+
           {/* hero ring */}
           <div
             style={{
@@ -285,7 +287,6 @@ async function render(
               justifyContent: "center",
               width: 440,
               height: 440,
-              marginTop: 64,
               position: "relative",
             }}
           >
@@ -328,7 +329,7 @@ async function render(
               flexWrap: "wrap",
               justifyContent: "center",
               gap: 16,
-              marginTop: 56,
+              marginTop: 72,
               maxWidth: 900,
             }}
           >
@@ -353,11 +354,12 @@ async function render(
             ))}
           </div>
 
+          <div style={{ display: "flex", flexGrow: 0.6 }} />
+
           {/* stat strip */}
           <div
             style={{
               display: "flex",
-              marginTop: 56,
               width: "100%",
               border: "2px solid rgba(255,255,255,0.14)",
               borderRadius: 28,
