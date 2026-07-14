@@ -3838,6 +3838,24 @@ button.head-icon {
 .pm-card {
   text-align: left;
 }
+.story-preview-img {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  margin: 0.4rem auto 1rem;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+}
+.story-preview-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+.story-preview-row button {
+  flex: 1;
+}
 .pm-textarea {
   width: 100%;
   background: var(--surface);

@@ -23,12 +23,16 @@ export default function PostMenu({
   const [err, setErr] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
   const [shareErr, setShareErr] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ file: File; url: string } | null>(
+    null,
+  );
 
   useEffect(() => setMounted(true), []);
 
-  // Build the 9:16 Story graphic server-side, then hand it to the native share
-  // sheet (→ Instagram → Stories). Falls back to a download where file-sharing
-  // isn't supported.
+  // Step 1: build the 9:16 Story graphic server-side and show a preview. We do
+  // NOT call navigator.share() here — iOS only allows share() inside a fresh
+  // user gesture, and the await above would consume it. The preview's Share
+  // button (a new tap) does the actual share.
   async function shareStory() {
     setOpen(false);
     setShareErr(null);
@@ -43,31 +47,52 @@ export default function PostMenu({
       const file = new File([blob], "getbetter-story.png", {
         type: "image/png",
       });
-      const nav = navigator as Navigator & {
-        canShare?: (d: { files: File[] }) => boolean;
-      };
-      if (nav.canShare && nav.canShare({ files: [file] })) {
-        await navigator.share({ files: [file] });
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "getbetter-story.png";
-        a.click();
-        URL.revokeObjectURL(url);
-      }
+      setPreview({ file, url: URL.createObjectURL(blob) });
     } catch (e) {
-      // User cancelling the share sheet throws AbortError — not an error.
-      if ((e as Error)?.name !== "AbortError") {
-        const detail = (e as Error)?.message ?? "";
-        setShareErr(
-          detail
-            ? `Couldn't create the story image. (${detail.slice(0, 140)})`
-            : "Couldn't create the story image — try again.",
-        );
-      }
+      const detail = (e as Error)?.message ?? "";
+      setShareErr(
+        detail
+          ? `Couldn't create the story image. (${detail.slice(0, 140)})`
+          : "Couldn't create the story image — try again.",
+      );
     } finally {
       setSharing(false);
+    }
+  }
+
+  function closePreview() {
+    setPreview((p) => {
+      if (p) URL.revokeObjectURL(p.url);
+      return null;
+    });
+  }
+
+  function downloadPreview() {
+    if (!preview) return;
+    const a = document.createElement("a");
+    a.href = preview.url;
+    a.download = "getbetter-story.png";
+    a.click();
+    closePreview();
+  }
+
+  // Step 2: fired straight from the Share button tap (gesture intact).
+  async function doShare() {
+    if (!preview) return;
+    const nav = navigator as Navigator & {
+      canShare?: (d: { files: File[] }) => boolean;
+    };
+    if (!nav.canShare || !nav.canShare({ files: [preview.file] })) {
+      downloadPreview();
+      return;
+    }
+    try {
+      await navigator.share({ files: [preview.file] });
+      closePreview();
+    } catch (e) {
+      // Cancelling the sheet throws AbortError — leave the preview open so they
+      // can try again or save instead.
+      if ((e as Error)?.name !== "AbortError") downloadPreview();
     }
   }
 
@@ -148,7 +173,7 @@ export default function PostMenu({
       )}
 
       {mounted &&
-        (sharing || shareErr) &&
+        (sharing || shareErr || preview) &&
         createPortal(
           <div className="tour-overlay" role="dialog" aria-modal="true">
             <div className="tour-card pm-card">
@@ -159,6 +184,39 @@ export default function PostMenu({
                   <p className="tour-body">
                     Building your shareable graphic — one sec.
                   </p>
+                </>
+              ) : preview ? (
+                <>
+                  <h2 className="tour-title">Ready to share</h2>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    className="story-preview-img"
+                    src={preview.url}
+                    alt="Your story graphic"
+                  />
+                  <button
+                    type="button"
+                    className="tour-action"
+                    onClick={doShare}
+                  >
+                    Share to Instagram…
+                  </button>
+                  <div className="story-preview-row">
+                    <button
+                      type="button"
+                      className="tour-back"
+                      onClick={closePreview}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="tour-back"
+                      onClick={downloadPreview}
+                    >
+                      Save image
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
