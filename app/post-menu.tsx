@@ -4,14 +4,18 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { Activity } from "@/lib/types";
 
-// Owner-only controls on a post: edit the caption or delete the whole post.
-// Deleting cascades its activities, comments, reactions, and media via FK.
+// Owner-only controls on a post: edit it (caption + which activities it counts)
+// or delete the whole post. Deleting cascades its activities, comments,
+// reactions, and media via FK.
 export default function PostMenu({
   postId,
+  groupId,
   caption,
 }: {
   postId: string;
+  groupId: string;
   caption: string | null;
 }) {
   const router = useRouter();
@@ -21,6 +25,11 @@ export default function PostMenu({
   const [text, setText] = useState(caption ?? "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Post editor: the group's activities + which ones this post counts.
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [origSelected, setOrigSelected] = useState<Set<string>>(new Set());
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareErr, setShareErr] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ file: File; url: string } | null>(
@@ -96,19 +105,84 @@ export default function PostMenu({
     }
   }
 
+  // Open the editor: load the group's activities and this post's current ones.
+  async function openEdit() {
+    setText(caption ?? "");
+    setErr(null);
+    setMode("edit");
+    setOpen(false);
+    setLoadingEdit(true);
+    const supabase = createClient();
+    const [{ data: acts }, { data: pa }] = await Promise.all([
+      supabase
+        .from("activities")
+        .select("*")
+        .eq("group_id", groupId)
+        .eq("active", true)
+        .order("sort_order"),
+      supabase.from("post_activities").select("activity_id").eq("post_id", postId),
+    ]);
+    setActivities((acts ?? []) as Activity[]);
+    const sel = new Set(
+      ((pa ?? []) as { activity_id: string }[]).map((r) => r.activity_id),
+    );
+    setSelected(sel);
+    setOrigSelected(new Set(sel));
+    setLoadingEdit(false);
+  }
+
+  function toggleActivity(id: string) {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  }
+
   async function saveEdit() {
     setBusy(true);
     setErr(null);
     const supabase = createClient();
-    const { error } = await supabase
+
+    // Caption.
+    const { error: capErr } = await supabase
       .from("group_posts")
       .update({ caption: text.trim() || null })
       .eq("id", postId);
-    setBusy(false);
-    if (error) {
-      setErr(error.message);
+    if (capErr) {
+      setErr(capErr.message);
+      setBusy(false);
       return;
     }
+
+    // Activities — add the newly checked, remove the unchecked.
+    const toAdd = [...selected].filter((id) => !origSelected.has(id));
+    const toRemove = [...origSelected].filter((id) => !selected.has(id));
+    if (toAdd.length > 0) {
+      const { error } = await supabase
+        .from("post_activities")
+        .insert(toAdd.map((activity_id) => ({ post_id: postId, activity_id })));
+      if (error) {
+        setErr(error.message);
+        setBusy(false);
+        return;
+      }
+    }
+    if (toRemove.length > 0) {
+      const { error } = await supabase
+        .from("post_activities")
+        .delete()
+        .eq("post_id", postId)
+        .in("activity_id", toRemove);
+      if (error) {
+        setErr(error.message);
+        setBusy(false);
+        return;
+      }
+    }
+
+    setBusy(false);
     setMode(null);
     router.refresh();
   }
@@ -148,15 +222,8 @@ export default function PostMenu({
             <button type="button" onClick={shareStory}>
               📸 Share to story
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setText(caption ?? "");
-                setMode("edit");
-                setOpen(false);
-              }}
-            >
-              ✏️ Edit caption
+            <button type="button" onClick={openEdit}>
+              ✏️ Edit post
             </button>
             <button
               type="button"
@@ -247,14 +314,37 @@ export default function PostMenu({
             <div className="tour-card pm-card">
               {mode === "edit" ? (
                 <>
-                  <h2 className="tour-title">Edit caption</h2>
+                  <h2 className="tour-title">Edit post</h2>
+                  <p className="pm-section-label">What you did</p>
+                  {loadingEdit ? (
+                    <p className="pm-loading">Loading…</p>
+                  ) : (
+                    <div className="pm-acts">
+                      {activities.map((a) => (
+                        <button
+                          key={a.id}
+                          type="button"
+                          className={`toggle ${selected.has(a.id) ? "on" : ""}`}
+                          onClick={() => toggleActivity(a.id)}
+                        >
+                          <span className="toggle-emoji">{a.emoji ?? "✅"}</span>
+                          <span className="toggle-text">
+                            <span className="toggle-name">{a.name}</span>
+                          </span>
+                          <span className="pm-check">
+                            {selected.has(a.id) ? "✓" : ""}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <p className="pm-section-label">Caption</p>
                   <textarea
                     className="pm-textarea"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    rows={4}
+                    rows={3}
                     placeholder="What did you do?"
-                    autoFocus
                   />
                   {err && <p className="auth-error">{err}</p>}
                   <div className="tour-nav">
@@ -270,7 +360,7 @@ export default function PostMenu({
                       type="button"
                       className="tour-next"
                       onClick={saveEdit}
-                      disabled={busy}
+                      disabled={busy || loadingEdit}
                     >
                       {busy ? "Saving…" : "Save"}
                     </button>

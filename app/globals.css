@@ -3838,6 +3838,44 @@ button.head-icon {
 .pm-card {
   text-align: left;
 }
+.pm-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0.2rem 0 0.5rem;
+}
+.pm-loading {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 0.8rem;
+}
+.pm-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 38vh;
+  overflow-y: auto;
+  margin-bottom: 0.9rem;
+}
+.pm-acts .toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+}
+.pm-acts .toggle-text {
+  flex: 1;
+}
+.pm-check {
+  color: var(--accent);
+  font-weight: 800;
+  width: 1.2rem;
+  text-align: center;
+  flex-shrink: 0;
+}
 .story-preview-img {
   display: block;
   width: 100%;

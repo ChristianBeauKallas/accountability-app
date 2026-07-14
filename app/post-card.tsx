@@ -10,6 +10,7 @@ import PostDate from "./post-date";
 
 export type PostCardData = {
   postId: string;
+  groupId: string;
   authorId: string;
   authorName: string;
   authorAvatar: string | null;
@@ -31,6 +32,7 @@ export type PostCardData = {
 
 export default function PostCard({
   postId,
+  groupId,
   authorId,
   authorName,
   authorAvatar,
@@ -54,7 +56,7 @@ export default function PostCard({
         <div className="post-head-right">
           <PostDate iso={createdAt} />
           {viewerId === authorId && (
-            <PostMenu postId={postId} caption={caption} />
+            <PostMenu postId={postId} groupId={groupId} caption={caption} />
           )}
         </div>
       </div>

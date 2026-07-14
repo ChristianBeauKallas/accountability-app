@@ -459,6 +459,7 @@ export default async function Home() {
             <PostCard
               key={p.id}
               postId={p.id}
+              groupId={groupId}
               authorId={p.author_id}
               authorName={author?.name ?? "Member"}
               authorAvatar={author?.avatar ?? null}

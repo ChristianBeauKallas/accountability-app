@@ -362,6 +362,7 @@ export default async function ProfilePage({
             <PostCard
               key={p.id}
               postId={p.id}
+              groupId={groupId ?? ""}
               authorId={id}
               authorName={profile.display_name}
               authorAvatar={profile.avatar_url}
