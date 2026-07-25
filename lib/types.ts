@@ -76,6 +76,33 @@ export type Checkin = {
   created_at: string;
 };
 
+export type CoachingTracker = {
+  id: string;
+  relationship_id: string;
+  label: string;
+  emoji: string | null;
+  sort_order: number;
+  repeatable: boolean;
+  wants_photo: boolean;
+  wants_note: boolean;
+  wants_amount: boolean;
+  unit: string | null;
+  target: number | null;
+  active: boolean;
+};
+
+export type CoachingEntry = {
+  id: string;
+  relationship_id: string;
+  client_id: string;
+  tracker_id: string;
+  happened_at: string;
+  detail: string | null;
+  amount: number | null;
+  logged_at: string;
+  photos?: string[];
+};
+
 export type Message = {
   id: string;
   group_id: string;

@@ -4,6 +4,7 @@ import ActivitiesManager from "./activities-manager";
 import GroupNameEditor from "./group-name-editor";
 import InviteLink from "./invite-link";
 import DeleteAccount from "./delete-account";
+import CoachingCard from "./coaching-card";
 import Tour from "../tour";
 import type { Activity } from "@/lib/types";
 
@@ -48,6 +49,35 @@ export default async function SettingsPage() {
   ]);
 
   const activities = (data ?? []) as Activity[];
+
+  // Coaching: group members (for the "coach a teammate" picker), who I coach,
+  // and whether I'm being coached.
+  const [membersRes, myClientsRes, amClientRes] = await Promise.all([
+    supabase
+      .from("group_members")
+      .select("user_id, profiles(display_name)")
+      .eq("group_id", membership.group_id),
+    supabase
+      .from("coaching_relationships")
+      .select("client_id")
+      .eq("coach_id", user.id),
+    supabase
+      .from("coaching_relationships")
+      .select("id")
+      .eq("client_id", user.id)
+      .limit(1),
+  ]);
+  const memberList = ((membersRes.data ?? []) as unknown as {
+    user_id: string;
+    profiles: { display_name: string } | null;
+  }[])
+    .filter((m) => m.user_id !== user.id)
+    .map((m) => ({ id: m.user_id, name: m.profiles?.display_name ?? "Member" }));
+  const clientIds = new Set(
+    (myClientsRes.data ?? []).map((r) => r.client_id as string),
+  );
+  const clientList = memberList.filter((m) => clientIds.has(m.id));
+  const isClient = (amClientRes.data ?? []).length > 0;
 
   return (
     <main className="board settings-page">
@@ -103,6 +133,20 @@ export default async function SettingsPage() {
           </ul>
         </section>
       )}
+
+      {/* Coaching — 1:1 */}
+      <section className="settings-card">
+        <h2 className="settings-title">Coaching</h2>
+        <p className="settings-hint">
+          Run a private 1:1 program — the person you coach logs their day, you
+          see it and leave notes. Separate from the group.
+        </p>
+        <CoachingCard
+          members={memberList}
+          clients={clientList}
+          isClient={isClient}
+        />
+      </section>
 
       {/* Walkthrough — everyone */}
       <section className="settings-card">

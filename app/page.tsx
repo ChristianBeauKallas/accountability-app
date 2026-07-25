@@ -81,6 +81,19 @@ export default async function Home() {
 
   const groupId = membership.group_id;
 
+  // Coaching entry point, if this user is in any relationship.
+  let coachingHref: string | null = null;
+  {
+    const { data: cr } = await supabase
+      .from("coaching_relationships")
+      .select("coach_id, client_id")
+      .or(`coach_id.eq.${user.id},client_id.eq.${user.id}`)
+      .limit(5);
+    const rows = (cr ?? []) as { coach_id: string; client_id: string }[];
+    if (rows.some((r) => r.client_id === user.id)) coachingHref = "/coaching";
+    else if (rows.some((r) => r.coach_id === user.id)) coachingHref = "/coach";
+  }
+
   // Fetch members, activities, and recent posts in parallel.
   const [membersRes, activitiesRes, postsRes] = await Promise.all([
     supabase
@@ -369,6 +382,15 @@ export default async function Home() {
               trigger="none"
             />
             <HeaderBell userId={user.id} />
+            {coachingHref && (
+              <Link
+                className="head-icon"
+                href={coachingHref}
+                aria-label="Coaching"
+              >
+                📓
+              </Link>
+            )}
             <Link className="head-icon" href="/activities" aria-label="Settings">
               ⚙
             </Link>
