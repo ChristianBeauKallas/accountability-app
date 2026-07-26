@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeStreak, localDate } from "@/lib/streaks";
-import type { CoachingTracker, CoachingEntry } from "@/lib/types";
+import type { CoachingTracker, CoachingEntry, SavedMeal } from "@/lib/types";
 import CoachingLog from "./coaching-log";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +59,9 @@ export default async function CoachingPage() {
       .order("sort_order"),
     supabase
       .from("coaching_entries")
-      .select("id, tracker_id, happened_at, detail, amount, logged_at")
+      .select(
+        "id, tracker_id, happened_at, detail, amount, calories, protein_g, carbs_g, fat_g, macros_source, logged_at",
+      )
       .eq("relationship_id", rel.id)
       .gte(
         "happened_at",
@@ -129,6 +131,44 @@ export default async function CoachingPage() {
       ? Math.round((loggedTrackerIds.size / allTrackers.length) * 100)
       : 0;
 
+  // Today's macro totals (across all entries that carry macros).
+  const totals = { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+  for (const e of todayEntries) {
+    if (e.calories) totals.calories += e.calories;
+    if (e.protein_g) totals.protein_g += Number(e.protein_g);
+    if (e.carbs_g) totals.carbs_g += Number(e.carbs_g);
+    if (e.fat_g) totals.fat_g += Number(e.fat_g);
+  }
+
+  // Saved meals + recent distinct meals (for one-tap re-logging).
+  const mealTrackerIds = new Set(
+    allTrackers.filter((t) => t.wants_macros).map((t) => t.id),
+  );
+  const recentMeals: SavedMeal[] = [];
+  const seenDetail = new Set<string>();
+  for (const e of allEntries) {
+    if (!mealTrackerIds.has(e.tracker_id)) continue;
+    const d = (e.detail ?? "").trim();
+    if (!d || seenDetail.has(d.toLowerCase())) continue;
+    seenDetail.add(d.toLowerCase());
+    recentMeals.push({
+      id: `recent-${e.id}`,
+      name: d,
+      detail: d,
+      calories: e.calories,
+      protein_g: e.protein_g,
+      carbs_g: e.carbs_g,
+      fat_g: e.fat_g,
+    });
+    if (recentMeals.length >= 8) break;
+  }
+  const { data: saved } = await supabase
+    .from("coaching_saved_meals")
+    .select("id, name, detail, calories, protein_g, carbs_g, fat_g")
+    .eq("relationship_id", rel.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
   return (
     <CoachingLog
       relationshipId={rel.id}
@@ -138,6 +178,9 @@ export default async function CoachingPage() {
       streak={streak}
       adherence={adherence}
       coachNote={(fb as { body: string } | null)?.body ?? null}
+      macroTotals={totals}
+      savedMeals={(saved ?? []) as SavedMeal[]}
+      recentMeals={recentMeals}
     />
   );
 }

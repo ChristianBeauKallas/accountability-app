@@ -47,6 +47,38 @@ export async function transcribe(blob: Blob): Promise<string> {
   return (data.text ?? "") as string;
 }
 
+export type MacroEstimate = {
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  items?: { name?: string; portion?: string }[];
+  confidence?: "low" | "medium" | "high";
+};
+
+/** Estimate calories + macros from a meal photo (base64/data URL) and/or text. */
+export async function estimateMacros(
+  image: string | null,
+  text: string,
+): Promise<MacroEstimate> {
+  const res = await fetch("/api/estimate-macros", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+    body: JSON.stringify({ image, text }),
+  });
+  if (!res.ok) {
+    let msg = "Couldn't estimate macros — try again.";
+    try {
+      const d = await res.json();
+      if (d?.error) msg = d.error;
+    } catch {
+      /* keep default */
+    }
+    throw new Error(msg);
+  }
+  return (await res.json()) as MacroEstimate;
+}
+
 /**
  * Clean up rough text via Claude; returns input on failure. An optional
  * `context` (e.g. "Meal — What did you eat?") tailors the output to a short,

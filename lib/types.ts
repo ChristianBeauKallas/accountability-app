@@ -87,6 +87,7 @@ export type CoachingTracker = {
   wants_photo: boolean;
   wants_note: boolean;
   wants_amount: boolean;
+  wants_macros: boolean;
   unit: string | null;
   target: number | null;
   active: boolean;
@@ -100,8 +101,23 @@ export type CoachingEntry = {
   happened_at: string;
   detail: string | null;
   amount: number | null;
+  calories: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
+  macros_source: string | null;
   logged_at: string;
   photos?: string[];
+};
+
+export type SavedMeal = {
+  id: string;
+  name: string;
+  detail: string | null;
+  calories: number | null;
+  protein_g: number | null;
+  carbs_g: number | null;
+  fat_g: number | null;
 };
 
 export type Message = {

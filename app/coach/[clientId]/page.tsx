@@ -52,7 +52,9 @@ export default async function CoachClientPage({
       .order("sort_order"),
     supabase
       .from("coaching_entries")
-      .select("id, tracker_id, happened_at, detail, amount, logged_at")
+      .select(
+        "id, tracker_id, happened_at, detail, amount, calories, protein_g, carbs_g, fat_g, macros_source, logged_at",
+      )
       .eq("relationship_id", rel.id)
       .gte("happened_at", new Date(Date.now() - 60 * 86400000).toISOString())
       .order("happened_at", { ascending: true }),
@@ -75,6 +77,15 @@ export default async function CoachClientPage({
     allTrackers.length > 0
       ? Math.round((loggedToday.size / allTrackers.length) * 100)
       : 0;
+
+  // Today's macro totals.
+  const mt = { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+  for (const e of todayEntries) {
+    if (e.calories) mt.calories += e.calories;
+    if (e.protein_g) mt.protein_g += Number(e.protein_g);
+    if (e.carbs_g) mt.carbs_g += Number(e.carbs_g);
+    if (e.fat_g) mt.fat_g += Number(e.fat_g);
+  }
 
   // 7-day adherence bars.
   const days: string[] = [];
@@ -205,6 +216,16 @@ export default async function CoachClientPage({
         )}
       </section>
 
+      {mt.calories > 0 && (
+        <section className="macro-totals">
+          <span className="mt-cal">{mt.calories} kcal today</span>
+          <span className="mt-macros">
+            <b>{Math.round(mt.protein_g)}g</b> P ·{" "}
+            <b>{Math.round(mt.carbs_g)}g</b> C · <b>{Math.round(mt.fat_g)}g</b> F
+          </span>
+        </section>
+      )}
+
       {/* 7-day adherence */}
       <section className="panel">
         <h2>Last 7 days</h2>
@@ -288,6 +309,13 @@ export default async function CoachClientPage({
                     {late && <span className="tl-late">logged later</span>}
                   </span>
                   {e.detail && <span className="tl-detail">{e.detail}</span>}
+                  {e.calories != null && (
+                    <span className="tl-macro">
+                      {e.calories} kcal · {Math.round(Number(e.protein_g ?? 0))}P
+                      · {Math.round(Number(e.carbs_g ?? 0))}C ·{" "}
+                      {Math.round(Number(e.fat_g ?? 0))}F
+                    </span>
+                  )}
                 </span>
                 {photos.length > 0 && (
                   // eslint-disable-next-line @next/next/no-img-element

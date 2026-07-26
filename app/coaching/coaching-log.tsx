@@ -5,14 +5,45 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
-import { transcribe, polish } from "@/lib/ai";
-import type { CoachingTracker, CoachingEntry } from "@/lib/types";
+import { transcribe, polish, estimateMacros } from "@/lib/ai";
+import type { CoachingTracker, CoachingEntry, SavedMeal } from "@/lib/types";
 
 function pickAudioMime(): string {
   if (typeof MediaRecorder === "undefined") return "";
   const c = ["audio/webm", "audio/mp4", "audio/ogg"];
   return c.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
 }
+
+// Downscale a photo to a data URL for the estimate call (keeps it fast + cheap).
+function fileToScaledDataUrl(file: File, max = 1024): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("no canvas"));
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.8));
+    };
+    img.onerror = () => reject(new Error("bad image"));
+    img.src = url;
+  });
+}
+
+type Macros = {
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  source: "ai" | "edited";
+};
 
 function toLocalInput(iso: string): string {
   const d = new Date(iso);
@@ -34,6 +65,7 @@ type Draft = {
   amount: string;
   files: File[];
   previews: string[];
+  macros: Macros | null;
 };
 
 export default function CoachingLog({
@@ -44,6 +76,9 @@ export default function CoachingLog({
   streak,
   adherence,
   coachNote,
+  macroTotals,
+  savedMeals,
+  recentMeals,
 }: {
   relationshipId: string;
   userId: string;
@@ -52,6 +87,9 @@ export default function CoachingLog({
   streak: number;
   adherence: number;
   coachNote: string | null;
+  macroTotals: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
+  savedMeals: SavedMeal[];
+  recentMeals: SavedMeal[];
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -59,6 +97,8 @@ export default function CoachingLog({
   const [err, setErr] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [dictating, setDictating] = useState(false);
+  const [estimating, setEstimating] = useState(false);
+  const [mealSaved, setMealSaved] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -79,6 +119,7 @@ export default function CoachingLog({
 
   function openNew(tracker: CoachingTracker) {
     setErr(null);
+    setMealSaved(false);
     setDraft({
       tracker,
       entry: null,
@@ -87,12 +128,14 @@ export default function CoachingLog({
       amount: "",
       files: [],
       previews: [],
+      macros: null,
     });
   }
   function openEdit(entry: CoachingEntry) {
     const tracker = trackerById.get(entry.tracker_id);
     if (!tracker) return;
     setErr(null);
+    setMealSaved(false);
     setDraft({
       tracker,
       entry,
@@ -101,11 +144,103 @@ export default function CoachingLog({
       amount: entry.amount != null ? String(entry.amount) : "",
       files: [],
       previews: entry.photos ?? [],
+      macros:
+        entry.calories != null
+          ? {
+              calories: entry.calories,
+              protein_g: Number(entry.protein_g ?? 0),
+              carbs_g: Number(entry.carbs_g ?? 0),
+              fat_g: Number(entry.fat_g ?? 0),
+              source: entry.macros_source === "edited" ? "edited" : "ai",
+            }
+          : null,
     });
   }
   function close() {
     setDraft(null);
     setErr(null);
+  }
+
+  // "Get macros" — estimate from the newly-added photo (if any) + the note.
+  async function getMacros() {
+    if (!draft) return;
+    setEstimating(true);
+    setErr(null);
+    try {
+      let image: string | null = null;
+      if (draft.files[0]) image = await fileToScaledDataUrl(draft.files[0]);
+      const m = await estimateMacros(image, draft.detail.trim());
+      setDraft((d) =>
+        d
+          ? {
+              ...d,
+              macros: {
+                calories: m.calories,
+                protein_g: m.protein_g,
+                carbs_g: m.carbs_g,
+                fat_g: m.fat_g,
+                source: "ai",
+              },
+            }
+          : d,
+      );
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Couldn't estimate macros.");
+    }
+    setEstimating(false);
+  }
+
+  function setMacroField(key: keyof Omit<Macros, "source">, value: string) {
+    setDraft((d) =>
+      d && d.macros
+        ? {
+            ...d,
+            macros: { ...d.macros, [key]: Number(value) || 0, source: "edited" },
+          }
+        : d,
+    );
+  }
+
+  function pickMeal(m: SavedMeal) {
+    setDraft((d) =>
+      d
+        ? {
+            ...d,
+            detail: m.detail ?? m.name,
+            macros:
+              m.calories != null
+                ? {
+                    calories: m.calories,
+                    protein_g: Number(m.protein_g ?? 0),
+                    carbs_g: Number(m.carbs_g ?? 0),
+                    fat_g: Number(m.fat_g ?? 0),
+                    source: "ai",
+                  }
+                : d.macros,
+          }
+        : d,
+    );
+  }
+
+  async function saveMealToLibrary() {
+    if (!draft) return;
+    const name = draft.detail.trim();
+    if (!name) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("coaching_saved_meals").insert({
+      relationship_id: relationshipId,
+      client_id: userId,
+      name: name.slice(0, 80),
+      detail: name,
+      calories: draft.macros?.calories ?? null,
+      protein_g: draft.macros?.protein_g ?? null,
+      carbs_g: draft.macros?.carbs_g ?? null,
+      fat_g: draft.macros?.fat_g ?? null,
+    });
+    if (!error) {
+      setMealSaved(true);
+      setTimeout(() => setMealSaved(false), 2000);
+    }
   }
 
   // Dictate → transcribe → AI cleanup (with the tracker's prompt as context) →
@@ -174,12 +309,21 @@ export default function CoachingLog({
     const happened_at = new Date(draft.when).toISOString();
     const detail = draft.detail.trim() || null;
     const amount = draft.amount.trim() ? Number(draft.amount) : null;
+    const macroFields = draft.macros
+      ? {
+          calories: draft.macros.calories,
+          protein_g: draft.macros.protein_g,
+          carbs_g: draft.macros.carbs_g,
+          fat_g: draft.macros.fat_g,
+          macros_source: draft.macros.source,
+        }
+      : {};
 
     let entryId = draft.entry?.id ?? null;
     if (entryId) {
       const { error } = await supabase
         .from("coaching_entries")
-        .update({ happened_at, detail, amount })
+        .update({ happened_at, detail, amount, ...macroFields })
         .eq("id", entryId);
       if (error) return fail(error.message);
     } else {
@@ -192,6 +336,7 @@ export default function CoachingLog({
           happened_at,
           detail,
           amount,
+          ...macroFields,
         })
         .select("id")
         .single();
@@ -268,6 +413,17 @@ export default function CoachingLog({
         </div>
       </section>
 
+      {macroTotals.calories > 0 && (
+        <section className="macro-totals">
+          <span className="mt-cal">{macroTotals.calories} kcal today</span>
+          <span className="mt-macros">
+            <b>{Math.round(macroTotals.protein_g)}g</b> P ·{" "}
+            <b>{Math.round(macroTotals.carbs_g)}g</b> C ·{" "}
+            <b>{Math.round(macroTotals.fat_g)}g</b> F
+          </span>
+        </section>
+      )}
+
       {coachNote && (
         <div className="coach-note">
           <span className="coach-note-label">📣 From your coach</span>
@@ -330,6 +486,13 @@ export default function CoachingLog({
                     )}
                   </span>
                   {e.detail && <span className="tl-detail">{e.detail}</span>}
+                  {e.calories != null && (
+                    <span className="tl-macro">
+                      {e.calories} kcal · {Math.round(Number(e.protein_g ?? 0))}P
+                      · {Math.round(Number(e.carbs_g ?? 0))}C ·{" "}
+                      {Math.round(Number(e.fat_g ?? 0))}F
+                    </span>
+                  )}
                 </span>
                 {e.photos && e.photos.length > 0 && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -349,6 +512,47 @@ export default function CoachingLog({
               <h2 className="tour-title">
                 {draft.tracker.emoji} {draft.tracker.label}
               </h2>
+
+              {draft.tracker.wants_macros &&
+                !draft.entry &&
+                (savedMeals.length > 0 || recentMeals.length > 0) && (
+                  <div className="meal-quick">
+                    <label className="cf-label">Quick add a repeat</label>
+                    <div className="meal-chips">
+                      {savedMeals.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          className="meal-chip saved"
+                          onClick={() => pickMeal(m)}
+                        >
+                          ⭐{" "}
+                          {m.name.length > 26
+                            ? m.name.slice(0, 26) + "…"
+                            : m.name}
+                          {m.calories != null && (
+                            <span className="meal-chip-cal">{m.calories}</span>
+                          )}
+                        </button>
+                      ))}
+                      {recentMeals.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          className="meal-chip"
+                          onClick={() => pickMeal(m)}
+                        >
+                          {m.name.length > 26
+                            ? m.name.slice(0, 26) + "…"
+                            : m.name}
+                          {m.calories != null && (
+                            <span className="meal-chip-cal">{m.calories}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
               <label className="cf-label">When</label>
               <input
@@ -439,6 +643,80 @@ export default function CoachingLog({
                   >
                     📷 {draft.previews.length > 0 ? "Add another" : "Add photo"}
                   </button>
+                </>
+              )}
+
+              {draft.tracker.wants_macros && (
+                <>
+                  <button
+                    type="button"
+                    className="tour-action"
+                    onClick={getMacros}
+                    disabled={estimating}
+                  >
+                    {estimating
+                      ? "Counting…"
+                      : draft.macros
+                        ? "🔍 Re-estimate macros"
+                        : "🔍 Get macros"}
+                  </button>
+                  {draft.macros && (
+                    <div className="macro-panel">
+                      <div className="macro-grid">
+                        <label>
+                          Cal
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={draft.macros.calories}
+                            onChange={(e) =>
+                              setMacroField("calories", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Protein
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={draft.macros.protein_g}
+                            onChange={(e) =>
+                              setMacroField("protein_g", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Carbs
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={draft.macros.carbs_g}
+                            onChange={(e) =>
+                              setMacroField("carbs_g", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Fat
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={draft.macros.fat_g}
+                            onChange={(e) =>
+                              setMacroField("fat_g", e.target.value)
+                            }
+                          />
+                        </label>
+                      </div>
+                      <button
+                        type="button"
+                        className="link-btn"
+                        onClick={saveMealToLibrary}
+                      >
+                        {mealSaved ? "Saved to meals ✓" : "⭐ Save this meal"}
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
 

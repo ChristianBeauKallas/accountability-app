@@ -4227,6 +4227,103 @@ button.head-icon {
 .coach-add-btn:disabled {
   opacity: 0.5;
 }
+
+/* Macros */
+.macro-totals {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 1rem;
+}
+.mt-cal {
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 1.05rem;
+}
+.mt-macros {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.mt-macros b {
+  color: var(--text);
+}
+.tl-macro {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.meal-quick {
+  margin-bottom: 0.4rem;
+}
+.meal-chips {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+}
+.meal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.meal-chip.saved {
+  border-color: var(--accent);
+}
+.meal-chip-cal {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+.macro-panel {
+  margin-top: 0.6rem;
+}
+.macro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0.4rem;
+}
+.macro-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  text-align: center;
+}
+.macro-grid input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.5rem 0.3rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  font-family: inherit;
+}
+.macro-grid input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
 .pm-textarea {
   width: 100%;
   background: var(--surface);
