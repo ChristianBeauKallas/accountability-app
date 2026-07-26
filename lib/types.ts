@@ -81,6 +81,7 @@ export type CoachingTracker = {
   relationship_id: string;
   label: string;
   emoji: string | null;
+  prompt: string | null;
   sort_order: number;
   repeatable: boolean;
   wants_photo: boolean;

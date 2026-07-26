@@ -47,13 +47,17 @@ export async function transcribe(blob: Blob): Promise<string> {
   return (data.text ?? "") as string;
 }
 
-/** Clean up rough text into a caption via Claude; returns input on failure. */
-export async function polish(text: string): Promise<string> {
+/**
+ * Clean up rough text via Claude; returns input on failure. An optional
+ * `context` (e.g. "Meal — What did you eat?") tailors the output to a short,
+ * relevant answer instead of a general caption.
+ */
+export async function polish(text: string, context?: string): Promise<string> {
   try {
     const res = await fetch("/api/polish", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await authHeaders()) },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, context }),
     });
     if (!res.ok) return text;
     const data = await res.json();

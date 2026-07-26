@@ -5,7 +5,14 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
+import { transcribe, polish } from "@/lib/ai";
 import type { CoachingTracker, CoachingEntry } from "@/lib/types";
+
+function pickAudioMime(): string {
+  if (typeof MediaRecorder === "undefined") return "";
+  const c = ["audio/webm", "audio/mp4", "audio/ogg"];
+  return c.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
+}
 
 function toLocalInput(iso: string): string {
   const d = new Date(iso);
@@ -50,7 +57,11 @@ export default function CoachingLog({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [dictating, setDictating] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   const trackerById = new Map(trackers.map((t) => [t.id, t]));
   const entries = [...initialEntries].sort((a, b) =>
@@ -95,6 +106,53 @@ export default function CoachingLog({
   function close() {
     setDraft(null);
     setErr(null);
+  }
+
+  // Dictate → transcribe → AI cleanup (with the tracker's prompt as context) →
+  // drop the cleaned text into the note field for editing.
+  async function startDictation() {
+    if (!draft) return;
+    setErr(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = pickAudioMime();
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      chunksRef.current = [];
+      rec.ondataavailable = (e) => e.data.size > 0 && chunksRef.current.push(e.data);
+      rec.onstop = async () => {
+        const type = chunksRef.current[0]?.type || mime || "audio/mp4";
+        const blob = new Blob(chunksRef.current, { type });
+        stream.getTracks().forEach((t) => t.stop());
+        setRecording(false);
+        if (blob.size === 0) return;
+        setDictating(true);
+        try {
+          const raw = await transcribe(blob);
+          const t = trackerById.get(draft.tracker.id);
+          const context = t ? `${t.label} — ${t.prompt ?? ""}`.trim() : undefined;
+          let clean = raw;
+          try {
+            clean = await polish(raw, context);
+          } catch {
+            /* keep raw */
+          }
+          setDraft((d) =>
+            d ? { ...d, detail: d.detail ? `${d.detail} ${clean}` : clean } : d,
+          );
+        } catch (e) {
+          setErr(e instanceof Error ? e.message : "Couldn't transcribe.");
+        }
+        setDictating(false);
+      };
+      recorderRef.current = rec;
+      rec.start(500);
+      setRecording(true);
+    } catch {
+      setErr("Microphone access denied — you can type instead.");
+    }
+  }
+  function stopDictation() {
+    recorderRef.current?.stop();
   }
 
   function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
@@ -320,7 +378,9 @@ export default function CoachingLog({
 
               {draft.tracker.wants_note && (
                 <>
-                  <label className="cf-label">Notes</label>
+                  <label className="cf-label">
+                    {draft.tracker.prompt ?? "Notes"}
+                  </label>
                   <textarea
                     className="pm-textarea"
                     rows={2}
@@ -328,8 +388,30 @@ export default function CoachingLog({
                     onChange={(e) =>
                       setDraft({ ...draft, detail: e.target.value })
                     }
-                    placeholder="What / how it went…"
+                    placeholder={
+                      dictating ? "Cleaning it up…" : draft.tracker.prompt ?? "…"
+                    }
                   />
+                  <div className="cf-dictate">
+                    {recording ? (
+                      <button
+                        type="button"
+                        className="dictate-btn recording"
+                        onClick={stopDictation}
+                      >
+                        ● <span>Stop</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="dictate-btn"
+                        onClick={startDictation}
+                        disabled={dictating}
+                      >
+                        🎙️ <span>{dictating ? "Writing…" : "Dictate"}</span>
+                      </button>
+                    )}
+                  </div>
                 </>
               )}
 

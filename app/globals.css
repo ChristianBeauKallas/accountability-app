@@ -4062,6 +4062,9 @@ button.head-icon {
   font-size: 0.95rem;
   font-family: inherit;
 }
+.cf-dictate {
+  margin: 0.45rem 0 0.2rem;
+}
 .cf-photos {
   display: flex;
   gap: 0.4rem;

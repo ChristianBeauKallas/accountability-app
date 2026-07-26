@@ -16,6 +16,7 @@ create table if not exists public.coaching_trackers (
   relationship_id uuid not null references public.coaching_relationships (id) on delete cascade,
   label           text not null,
   emoji           text,
+  prompt          text,   -- context question for the note field ("What did you eat?")
   sort_order      int not null default 0,
   repeatable      boolean not null default false, -- many/day (meal, water) vs once/day (wake, sleep)
   wants_photo     boolean not null default false,
@@ -62,6 +63,18 @@ create table if not exists public.coaching_reminders (
   active          boolean not null default true,
   created_at      timestamptz not null default now()
 );
+
+-- ---- context prompts on trackers (safe to re-run) ---------------------------
+alter table public.coaching_trackers add column if not exists prompt text;
+update public.coaching_trackers set prompt = case label
+    when 'Meal'     then 'What did you eat?'
+    when 'Water'    then 'What did you drink?'
+    when 'Exercise' then 'What did you do?'
+    when 'Read'     then 'What did you read?'
+    when 'Podcast'  then 'What did you listen to?'
+    else prompt
+  end
+  where prompt is null;
 
 -- ---- media can attach to an entry too ---------------------------------------
 alter table public.media add column if not exists entry_id uuid
@@ -213,17 +226,17 @@ begin
     select 1 from public.coaching_trackers where relationship_id = rel_id
   ) then
     insert into public.coaching_trackers
-      (relationship_id, label, emoji, sort_order, repeatable, wants_photo, wants_note, wants_amount, unit, target)
+      (relationship_id, label, emoji, prompt, sort_order, repeatable, wants_photo, wants_note, wants_amount, unit, target)
     values
-      (rel_id, 'Wake up',         '☀️', 10, false, false, false, false, null, null),
-      (rel_id, 'Meal',            '🍽️', 20, true,  true,  true,  false, null, null),
-      (rel_id, 'Water',           '💧', 30, true,  false, true,  true,  'oz', 100),
-      (rel_id, 'Exercise',        '🏋️', 40, true,  false, true,  false, null, null),
-      (rel_id, 'Read',            '📖', 50, true,  false, true,  false, null, null),
-      (rel_id, 'Podcast',         '🎧', 60, true,  false, true,  false, null, null),
-      (rel_id, 'Sleep',           '🌙', 70, false, false, false, false, null, null),
-      (rel_id, 'Progress selfie', '📸', 80, false, true,  false, false, null, null),
-      (rel_id, 'Weight',          '⚖️', 90, false, false, false, true,  'lb', null);
+      (rel_id, 'Wake up',         '☀️', null,                    10, false, false, false, false, null, null),
+      (rel_id, 'Meal',            '🍽️', 'What did you eat?',      20, true,  true,  true,  false, null, null),
+      (rel_id, 'Water',           '💧', 'What did you drink?',    30, true,  false, true,  true,  'oz', 100),
+      (rel_id, 'Exercise',        '🏋️', 'What did you do?',       40, true,  false, true,  false, null, null),
+      (rel_id, 'Read',            '📖', 'What did you read?',     50, true,  false, true,  false, null, null),
+      (rel_id, 'Podcast',         '🎧', 'What did you listen to?',60, true,  false, true,  false, null, null),
+      (rel_id, 'Sleep',           '🌙', null,                    70, false, false, false, false, null, null),
+      (rel_id, 'Progress selfie', '📸', null,                    80, false, true,  false, false, null, null),
+      (rel_id, 'Weight',          '⚖️', null,                    90, false, false, false, true,  'lb', null);
   end if;
 
   return rel_id;
