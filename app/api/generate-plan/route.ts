@@ -75,9 +75,22 @@ export async function POST(req: Request) {
     "Rules: set daily calorie + macro targets appropriate for the goal (deficit " +
     "to lose, surplus to gain) anchored to maintenance; keep protein high. Water " +
     "target in oz. Prescribe REAL workouts ONLY on their training weekdays, matched " +
-    "to their activity level and chosen types — each with concrete exercises, sets, " +
-    "reps, and a one-line form cue. Non-training days are kind:'rest' (light detail " +
-    "ok). Give a 4-item example day fitting their diet type.\n\n" +
+    "to their activity level and chosen types. Non-training days are kind:'rest'. " +
+    "Give a 4-item example day fitting their diet type.\n\n" +
+    "FORMATTING (keep it clean — this renders on a phone):\n" +
+    "- title: the session focus in 2-4 words only. NO weekday, NO numbering. " +
+    "Good: 'Intervals / Tempo', 'Upper body'. Bad: 'Wednesday – Run 2 (Intervals)'.\n" +
+    "- detail: ONE short line (<= 14 words) on the session's aim. Do NOT restate " +
+    "every segment/exercise below it.\n" +
+    "- exercises[].name: a SHORT label only — a lift name ('Bench press') or a run " +
+    "segment ('Warm-up','Intervals','Tempo','Cool-down'). NEVER put sets, reps, " +
+    "distance, or pace inside the name or in parentheses.\n" +
+    "- LIFTS: sets = integer (e.g. 4), reps = a number or range string (e.g. '8' " +
+    "or '8-10').\n" +
+    "- RUN/CARDIO segments: set sets = 1 and put the WHOLE prescription in reps " +
+    "(e.g. '2 miles easy' or '3x1 mile @ 10K pace, 90s jog recovery'). Keep the " +
+    "name to the segment label.\n" +
+    "- cue: one short optional form/effort tip.\n\n" +
     'Shape: {"summary":string,"diet_notes":string,"calorie_target":int,' +
     '"protein_target":int,"carbs_target":int,"fat_target":int,"water_target":int,' +
     '"example_day":[{"meal":string,"detail":string,"calories":int,"protein_g":int}],' +

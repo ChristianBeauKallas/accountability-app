@@ -127,6 +127,15 @@ export async function POST(req: Request) {
     "were missed. Keep the weekly structure unless adherence was poor (< 4 days) — " +
     "then simplify to rebuild consistency. Adjust calorie/macro targets if weight " +
     "isn't trending toward the goal. Keep protein high.\n\n" +
+    "FORMATTING (renders on a phone — keep it clean):\n" +
+    "- title: session focus in 2-4 words. NO weekday, NO numbering.\n" +
+    "- detail: ONE short line (<= 14 words); don't restate the segments.\n" +
+    "- exercises[].name: SHORT label only (a lift name, or a run segment like " +
+    "'Warm-up'/'Intervals'/'Cool-down'). NEVER put sets/reps/distance/pace in the " +
+    "name or parentheses.\n" +
+    "- LIFTS: sets = integer, reps = number or range ('8' / '8-10').\n" +
+    "- RUN/CARDIO: sets = 1, put the whole prescription in reps " +
+    "(e.g. '3x1 mile @ 10K pace, 90s jog'). \n\n" +
     'Shape: {"summary":string,"diet_notes":string,"calorie_target":int,' +
     '"protein_target":int,"carbs_target":int,"fat_target":int,"water_target":int,' +
     '"example_day":[{"meal":string,"detail":string,"calories":int,"protein_g":int}],' +

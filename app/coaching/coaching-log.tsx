@@ -57,6 +57,17 @@ function fmtTime(iso: string): string {
   });
 }
 
+// Turn an exercise into a clean one-liner. Only show a "N×" multiplier for
+// real multi-set work (lifts); a single set (a run segment) just shows its
+// prescription — no meaningless "1×".
+function exLine(name: string, sets?: number, reps?: string): string {
+  const r = (reps ?? "").trim();
+  let scheme = "";
+  if (sets && sets > 1) scheme = r ? `${sets}×${r}` : `${sets} sets`;
+  else scheme = r;
+  return scheme ? `${name} — ${scheme}` : name;
+}
+
 type Draft = {
   tracker: CoachingTracker;
   entry: CoachingEntry | null;
@@ -458,8 +469,7 @@ export default function CoachingLog({
               {todayWorkout.exercises.map((e, i) => (
                 <li key={i}>
                   <span className="wc-ex-name">
-                    {e.name}
-                    {e.sets ? ` — ${e.sets}×${e.reps ?? ""}` : ""}
+                    {exLine(e.name, e.sets, e.reps)}
                   </span>
                   {e.cue && <span className="wc-cue">{e.cue}</span>}
                 </li>

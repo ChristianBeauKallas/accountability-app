@@ -79,7 +79,10 @@ export default function WorkoutLogger({
       }
       out.push({
         name: e.name,
-        scheme: e.sets ? `${e.sets}×${e.reps ?? ""}` : "",
+        scheme:
+          e.sets && e.sets > 1
+            ? `${e.sets}×${e.reps ?? ""}`
+            : (e.reps ?? "").trim(),
         cue: e.cue ?? "",
         sets,
       });
