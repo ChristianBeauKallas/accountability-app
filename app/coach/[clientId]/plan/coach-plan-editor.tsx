@@ -46,11 +46,19 @@ export default function CoachPlanEditor({
   intake,
   plan,
   workouts,
+  recap,
 }: {
   clientId: string;
   intake: CoachingIntake | null;
   plan: CoachingPlan | null;
   workouts: PlanWorkout[];
+  recap: {
+    planId: string;
+    week: number;
+    days: number;
+    workouts: number;
+    weight: string | null;
+  } | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -159,6 +167,47 @@ export default function CoachPlanEditor({
     if (ok) router.refresh();
   }
 
+  async function buildNext() {
+    if (!recap) return;
+    setBusy(true);
+    setErr(null);
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const res = await fetch("/api/progress-plan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify({ planId: recap.planId }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setErr(d.error ?? "Couldn't build next week.");
+      return;
+    }
+    router.refresh();
+  }
+
+  const RecapCard =
+    recap != null ? (
+      <div className="recap-card">
+        <div className="recap-title">🗓️ Week {recap.week} recap</div>
+        <div className="recap-line">
+          {recap.days}/7 days logged · {recap.workouts} workouts
+          {recap.weight ? ` · ${recap.weight}` : ""}
+        </div>
+        {plan?.status === "active" && (
+          <button className="btn-primary" onClick={buildNext} disabled={busy}>
+            {busy ? "Building…" : `✨ Build Week ${recap.week + 1}`}
+          </button>
+        )}
+      </div>
+    ) : null;
+
   // ---- No plan yet: show intake + Generate ----
   if (!plan) {
     if (!intake) {
@@ -170,6 +219,7 @@ export default function CoachPlanEditor({
     }
     return (
       <>
+        {RecapCard}
         <section className="settings-card">
           <h2 className="settings-title">Intake</h2>
           <div className="intake-summary">
@@ -211,6 +261,8 @@ export default function CoachPlanEditor({
         Week {plan.week_number} ·{" "}
         {plan.status === "active" ? "Active" : "Draft — edit, then assign"}
       </div>
+
+      {RecapCard}
 
       <section className="settings-card">
         <h2 className="settings-title">Daily targets</h2>
