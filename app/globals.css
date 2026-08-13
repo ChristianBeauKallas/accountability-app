@@ -4324,6 +4324,328 @@ button.head-icon {
   outline: none;
   border-color: var(--accent);
 }
+
+/* ============================= My Plan ============================= */
+.plan-banner {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+.plan-banner.build {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+.plan-banner.wait {
+  color: var(--muted);
+}
+.workout-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+}
+.wc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+.wc-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+.wc-tag {
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+.wc-detail {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+.wc-ex {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.wc-ex li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.45rem 0.55rem;
+  background: var(--bg-2);
+  border-radius: 9px;
+}
+.wc-ex-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+.wc-cue {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.wc-log {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* intake wizard */
+.intake-dots {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 1.1rem;
+}
+.idot {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.idot.on {
+  background: var(--accent);
+}
+.intake-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.1rem;
+}
+.intake-card .q {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+}
+.intake-card .q-sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.9rem;
+}
+.intake-mic-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
+.intake-two {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.intake-arrow {
+  color: var(--muted);
+  font-size: 1.2rem;
+}
+.scale {
+  display: flex;
+  gap: 0.4rem;
+}
+.scaleb {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.scaleb.on {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.anchor {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+.days {
+  display: flex;
+  gap: 0.4rem;
+}
+.dayb {
+  flex: 1;
+  height: 46px;
+  border-radius: 11px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+}
+.dayb.on {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.actrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
+}
+.actrow .nm {
+  flex: 1;
+  font-weight: 600;
+}
+.actrow .cad {
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 700;
+  background: var(--accent-dim);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.actx {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.habit-add {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+.habit-add .cf-input {
+  flex: 1;
+  min-width: 8rem;
+}
+.intake-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+}
+
+/* coach plan editor */
+.intake-summary p {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 0.4rem;
+  color: var(--muted);
+}
+.intake-summary b {
+  color: var(--text);
+}
+.btn-primary {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  border: none;
+  border-radius: 999px;
+  padding: 0.85rem;
+  font-weight: 800;
+  font-size: 0.98rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.btn-primary:disabled {
+  opacity: 0.55;
+}
+.plan-status {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.8rem;
+}
+.target-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+.target-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.target-grid input {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  font-family: inherit;
+}
+.wo-edit {
+  margin-bottom: 0.8rem;
+}
+.wo-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.wo-dow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--muted);
+  width: 2.4rem;
+}
+.wo-title {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-weight: 700;
+  font-family: inherit;
+}
+.plan-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.plan-actions .btn-primary {
+  flex: 1;
+}
+.plan-regen {
+  display: block;
+  margin: 0.9rem auto 0;
+}
 .pm-textarea {
   width: 100%;
   background: var(--surface);

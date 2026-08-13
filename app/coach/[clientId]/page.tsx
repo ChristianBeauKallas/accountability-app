@@ -192,6 +192,10 @@ export default async function CoachClientPage({
         </div>
       </header>
 
+      <Link href={`/coach/${clientId}/plan`} className="plan-banner build">
+        📋 Manage plan ›
+      </Link>
+
       <section className="coach-stats">
         <div className="cstat">
           <span className="cstat-n">{streak}🔥</span>

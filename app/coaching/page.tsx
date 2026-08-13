@@ -1,8 +1,23 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { computeStreak, localDate } from "@/lib/streaks";
-import type { CoachingTracker, CoachingEntry, SavedMeal } from "@/lib/types";
+import type {
+  CoachingTracker,
+  CoachingEntry,
+  SavedMeal,
+  CoachingPlan,
+} from "@/lib/types";
 import CoachingLog from "./coaching-log";
+
+const WD: Record<string, number> = {
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+  Sun: 7,
+};
 
 export const dynamic = "force-dynamic";
 
@@ -169,6 +184,56 @@ export default async function CoachingPage() {
     .order("created_at", { ascending: false })
     .limit(20);
 
+  // Active plan → today's weekday, targets, and prescribed workout.
+  const wdShort = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    weekday: "short",
+  }).format(new Date());
+  const todayWeekday = WD[wdShort] ?? 1;
+
+  const { data: planRows } = await supabase
+    .from("coaching_plans")
+    .select("*")
+    .eq("relationship_id", rel.id)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const plan = (planRows?.[0] ?? null) as CoachingPlan | null;
+
+  let todayWorkout: {
+    title: string;
+    detail: string | null;
+    exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
+  } | null = null;
+  if (plan) {
+    const { data: w } = await supabase
+      .from("coaching_plan_workouts")
+      .select("title, detail, exercises")
+      .eq("plan_id", plan.id)
+      .eq("weekday", todayWeekday)
+      .maybeSingle();
+    if (w)
+      todayWorkout = {
+        title: w.title as string,
+        detail: (w.detail as string) ?? null,
+        exercises: (w.exercises as never) ?? null,
+      };
+  }
+
+  // Build/waiting banner when there's no active plan.
+  let buildBanner: { text: string; href: string | null } | null = null;
+  if (!plan) {
+    const { data: intake } = await supabase
+      .from("coaching_intakes")
+      .select("id")
+      .eq("relationship_id", rel.id)
+      .order("submitted_at", { ascending: false })
+      .limit(1);
+    buildBanner = intake?.[0]
+      ? { text: "Your coach is building your plan — hang tight", href: null }
+      : { text: "Build your plan", href: "/coaching/intake" };
+  }
+
   return (
     <CoachingLog
       relationshipId={rel.id}
@@ -181,6 +246,19 @@ export default async function CoachingPage() {
       macroTotals={totals}
       savedMeals={(saved ?? []) as SavedMeal[]}
       recentMeals={recentMeals}
+      todayWeekday={plan ? todayWeekday : null}
+      targets={
+        plan
+          ? {
+              calorie: plan.calorie_target,
+              protein: plan.protein_target,
+              water: plan.water_target,
+            }
+          : null
+      }
+      planSummary={plan?.summary ?? null}
+      todayWorkout={todayWorkout}
+      buildBanner={buildBanner}
     />
   );
 }

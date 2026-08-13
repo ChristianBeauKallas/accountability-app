@@ -79,6 +79,11 @@ export default function CoachingLog({
   macroTotals,
   savedMeals,
   recentMeals,
+  todayWeekday,
+  targets,
+  planSummary,
+  todayWorkout,
+  buildBanner,
 }: {
   relationshipId: string;
   userId: string;
@@ -90,6 +95,19 @@ export default function CoachingLog({
   macroTotals: { calories: number; protein_g: number; carbs_g: number; fat_g: number };
   savedMeals: SavedMeal[];
   recentMeals: SavedMeal[];
+  todayWeekday?: number | null;
+  targets?: {
+    calorie: number | null;
+    protein: number | null;
+    water: number | null;
+  } | null;
+  planSummary?: string | null;
+  todayWorkout?: {
+    title: string;
+    detail: string | null;
+    exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
+  } | null;
+  buildBanner?: { text: string; href: string | null } | null;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -104,6 +122,12 @@ export default function CoachingLog({
   const chunksRef = useRef<Blob[]>([]);
 
   const trackerById = new Map(trackers.map((t) => [t.id, t]));
+  // On a plan, only show what's due today (trackers with no days = every day).
+  const visibleTrackers = todayWeekday
+    ? trackers.filter(
+        (t) => !t.days || t.days.length === 0 || t.days.includes(todayWeekday),
+      )
+    : trackers;
   const entries = [...initialEntries].sort((a, b) =>
     a.happened_at.localeCompare(b.happened_at),
   );
@@ -402,6 +426,43 @@ export default function CoachingLog({
         </div>
       </header>
 
+      {buildBanner &&
+        (buildBanner.href ? (
+          <Link href={buildBanner.href} className="plan-banner build">
+            {buildBanner.text} ›
+          </Link>
+        ) : (
+          <div className="plan-banner wait">{buildBanner.text}</div>
+        ))}
+
+      {planSummary && <div className="plan-banner">📋 {planSummary}</div>}
+
+      {todayWorkout && (
+        <section className="workout-card">
+          <div className="wc-head">
+            <span className="wc-title">{todayWorkout.title}</span>
+            <span className="wc-tag">Today</span>
+          </div>
+          {todayWorkout.detail && (
+            <p className="wc-detail">{todayWorkout.detail}</p>
+          )}
+          {todayWorkout.exercises && todayWorkout.exercises.length > 0 && (
+            <ul className="wc-ex">
+              {todayWorkout.exercises.map((e, i) => (
+                <li key={i}>
+                  <span className="wc-ex-name">
+                    {e.name}
+                    {e.sets ? ` — ${e.sets}×${e.reps ?? ""}` : ""}
+                  </span>
+                  {e.cue && <span className="wc-cue">{e.cue}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="wc-log">Log it below with the 🏋️ Workout tracker.</p>
+        </section>
+      )}
+
       <section className="coach-stats">
         <div className="cstat">
           <span className="cstat-n">{streak}🔥</span>
@@ -413,12 +474,18 @@ export default function CoachingLog({
         </div>
       </section>
 
-      {macroTotals.calories > 0 && (
+      {(macroTotals.calories > 0 || targets?.calorie) && (
         <section className="macro-totals">
-          <span className="mt-cal">{macroTotals.calories} kcal today</span>
+          <span className="mt-cal">
+            {macroTotals.calories}
+            {targets?.calorie ? ` / ${targets.calorie}` : ""} kcal
+          </span>
           <span className="mt-macros">
-            <b>{Math.round(macroTotals.protein_g)}g</b> P ·{" "}
-            <b>{Math.round(macroTotals.carbs_g)}g</b> C ·{" "}
+            <b>
+              {Math.round(macroTotals.protein_g)}
+              {targets?.protein ? `/${targets.protein}` : ""}g
+            </b>{" "}
+            P · <b>{Math.round(macroTotals.carbs_g)}g</b> C ·{" "}
             <b>{Math.round(macroTotals.fat_g)}g</b> F
           </span>
         </section>
@@ -433,7 +500,7 @@ export default function CoachingLog({
 
       {/* Quick add */}
       <section className="tracker-row">
-        {trackers.map((t) => {
+        {visibleTrackers.map((t) => {
           const count = countByTracker.get(t.id) ?? 0;
           const sum = sumByTracker.get(t.id);
           let badge = "";

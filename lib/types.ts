@@ -91,6 +91,7 @@ export type CoachingTracker = {
   unit: string | null;
   target: number | null;
   active: boolean;
+  days: number[] | null;
 };
 
 export type CoachingEntry = {
@@ -118,6 +119,72 @@ export type SavedMeal = {
   protein_g: number | null;
   carbs_g: number | null;
   fat_g: number | null;
+};
+
+export type IntakeHabit = { name: string; cadence: string };
+
+export type CoachingIntake = {
+  id: string;
+  relationship_id: string;
+  client_id: string;
+  goals: string | null;
+  current_weight: number | null;
+  goal_weight: number | null;
+  build: string | null;
+  height: string | null;
+  age: number | null;
+  activity_level: number | null;
+  diet_level: number | null;
+  diet_type: string | null;
+  maintenance_calories: number | null;
+  train_days: number[] | null;
+  workout_types: string[] | null;
+  habits: IntakeHabit[] | null;
+  status: string;
+  submitted_at: string;
+};
+
+export type PlanExercise = {
+  name: string;
+  sets?: number;
+  reps?: string;
+  cue?: string;
+};
+
+export type PlanWorkout = {
+  id: string;
+  plan_id: string;
+  weekday: number;
+  title: string;
+  kind: string;
+  detail: string | null;
+  exercises: PlanExercise[] | null;
+  sort_order: number;
+};
+
+export type ExampleMeal = {
+  meal: string;
+  detail: string;
+  calories?: number;
+  protein_g?: number;
+};
+
+export type CoachingPlan = {
+  id: string;
+  relationship_id: string;
+  client_id: string;
+  week_number: number;
+  status: string;
+  summary: string | null;
+  diet_notes: string | null;
+  calorie_target: number | null;
+  protein_target: number | null;
+  carbs_target: number | null;
+  fat_target: number | null;
+  water_target: number | null;
+  example_day: ExampleMeal[] | null;
+  created_at: string;
+  activated_at: string | null;
 };
 
 export type Message = {
