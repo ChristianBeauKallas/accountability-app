@@ -459,7 +459,9 @@ export default function CoachingLog({
               ))}
             </ul>
           )}
-          <p className="wc-log">Log it below with the 🏋️ Workout tracker.</p>
+          <Link href="/coaching/workout" className="wc-log-btn">
+            🏋️ Log this workout ›
+          </Link>
         </section>
       )}
 

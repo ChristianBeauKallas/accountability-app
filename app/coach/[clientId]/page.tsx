@@ -170,6 +170,35 @@ export default async function CoachClientPage({
     .eq("day", today)
     .maybeSingle();
 
+  // Today's logged workout (actual sets + effort).
+  const { data: wlog } = await supabase
+    .from("coaching_workout_logs")
+    .select("id, title, effort")
+    .eq("relationship_id", rel.id)
+    .eq("day", today)
+    .maybeSingle();
+  const woByExercise = new Map<
+    string,
+    { set_index: number; weight: number | null; reps: number | null }[]
+  >();
+  if (wlog) {
+    const { data: s } = await supabase
+      .from("coaching_exercise_sets")
+      .select("exercise_name, set_index, weight, reps")
+      .eq("workout_log_id", wlog.id)
+      .order("set_index");
+    for (const row of (s ?? []) as {
+      exercise_name: string;
+      set_index: number;
+      weight: number | null;
+      reps: number | null;
+    }[]) {
+      const arr = woByExercise.get(row.exercise_name) ?? [];
+      arr.push(row);
+      woByExercise.set(row.exercise_name, arr);
+    }
+  }
+
   const name = client?.display_name ?? "Client";
   const latestWeight = weights.length ? weights[weights.length - 1].v : null;
   const firstWeight = weights.length ? weights[0].v : null;
@@ -282,6 +311,26 @@ export default async function CoachClientPage({
           initial={(fb as { body: string } | null)?.body ?? ""}
         />
       </section>
+
+      {/* Today's logged workout */}
+      {wlog && woByExercise.size > 0 && (
+        <section className="panel">
+          <h2>
+            Today&apos;s workout
+            {wlog.effort && <span className="wo-effort-tag">felt {wlog.effort}</span>}
+          </h2>
+          {[...woByExercise.entries()].map(([exName, sets]) => (
+            <div className="cw-ex" key={exName}>
+              <span className="cw-name">{exName}</span>
+              <span className="cw-sets">
+                {sets
+                  .map((s) => `${s.weight ?? "—"}×${s.reps ?? "—"}`)
+                  .join("  ·  ")}
+              </span>
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* Today's timeline */}
       <section className="panel">

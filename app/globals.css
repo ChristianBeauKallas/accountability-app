@@ -4646,6 +4646,156 @@ button.head-icon {
   display: block;
   margin: 0.9rem auto 0;
 }
+
+/* workout card link + logger */
+.wc-log-btn {
+  display: inline-block;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.wl-ex {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.8rem;
+}
+.wl-ex-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.wl-ex-name {
+  font-weight: 800;
+  font-size: 1rem;
+}
+.wl-ex-scheme {
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+.wl-cue {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+.wl-last {
+  font-size: 0.74rem;
+  color: var(--accent-2);
+  margin-top: 0.2rem;
+  font-weight: 600;
+}
+.wl-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0.4rem;
+}
+.wl-set {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.wl-sn {
+  width: 3.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.wl-in {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: 700;
+  font-family: inherit;
+}
+.wl-x {
+  color: var(--muted);
+}
+.wl-rm {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.wl-addset {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.wl-addex {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+.wl-addex .cf-input {
+  flex: 1;
+}
+.wl-effort {
+  margin-bottom: 1rem;
+}
+.eopts {
+  display: flex;
+  gap: 0.5rem;
+}
+.eopt {
+  flex: 1;
+  text-align: center;
+  padding: 0.7rem;
+  border-radius: 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+}
+.eopt.on {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.wl-save {
+  margin-bottom: 2rem;
+}
+.wo-effort-tag {
+  margin-left: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+.cw-ex {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.cw-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.cw-sets {
+  font-size: 0.82rem;
+  color: var(--accent-2);
+  font-weight: 600;
+}
 .pm-textarea {
   width: 100%;
   background: var(--surface);

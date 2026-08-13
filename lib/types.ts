@@ -151,6 +151,13 @@ export type PlanExercise = {
   cue?: string;
 };
 
+export type LoggedSet = {
+  exercise_name: string;
+  set_index: number;
+  weight: number | null;
+  reps: number | null;
+};
+
 export type PlanWorkout = {
   id: string;
   plan_id: string;
