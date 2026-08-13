@@ -42,7 +42,7 @@ export default async function CoachingPage() {
         <header className="board-head">
           <div className="board-head-top">
             <div>
-              <h1>Coaching</h1>
+              <h1>My Plan</h1>
               <p className="subtitle">
                 <Link href="/">‹ Feed</Link>
               </p>
@@ -50,8 +50,8 @@ export default async function CoachingPage() {
           </div>
         </header>
         <div className="notice">
-          You&apos;re not in a coaching program yet. When your coach adds you,
-          your daily log shows up here.
+          You don&apos;t have a plan yet. Start your own from Settings →
+          Coaching, or ask whoever&apos;s holding you accountable to add you.
         </div>
       </main>
     );
@@ -220,6 +220,11 @@ export default async function CoachingPage() {
       };
   }
 
+  // When you run your own plan you're both sides — send yourself to the
+  // builder instead of telling yourself to "hang tight".
+  const selfCoached = rel.coach_id === user.id;
+  const manageHref = selfCoached ? `/coach/${user.id}/plan` : null;
+
   // Build/waiting banner when there's no active plan.
   let buildBanner: { text: string; href: string | null } | null = null;
   if (!plan) {
@@ -229,9 +234,13 @@ export default async function CoachingPage() {
       .eq("relationship_id", rel.id)
       .order("submitted_at", { ascending: false })
       .limit(1);
-    buildBanner = intake?.[0]
-      ? { text: "Your coach is building your plan — hang tight", href: null }
-      : { text: "Build your plan", href: "/coaching/intake" };
+    if (intake?.[0]) {
+      buildBanner = selfCoached
+        ? { text: "Finish building your plan", href: manageHref }
+        : { text: "Your coach is building your plan — hang tight", href: null };
+    } else {
+      buildBanner = { text: "Build your plan", href: "/coaching/intake" };
+    }
   }
 
   return (
@@ -259,6 +268,7 @@ export default async function CoachingPage() {
       planSummary={plan?.summary ?? null}
       todayWorkout={todayWorkout}
       buildBanner={buildBanner}
+      manageHref={plan ? manageHref : null}
     />
   );
 }

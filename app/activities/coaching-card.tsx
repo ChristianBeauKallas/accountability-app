@@ -8,10 +8,12 @@ import { createClient } from "@/lib/supabase/client";
 // Settings › Coaching: open your own log (if you're a client), see the people
 // you coach, and start coaching a teammate (seeds their default trackers).
 export default function CoachingCard({
+  userId,
   members,
   clients,
   isClient,
 }: {
+  userId: string;
   members: { id: string; name: string }[];
   clients: { id: string; name: string }[];
   isClient: boolean;
@@ -38,12 +40,36 @@ export default function CoachingCard({
     router.push(`/coach/${pick}`);
   }
 
+  async function startOwnPlan() {
+    setBusy(true);
+    setErr(null);
+    const supabase = createClient();
+    const { error } = await supabase.rpc("start_coaching", { client: userId });
+    setBusy(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    router.push("/coaching/intake");
+  }
+
   return (
     <div className="coaching-card">
       {isClient && (
         <Link href="/coaching" className="coaching-open">
-          📓 Open your daily log ›
+          📋 Open my plan ›
         </Link>
+      )}
+
+      {!isClient && (
+        <button
+          type="button"
+          className="coaching-open own-plan"
+          onClick={startOwnPlan}
+          disabled={busy}
+        >
+          {busy ? "…" : "📋 Start my own plan ›"}
+        </button>
       )}
 
       <p className="settings-hint">People you coach</p>

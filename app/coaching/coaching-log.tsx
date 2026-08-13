@@ -84,6 +84,7 @@ export default function CoachingLog({
   planSummary,
   todayWorkout,
   buildBanner,
+  manageHref,
 }: {
   relationshipId: string;
   userId: string;
@@ -108,6 +109,7 @@ export default function CoachingLog({
     exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
   } | null;
   buildBanner?: { text: string; href: string | null } | null;
+  manageHref?: string | null;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -423,6 +425,11 @@ export default function CoachingLog({
               <Link href="/">‹ Feed</Link>
             </p>
           </div>
+          {manageHref && (
+            <Link href={manageHref} className="head-icon" aria-label="Adjust plan">
+              ⚙
+            </Link>
+          )}
         </div>
       </header>
 

@@ -4185,6 +4185,16 @@ button.head-icon {
   font-weight: 700;
   margin-bottom: 0.3rem;
 }
+button.coaching-open {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.coaching-open.own-plan {
+  background: transparent;
+}
 .settings-hint.dim {
   opacity: 0.6;
 }

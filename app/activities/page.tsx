@@ -63,9 +63,8 @@ export default async function SettingsPage() {
       .eq("coach_id", user.id),
     supabase
       .from("coaching_relationships")
-      .select("id")
-      .eq("client_id", user.id)
-      .limit(1),
+      .select("id, coach_id")
+      .eq("client_id", user.id),
   ]);
   const memberList = ((membersRes.data ?? []) as unknown as {
     user_id: string;
@@ -77,7 +76,11 @@ export default async function SettingsPage() {
     (myClientsRes.data ?? []).map((r) => r.client_id as string),
   );
   const clientList = memberList.filter((m) => clientIds.has(m.id));
-  const isClient = (amClientRes.data ?? []).length > 0;
+  const myClientRels = (amClientRes.data ?? []) as {
+    id: string;
+    coach_id: string;
+  }[];
+  const isClient = myClientRels.length > 0;
 
   return (
     <main className="board settings-page">
@@ -142,6 +145,7 @@ export default async function SettingsPage() {
           see it and leave notes. Separate from the group.
         </p>
         <CoachingCard
+          userId={user.id}
           members={memberList}
           clients={clientList}
           isClient={isClient}

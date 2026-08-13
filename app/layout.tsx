@@ -41,11 +41,27 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Coaching nav flags: "My Plan" shows for anyone with a plan (a client, or
+  // someone running their own plan); "My Team" shows only if you hold someone
+  // else accountable.
+  let hasPlan = false;
+  let hasTeam = false;
+  if (user) {
+    const { data: relFlags } = await supabase
+      .from("coaching_relationships")
+      .select("coach_id, client_id")
+      .or(`coach_id.eq.${user.id},client_id.eq.${user.id}`);
+    for (const r of relFlags ?? []) {
+      if (r.client_id === user.id) hasPlan = true;
+      if (r.coach_id === user.id && r.client_id !== user.id) hasTeam = true;
+    }
+  }
+
   return (
     <html lang="en">
       <body>
         {children}
-        <BottomNav userId={user?.id ?? null} />
+        <BottomNav userId={user?.id ?? null} hasPlan={hasPlan} hasTeam={hasTeam} />
         {/* Only nudge to install once they're signed in — it must never sit on
             top of the login / signup / invite flow. */}
         {user && <InstallPrompt />}

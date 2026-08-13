@@ -16,7 +16,10 @@ export default async function CoachHome() {
     .select("client_id")
     .eq("coach_id", user.id);
 
-  const clientIds = (rels ?? []).map((r) => r.client_id as string);
+  // Exclude yourself — your own plan lives under "My Plan", not the team list.
+  const clientIds = (rels ?? [])
+    .map((r) => r.client_id as string)
+    .filter((id) => id !== user.id);
   const clients: { id: string; name: string; avatar: string | null }[] = [];
   if (clientIds.length > 0) {
     const { data: profs } = await supabase
@@ -36,7 +39,7 @@ export default async function CoachHome() {
       <header className="board-head">
         <div className="board-head-top">
           <div>
-            <h1>Coaching</h1>
+            <h1>My Team</h1>
             <p className="subtitle">
               <Link href="/">‹ Feed</Link>
             </p>
@@ -48,10 +51,10 @@ export default async function CoachHome() {
       </header>
 
       <section className="panel">
-        <h2>Your clients</h2>
+        <h2>People you hold accountable</h2>
         {clients.length === 0 && (
           <p className="empty">
-            No clients yet. Add someone from Settings → Coaching.
+            No one yet. Add a teammate from Settings → Coaching.
           </p>
         )}
         {clients.map((c) => (
