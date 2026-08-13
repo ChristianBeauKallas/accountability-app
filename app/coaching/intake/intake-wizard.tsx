@@ -16,7 +16,7 @@ const DAYS = [
   { n: 7, l: "S" },
 ];
 const BUILDS = ["Lean", "Average", "Athletic", "Athletically heavy", "Heavy"];
-const DIET_TYPES = ["None", "High-protein", "Keto", "Carnivore", "IF", "Vegan"];
+const DIET_TYPES = ["None", "High-protein", "Keto", "Carnivore", "IF", "Vegan", "Other"];
 const WORKOUT_TYPES = [
   "Lifting",
   "Running",
@@ -65,6 +65,7 @@ export default function IntakeWizard({
   const [activity, setActivity] = useState<number | null>(null);
   const [dietLevel, setDietLevel] = useState<number | null>(null);
   const [dietType, setDietType] = useState("");
+  const [customDiet, setCustomDiet] = useState("");
   const [maintenance, setMaintenance] = useState("");
   const [trainDays, setTrainDays] = useState<number[]>([]);
   const [types, setTypes] = useState<string[]>([]);
@@ -127,6 +128,8 @@ export default function IntakeWizard({
     setErr(null);
     const supabase = createClient();
     const allTypes = [...types, ...(customType.trim() ? [customType.trim()] : [])];
+    const dietValue =
+      dietType === "Other" ? customDiet.trim() || "Other" : dietType || null;
     const { error } = await supabase.from("coaching_intakes").insert({
       relationship_id: relationshipId,
       client_id: userId,
@@ -138,7 +141,7 @@ export default function IntakeWizard({
       age: age ? Number(age) : null,
       activity_level: activity,
       diet_level: dietLevel,
-      diet_type: dietType || null,
+      diet_type: dietValue,
       maintenance_calories: maintenance ? Number(maintenance) : null,
       train_days: trainDays.length ? trainDays : null,
       workout_types: allTypes.length ? allTypes : null,
@@ -259,6 +262,15 @@ export default function IntakeWizard({
                 </button>
               ))}
             </div>
+            {dietType === "Other" && (
+              <input
+                className="cf-input"
+                style={{ marginBottom: "0.7rem" }}
+                value={customDiet}
+                placeholder="Tell us how you eat — e.g. pescatarian, low-FODMAP…"
+                onChange={(e) => setCustomDiet(e.target.value)}
+              />
+            )}
             <label className="cf-label">Your maintenance calories</label>
             <input className="cf-input" type="number" inputMode="numeric" value={maintenance} placeholder="e.g. 2,600" onChange={(e) => setMaintenance(e.target.value)} />
             <p className="q-sub">What you eat to hold weight — we build your target around this. Not sure? Leave it blank and we&apos;ll estimate.</p>

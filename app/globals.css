@@ -4511,6 +4511,21 @@ button.coaching-open {
   border-color: var(--accent);
   color: var(--accent);
 }
+/* Intake chips are selectable buttons — give them a real neutral/selected
+   state (the shared display .chip has no .on style). */
+.intake .chip {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.42rem 0.85rem;
+  font-size: 0.85rem;
+}
+.intake .chip.on {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .actrow {
   display: flex;
   align-items: center;
