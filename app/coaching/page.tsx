@@ -204,11 +204,15 @@ export default async function CoachingPage() {
     title: string;
     detail: string | null;
     exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
+    planWorkoutId: string | null;
+    adjusted: boolean;
+    adjustNote: string | null;
+    adjustReason: string | null;
   } | null = null;
   if (plan) {
     const { data: w } = await supabase
       .from("coaching_plan_workouts")
-      .select("title, detail, exercises")
+      .select("id, title, detail, exercises")
       .eq("plan_id", plan.id)
       .eq("weekday", todayWeekday)
       .maybeSingle();
@@ -217,7 +221,30 @@ export default async function CoachingPage() {
         title: w.title as string,
         detail: (w.detail as string) ?? null,
         exercises: (w.exercises as never) ?? null,
+        planWorkoutId: (w.id as string) ?? null,
+        adjusted: false,
+        adjustNote: null,
+        adjustReason: null,
       };
+
+    // Did the client rework today's session? That overrides the card.
+    const { data: adj } = await supabase
+      .from("coaching_workout_adjustments")
+      .select("title, detail, exercises, note, reason")
+      .eq("relationship_id", rel.id)
+      .eq("day", today)
+      .maybeSingle();
+    if (adj) {
+      todayWorkout = {
+        title: (adj.title as string) ?? todayWorkout?.title ?? "Adjusted workout",
+        detail: (adj.detail as string) ?? null,
+        exercises: (adj.exercises as never) ?? null,
+        planWorkoutId: todayWorkout?.planWorkoutId ?? null,
+        adjusted: true,
+        adjustNote: (adj.note as string) ?? null,
+        adjustReason: (adj.reason as string) ?? null,
+      };
+    }
   }
 
   // When you run your own plan you're both sides — send yourself to the
@@ -267,6 +294,7 @@ export default async function CoachingPage() {
       }
       planSummary={plan?.summary ?? null}
       todayWorkout={todayWorkout}
+      today={today}
       buildBanner={buildBanner}
       manageHref={plan ? manageHref : null}
     />

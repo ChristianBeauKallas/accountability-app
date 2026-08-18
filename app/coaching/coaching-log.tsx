@@ -94,6 +94,7 @@ export default function CoachingLog({
   targets,
   planSummary,
   todayWorkout,
+  today,
   buildBanner,
   manageHref,
 }: {
@@ -118,7 +119,12 @@ export default function CoachingLog({
     title: string;
     detail: string | null;
     exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
+    planWorkoutId: string | null;
+    adjusted: boolean;
+    adjustNote: string | null;
+    adjustReason: string | null;
   } | null;
+  today?: string;
   buildBanner?: { text: string; href: string | null } | null;
   manageHref?: string | null;
 }) {
@@ -133,6 +139,23 @@ export default function CoachingLog({
   const fileInput = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // "Make adjustments" — talk through how you feel, AI reworks today's session.
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustNote, setAdjustNote] = useState("");
+  const [adjustRec, setAdjustRec] = useState(false);
+  const [adjustWriting, setAdjustWriting] = useState(false);
+  const [adjustBusy, setAdjustBusy] = useState(false);
+  const [adjustErr, setAdjustErr] = useState<string | null>(null);
+  const [proposal, setProposal] = useState<{
+    title: string;
+    kind: string;
+    detail: string | null;
+    reason: string | null;
+    exercises: { name: string; sets?: number; reps?: string; cue?: string }[];
+  } | null>(null);
+  const adjRecRef = useRef<MediaRecorder | null>(null);
+  const adjChunks = useRef<Blob[]>([]);
 
   const trackerById = new Map(trackers.map((t) => [t.id, t]));
   // On a plan, only show what's due today (trackers with no days = every day).
@@ -426,6 +449,152 @@ export default function CoachingLog({
     router.refresh();
   }
 
+  // ---- Make adjustments ----
+  async function startAdjustDictation() {
+    setAdjustErr(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = pickAudioMime();
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      adjChunks.current = [];
+      rec.ondataavailable = (e) => e.data.size > 0 && adjChunks.current.push(e.data);
+      rec.onstop = async () => {
+        const type = adjChunks.current[0]?.type || mime || "audio/mp4";
+        const blob = new Blob(adjChunks.current, { type });
+        stream.getTracks().forEach((t) => t.stop());
+        setAdjustRec(false);
+        if (blob.size === 0) return;
+        setAdjustWriting(true);
+        try {
+          const rawTxt = await transcribe(blob);
+          let clean = rawTxt;
+          try {
+            clean = await polish(rawTxt, "How the client feels + what to change about today's workout");
+          } catch {
+            /* keep raw */
+          }
+          setAdjustNote((n) => (n ? `${n} ${clean}` : clean));
+        } catch (e) {
+          setAdjustErr(e instanceof Error ? e.message : "Couldn't transcribe.");
+        }
+        setAdjustWriting(false);
+      };
+      adjRecRef.current = rec;
+      rec.start(500);
+      setAdjustRec(true);
+    } catch {
+      setAdjustErr("Microphone access denied — you can type instead.");
+    }
+  }
+
+  async function proposeAdjustment() {
+    if (!adjustNote.trim()) return;
+    setAdjustBusy(true);
+    setAdjustErr(null);
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const res = await fetch("/api/adjust-workout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify({
+        relationshipId,
+        planWorkoutId: todayWorkout?.planWorkoutId ?? null,
+        note: adjustNote.trim(),
+      }),
+    });
+    setAdjustBusy(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setAdjustErr(d.error ?? "Couldn't build the adjustment.");
+      return;
+    }
+    setProposal(await res.json());
+  }
+
+  async function applyAdjustment() {
+    if (!proposal || !today) return;
+    setAdjustBusy(true);
+    setAdjustErr(null);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("coaching_workout_adjustments")
+      .upsert(
+        {
+          relationship_id: relationshipId,
+          client_id: userId,
+          plan_workout_id: todayWorkout?.planWorkoutId ?? null,
+          day: today,
+          title: proposal.title,
+          detail: proposal.detail,
+          exercises: proposal.exercises,
+          note: adjustNote.trim() || null,
+          reason: proposal.reason,
+        },
+        { onConflict: "relationship_id,day" },
+      );
+    setAdjustBusy(false);
+    if (error) {
+      setAdjustErr(error.message);
+      return;
+    }
+    closeAdjust();
+    router.refresh();
+  }
+
+  function closeAdjust() {
+    setAdjustOpen(false);
+    setProposal(null);
+    setAdjustNote("");
+    setAdjustErr(null);
+  }
+
+  // Sort today's trackers into the labeled zones.
+  function zoneOf(t: CoachingTracker): "workout" | "meal" | "water" | "weight" | "photo" | "dev" {
+    const l = t.label.toLowerCase();
+    if (/workout|exercise|training|\blift\b|\brun\b|cardio/.test(l)) return "workout";
+    if (t.wants_macros || /meal|eat|food|nutrition|breakfast|lunch|dinner|snack/.test(l)) return "meal";
+    if (/water|drink|hydrat/.test(l) || t.unit === "oz") return "water";
+    if (/weight|scale|weigh/.test(l)) return "weight";
+    if (/selfie|progress|photo/.test(l)) return "photo";
+    return "dev";
+  }
+  const mealTrackers = visibleTrackers.filter((t) => zoneOf(t) === "meal");
+  const waterTrackers = visibleTrackers.filter((t) => zoneOf(t) === "water");
+  const devTrackers = visibleTrackers.filter((t) => zoneOf(t) === "dev");
+  const workoutTrackers = visibleTrackers.filter((t) => zoneOf(t) === "workout");
+  const weightTracker = visibleTrackers.find((t) => zoneOf(t) === "weight") ?? null;
+  const photoTracker = visibleTrackers.find((t) => zoneOf(t) === "photo") ?? null;
+  const doneCount = (t: CoachingTracker) => countByTracker.get(t.id) ?? 0;
+
+  // A compact tracker row used inside the Meals / Personal-development zones.
+  const trackerRow = (t: CoachingTracker) => {
+    const count = doneCount(t);
+    const sum = sumByTracker.get(t.id);
+    let badge = "";
+    if (t.wants_amount && sum != null)
+      badge = `${sum}${t.target ? `/${t.target}` : ""}${t.unit ?? ""}`;
+    else if (t.repeatable && count > 0) badge = `×${count}`;
+    return (
+      <button key={t.id} type="button" className="zrow" onClick={() => openNew(t)}>
+        <span className={`zrow-check ${count > 0 ? "done" : ""}`}>
+          {count > 0 ? "✓" : ""}
+        </span>
+        <span className="zrow-emoji">{t.emoji ?? "✅"}</span>
+        <span className="zrow-label">{t.label}</span>
+        {badge ? (
+          <span className="zrow-badge">{badge}</span>
+        ) : (
+          <span className="zrow-add">＋</span>
+        )}
+      </button>
+    );
+  };
+
   return (
     <main className="board coaching">
       <header className="board-head">
@@ -455,60 +624,20 @@ export default function CoachingLog({
 
       {planSummary && <div className="plan-banner">📋 {planSummary}</div>}
 
-      {todayWorkout && (
-        <section className="workout-card">
-          <div className="wc-head">
-            <span className="wc-title">{todayWorkout.title}</span>
-            <span className="wc-tag">Today</span>
-          </div>
-          {todayWorkout.detail && (
-            <p className="wc-detail">{todayWorkout.detail}</p>
-          )}
-          {todayWorkout.exercises && todayWorkout.exercises.length > 0 && (
-            <ul className="wc-ex">
-              {todayWorkout.exercises.map((e, i) => (
-                <li key={i}>
-                  <span className="wc-ex-name">
-                    {exLine(e.name, e.sets, e.reps)}
-                  </span>
-                  {e.cue && <span className="wc-cue">{e.cue}</span>}
-                </li>
-              ))}
-            </ul>
-          )}
-          <Link href="/coaching/workout" className="wc-log-btn">
-            🏋️ Log this workout ›
-          </Link>
-        </section>
-      )}
-
-      <section className="coach-stats">
-        <div className="cstat">
-          <span className="cstat-n">{streak}🔥</span>
-          <span className="cstat-l">Day streak</span>
+      {/* Lightweight progress ribbon */}
+      <section className="day-ribbon">
+        <div className="dr-stat">
+          <b>{streak}🔥</b>
+          <span>Streak</span>
         </div>
-        <div className="cstat">
-          <span className="cstat-n">{adherence}%</span>
-          <span className="cstat-l">Logged today</span>
+        <div className="dr-div" />
+        <div className="dr-track">
+          <div className="dr-bar">
+            <div className="dr-fill" style={{ width: `${adherence}%` }} />
+          </div>
+          <span className="dr-lbl">{adherence}% logged today</span>
         </div>
       </section>
-
-      {(macroTotals.calories > 0 || targets?.calorie) && (
-        <section className="macro-totals">
-          <span className="mt-cal">
-            {macroTotals.calories}
-            {targets?.calorie ? ` / ${targets.calorie}` : ""} kcal
-          </span>
-          <span className="mt-macros">
-            <b>
-              {Math.round(macroTotals.protein_g)}
-              {targets?.protein ? `/${targets.protein}` : ""}g
-            </b>{" "}
-            P · <b>{Math.round(macroTotals.carbs_g)}g</b> C ·{" "}
-            <b>{Math.round(macroTotals.fat_g)}g</b> F
-          </span>
-        </section>
-      )}
 
       {coachNote && (
         <div className="coach-note">
@@ -517,30 +646,154 @@ export default function CoachingLog({
         </div>
       )}
 
-      {/* Quick add */}
-      <section className="tracker-row">
-        {visibleTrackers.map((t) => {
-          const count = countByTracker.get(t.id) ?? 0;
-          const sum = sumByTracker.get(t.id);
-          let badge = "";
-          if (t.wants_amount && sum != null)
-            badge = `${sum}${t.target ? `/${t.target}` : ""}${t.unit ?? ""}`;
-          else if (t.repeatable && count > 0) badge = `×${count}`;
-          else if (count > 0) badge = "✓";
-          return (
-            <button
-              key={t.id}
-              type="button"
-              className={`tracker-chip ${count > 0 ? "done" : ""}`}
-              onClick={() => openNew(t)}
-            >
-              <span className="tc-emoji">{t.emoji ?? "✅"}</span>
-              <span className="tc-label">{t.label}</span>
-              {badge && <span className="tc-badge">{badge}</span>}
-            </button>
-          );
-        })}
-      </section>
+      {/* ── Zone: Workout ── */}
+      {(todayWorkout || workoutTrackers.length > 0) && (
+        <section className="zone">
+          <div className="zone-head">
+            <div className="eyebrow">
+              <span className="zdot run">🏃</span> Today&apos;s workout
+            </div>
+            <p className="zone-help">
+              Your session for today — log it when you&apos;re done, or adjust it first.
+            </p>
+          </div>
+
+          {todayWorkout ? (
+            <div className="workout-card">
+              <div className="wc-head">
+                <span className="wc-title">{todayWorkout.title}</span>
+                <span className={`wc-tag ${todayWorkout.adjusted ? "adj" : ""}`}>
+                  {todayWorkout.adjusted ? "✦ Adjusted" : "Today"}
+                </span>
+              </div>
+              {todayWorkout.detail && (
+                <p className="wc-detail">{todayWorkout.detail}</p>
+              )}
+              {todayWorkout.exercises && todayWorkout.exercises.length > 0 && (
+                <ul className="wc-ex">
+                  {todayWorkout.exercises.map((e, i) => (
+                    <li key={i}>
+                      <span className="wc-ex-name">{exLine(e.name, e.sets, e.reps)}</span>
+                      {e.cue && <span className="wc-cue">{e.cue}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {todayWorkout.adjusted && todayWorkout.adjustReason && (
+                <p className="wc-reason">✦ {todayWorkout.adjustReason}</p>
+              )}
+              <div className="wc-actions">
+                <Link href="/coaching/workout" className="wc-log-btn">
+                  🏋️ Log this workout
+                </Link>
+                <button
+                  type="button"
+                  className="wc-adjust-btn"
+                  onClick={() => setAdjustOpen(true)}
+                >
+                  🎙️ {todayWorkout.adjusted ? "Adjust again" : "Make adjustments"}
+                </button>
+              </div>
+              <p className="wc-hint">
+                Sore, short on time, low energy? Tell us and we&apos;ll adapt today&apos;s session.
+              </p>
+            </div>
+          ) : (
+            <div className="zone-card">{workoutTrackers.map(trackerRow)}</div>
+          )}
+        </section>
+      )}
+
+      {/* ── Zone: Meals & macros ── */}
+      {(mealTrackers.length > 0 || waterTrackers.length > 0) && (
+        <section className="zone">
+          <div className="zone-head">
+            <div className="eyebrow">
+              <span className="zdot food">🍽️</span> Meals &amp; macros
+            </div>
+            <p className="zone-help">Snap a photo or talk it out — we count the macros.</p>
+          </div>
+          <div className="zone-card">
+            {(macroTotals.calories > 0 || targets?.calorie) && (
+              <div className="macro-totals">
+                <span className="mt-cal">
+                  {macroTotals.calories}
+                  {targets?.calorie ? ` / ${targets.calorie}` : ""} kcal
+                </span>
+                <span className="mt-macros">
+                  <b>
+                    {Math.round(macroTotals.protein_g)}
+                    {targets?.protein ? `/${targets.protein}` : ""}g
+                  </b>{" "}
+                  P · <b>{Math.round(macroTotals.carbs_g)}g</b> C ·{" "}
+                  <b>{Math.round(macroTotals.fat_g)}g</b> F
+                </span>
+              </div>
+            )}
+            {mealTrackers.map(trackerRow)}
+            {waterTrackers.map(trackerRow)}
+          </div>
+        </section>
+      )}
+
+      {/* ── Zone: Personal development ── */}
+      {devTrackers.length > 0 && (
+        <section className="zone">
+          <div className="zone-head">
+            <div className="eyebrow">
+              <span className="zdot dev">📖</span> Personal development
+            </div>
+            <p className="zone-help">The habits you&apos;re building this week.</p>
+          </div>
+          <div className="zone-card">{devTrackers.map(trackerRow)}</div>
+        </section>
+      )}
+
+      {/* ── Zone: Daily check-in ── */}
+      {(weightTracker || photoTracker) && (
+        <section className="zone">
+          <div className="zone-head">
+            <div className="eyebrow">
+              <span className="zdot check">✅</span> Daily check-in
+            </div>
+            <p className="zone-help">Two quick ones — weight this morning, plus your progress photo.</p>
+          </div>
+          <div className="checkin-pair">
+            {weightTracker && (
+              <button
+                type="button"
+                className="mini-card"
+                onClick={() => openNew(weightTracker)}
+              >
+                <span className="mini-ic">{weightTracker.emoji ?? "⚖️"}</span>
+                <span className="mini-k">{weightTracker.label}</span>
+                <span className={`mini-v ${doneCount(weightTracker) ? "" : "empty"}`}>
+                  {sumByTracker.get(weightTracker.id) != null
+                    ? `${sumByTracker.get(weightTracker.id)}${weightTracker.unit ?? ""}`
+                    : "Log it"}
+                </span>
+                <span className="mini-cta">
+                  {doneCount(weightTracker) ? "Logged ✓" : "Tap to log"}
+                </span>
+              </button>
+            )}
+            {photoTracker && (
+              <button
+                type="button"
+                className="mini-card"
+                onClick={() => openNew(photoTracker)}
+              >
+                <span className="mini-ic">{photoTracker.emoji ?? "📸"}</span>
+                <span className="mini-k">{photoTracker.label}</span>
+                <span className={`mini-v ${doneCount(photoTracker) ? "" : "empty"}`}>
+                  {doneCount(photoTracker) ? "Added ✓" : "Add today's"}
+                </span>
+                <span className="mini-cta">Private — coach only</span>
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Today's timeline */}
       <section className="panel">
@@ -846,6 +1099,121 @@ export default function CoachingLog({
                 >
                   Cancel
                 </button>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* Make-adjustments sheet */}
+      {adjustOpen &&
+        createPortal(
+          <div className="tour-overlay" role="dialog" aria-modal="true">
+            <div className="tour-card pm-card">
+              <h2 className="tour-title">🎙️ Adjust today&apos;s workout</h2>
+
+              {!proposal ? (
+                <>
+                  <p className="adj-sub">
+                    How are you feeling, and what should change? Talk it through —
+                    soreness, time, energy, equipment. We&apos;ll rework just today.
+                  </p>
+                  <textarea
+                    className="pm-textarea"
+                    rows={3}
+                    value={adjustNote}
+                    onChange={(e) => setAdjustNote(e.target.value)}
+                    placeholder={
+                      adjustWriting
+                        ? "Cleaning it up…"
+                        : "e.g. My knee's a little sore and I only have 40 minutes"
+                    }
+                  />
+                  <div className="cf-dictate">
+                    {adjustRec ? (
+                      <button
+                        type="button"
+                        className="dictate-btn recording"
+                        onClick={() => adjRecRef.current?.stop()}
+                      >
+                        ● <span>Stop</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="dictate-btn"
+                        onClick={startAdjustDictation}
+                        disabled={adjustWriting}
+                      >
+                        🎙️ <span>{adjustWriting ? "Writing…" : "Tap & talk"}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {adjustErr && <p className="auth-error">{adjustErr}</p>}
+
+                  <div className="tour-nav">
+                    <button type="button" className="tour-back" onClick={closeAdjust} disabled={adjustBusy}>
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="tour-next"
+                      onClick={proposeAdjustment}
+                      disabled={adjustBusy || !adjustNote.trim()}
+                    >
+                      {adjustBusy ? "Reworking…" : "Update my workout ›"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="adj-preview">
+                    <span className="adj-badge">✦ Proposed for today</span>
+                    <h3 className="adj-title">{proposal.title}</h3>
+                    {proposal.detail && <p className="adj-detail">{proposal.detail}</p>}
+                    {proposal.exercises.length > 0 && (
+                      <ul className="wc-ex">
+                        {proposal.exercises.map((e, i) => (
+                          <li key={i}>
+                            <span className="wc-ex-name">{exLine(e.name, e.sets, e.reps)}</span>
+                            {e.cue && <span className="wc-cue">{e.cue}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {proposal.reason && <p className="adj-reason">✦ {proposal.reason}</p>}
+                  </div>
+
+                  {adjustErr && <p className="auth-error">{adjustErr}</p>}
+
+                  <div className="tour-nav">
+                    <button
+                      type="button"
+                      className="tour-back"
+                      onClick={() => setProposal(null)}
+                      disabled={adjustBusy}
+                    >
+                      ‹ Talk again
+                    </button>
+                    <button
+                      type="button"
+                      className="tour-next"
+                      onClick={applyAdjustment}
+                      disabled={adjustBusy}
+                    >
+                      {adjustBusy ? "Applying…" : "Apply to today ›"}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="cf-cancel-link"
+                    onClick={closeAdjust}
+                    disabled={adjustBusy}
+                  >
+                    Cancel
+                  </button>
+                </>
               )}
             </div>
           </div>,

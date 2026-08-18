@@ -199,6 +199,14 @@ export default async function CoachClientPage({
     }
   }
 
+  // Did the client rework today's session? Show it so the coach knows why.
+  const { data: adjustment } = await supabase
+    .from("coaching_workout_adjustments")
+    .select("title, note, reason")
+    .eq("relationship_id", rel.id)
+    .eq("day", today)
+    .maybeSingle();
+
   const name = client?.display_name ?? "Client";
   const latestWeight = weights.length ? weights[weights.length - 1].v : null;
   const firstWeight = weights.length ? weights[0].v : null;
@@ -311,6 +319,15 @@ export default async function CoachClientPage({
           initial={(fb as { body: string } | null)?.body ?? ""}
         />
       </section>
+
+      {/* Client reworked today's session */}
+      {adjustment && (
+        <section className="adj-callout">
+          <span className="adj-callout-label">✦ {name.split(" ")[0]} adjusted today&apos;s workout</span>
+          {adjustment.note && <p className="adj-callout-note">“{adjustment.note}”</p>}
+          {adjustment.reason && <p className="adj-callout-reason">{adjustment.reason}</p>}
+        </section>
+      )}
 
       {/* Today's logged workout */}
       {wlog && woByExercise.size > 0 && (

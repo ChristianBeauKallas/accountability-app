@@ -77,6 +77,18 @@ export default async function WorkoutPage() {
     }
   }
 
+  // If the client reworked today's session, log the adjusted version instead.
+  const { data: adj } = await supabase
+    .from("coaching_workout_adjustments")
+    .select("title, exercises")
+    .eq("relationship_id", rel.id)
+    .eq("day", today)
+    .maybeSingle();
+  if (adj) {
+    if (adj.title) title = adj.title as string;
+    exercises = ((adj.exercises as PlanExercise[]) ?? []).filter((e) => e?.name);
+  }
+
   // Existing log for today (to resume/edit).
   const { data: existingLog } = await supabase
     .from("coaching_workout_logs")

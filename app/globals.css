@@ -4418,6 +4418,271 @@ button.coaching-open {
   font-weight: 600;
 }
 
+/* ---- My Plan: zoned daily view ---- */
+.day-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: linear-gradient(180deg, var(--surface), var(--bg-2));
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 0.7rem 0.95rem;
+  margin-bottom: 1.3rem;
+}
+.dr-stat {
+  display: flex;
+  flex-direction: column;
+}
+.dr-stat b {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.dr-stat span {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+  font-weight: 700;
+}
+.dr-div {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border);
+}
+.dr-track {
+  flex: 1;
+}
+.dr-bar {
+  height: 7px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.dr-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+.dr-lbl {
+  font-size: 0.66rem;
+  color: var(--faint);
+  margin-top: 0.35rem;
+  font-weight: 600;
+}
+
+.zone {
+  margin-bottom: 1.5rem;
+}
+.zone-head {
+  margin: 0 0.15rem 0.55rem;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.zdot {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  flex: none;
+  background: var(--surface-2);
+}
+.zdot.run { background: var(--accent-dim); }
+.zdot.food { background: rgba(96, 197, 251, 0.16); }
+.zdot.dev { background: rgba(183, 156, 255, 0.16); }
+.zdot.check { background: rgba(251, 191, 36, 0.16); }
+.zone-help {
+  color: var(--muted);
+  font-size: 0.76rem;
+  margin: 0.3rem 0 0 1.85rem;
+}
+.zone-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 0.35rem 0.9rem;
+}
+
+.zrow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.72rem 0.1rem;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+  text-align: left;
+}
+.zrow:first-child { border-top: 0; }
+.zrow-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: transparent;
+}
+.zrow-check.done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.zrow-emoji { font-size: 1.05rem; }
+.zrow-label { font-weight: 600; font-size: 0.9rem; }
+.zrow-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-variant-numeric: tabular-nums;
+}
+.zrow-add {
+  margin-left: auto;
+  font-size: 1.15rem;
+  color: var(--faint);
+  font-weight: 700;
+}
+
+.wc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+.wc-log-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 12px;
+  padding: 0.75rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 18px rgba(62, 232, 122, 0.22);
+}
+.wc-adjust-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.wc-hint {
+  margin: 0.55rem 0.1rem 0;
+  font-size: 0.72rem;
+  color: var(--faint);
+  text-align: center;
+}
+.wc-reason {
+  margin: 0.1rem 0 0.4rem;
+  font-size: 0.78rem;
+  color: var(--accent-2);
+  background: var(--accent-dim);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+}
+.wc-tag.adj {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.checkin-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.mini-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 15px;
+  padding: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+  text-align: left;
+}
+.mini-ic { font-size: 1.15rem; margin-bottom: 0.3rem; }
+.mini-k {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--faint);
+  font-weight: 700;
+}
+.mini-v {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0.1rem 0;
+  font-variant-numeric: tabular-nums;
+}
+.mini-v.empty { color: var(--accent); font-size: 0.95rem; }
+.mini-cta { font-size: 0.66rem; color: var(--muted); margin-top: 0.15rem; }
+
+.adj-sub { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.7rem; }
+.adj-preview {
+  background: var(--bg-2);
+  border: 1px solid rgba(62, 232, 122, 0.25);
+  border-radius: 12px;
+  padding: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+.adj-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.adj-title { font-size: 1.05rem; font-weight: 800; margin: 0.25rem 0 0.3rem; }
+.adj-detail { color: var(--muted); font-size: 0.82rem; margin: 0 0 0.5rem; }
+.adj-reason { margin: 0.5rem 0 0; font-size: 0.8rem; color: var(--accent-2); }
+
+.adj-callout {
+  background: var(--accent-dim);
+  border: 1px solid rgba(62, 232, 122, 0.3);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+.adj-callout-label { font-weight: 800; font-size: 0.85rem; color: var(--accent-2); }
+.adj-callout-note { margin: 0.4rem 0 0.2rem; font-style: italic; font-size: 0.86rem; }
+.adj-callout-reason { margin: 0; font-size: 0.8rem; color: var(--muted); }
+
 /* intake wizard */
 .intake-dots {
   display: flex;
