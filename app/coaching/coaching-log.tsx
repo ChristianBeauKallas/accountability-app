@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { transcribe, polish, estimateMacros } from "@/lib/ai";
+import { syncPlanRecap } from "@/lib/plan-recap";
 import type { CoachingTracker, CoachingEntry, SavedMeal } from "@/lib/types";
 
 function pickAudioMime(): string {
@@ -151,6 +152,7 @@ export default function CoachingLog({
   const [dictating, setDictating] = useState(false);
   const [estimating, setEstimating] = useState(false);
   const [mealSaved, setMealSaved] = useState(false);
+  const [shareToFeed, setShareToFeed] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -201,6 +203,7 @@ export default function CoachingLog({
   function openNew(tracker: CoachingTracker) {
     setErr(null);
     setMealSaved(false);
+    setShareToFeed(false);
     setDraft({
       tracker,
       entry: null,
@@ -217,6 +220,7 @@ export default function CoachingLog({
     if (!tracker) return;
     setErr(null);
     setMealSaved(false);
+    setShareToFeed(false);
     setDraft({
       tracker,
       entry,
@@ -448,8 +452,28 @@ export default function CoachingLog({
       if (mErr) return fail(mErr.message);
     }
 
+    // Optional explicit share of a private entry (weigh-in / progress selfie).
+    if (
+      shareToFeed &&
+      entryId &&
+      /weight|scale|weigh|selfie|progress|photo/i.test(draft.tracker.label)
+    ) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      await fetch("/api/share-to-feed", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ entryId }),
+      }).catch(() => {});
+    }
+
     setBusy(false);
     close();
+    void syncPlanRecap(draft.when.slice(0, 10));
     router.refresh();
 
     function fail(msg: string) {
@@ -472,6 +496,7 @@ export default function CoachingLog({
       return;
     }
     close();
+    void syncPlanRecap(draft.when.slice(0, 10));
     router.refresh();
   }
 
@@ -1144,6 +1169,19 @@ export default function CoachingLog({
                     </div>
                   )}
                 </>
+              )}
+
+              {/weight|scale|weigh|selfie|progress|photo/i.test(
+                draft.tracker.label,
+              ) && (
+                <label className="share-toggle">
+                  <input
+                    type="checkbox"
+                    checked={shareToFeed}
+                    onChange={(e) => setShareToFeed(e.target.checked)}
+                  />
+                  <span>Share this to the group feed</span>
+                </label>
               )}
 
               {err && <p className="auth-error">{err}</p>}

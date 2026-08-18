@@ -6,6 +6,7 @@ import Tour from "./tour";
 import InstallModal from "./install-modal";
 import PostingTour from "./posting-tour";
 import PostCard from "./post-card";
+import PlanRecapCard from "./plan-recap-card";
 import { Avatar } from "./avatar";
 import { ProgressAvatar } from "./progress-avatar";
 import HeaderBell from "./header-bell";
@@ -26,11 +27,26 @@ type MemberRow = {
   } | null;
 };
 
+type PlanItems = {
+  workouts?: { title: string; effort: string | null }[];
+  meals?: {
+    count: number;
+    calories: number;
+    protein: number;
+    target_calories: number | null;
+    target_protein: number | null;
+  } | null;
+  habits?: { label: string; emoji: string; count: number }[];
+};
+
 type PostRow = {
   id: string;
   author_id: string;
   caption: string | null;
   created_at: string;
+  source?: string | null;
+  day?: string | null;
+  plan_items?: PlanItems | null;
   post_activities: { activity_id: string }[];
   media: { id: string; type: string; storage_path: string }[];
 };
@@ -109,7 +125,7 @@ export default async function Home() {
     supabase
       .from("group_posts")
       .select(
-        "id, author_id, caption, created_at, post_activities(activity_id), media(id, type, storage_path)",
+        "id, author_id, caption, created_at, source, day, plan_items, post_activities(activity_id), media(id, type, storage_path)",
       )
       .eq("group_id", groupId)
       .order("created_at", { ascending: false })
@@ -276,6 +292,21 @@ export default async function Home() {
     datesByUser.set(uid, fullCompletionDays(byDay, startDays));
   }
 
+  // Unify with My Plan: a day that produced a plan-recap post counts as a
+  // completed (checked-in) day too, so coached folks aren't logging twice.
+  const planDaysByUser = new Map<string, Set<string>>();
+  for (const p of posts) {
+    if (p.source !== "plan" || !p.day) continue;
+    const s = planDaysByUser.get(p.author_id) ?? new Set<string>();
+    s.add(p.day);
+    planDaysByUser.set(p.author_id, s);
+  }
+  for (const [uid, days] of planDaysByUser) {
+    const set = datesByUser.get(uid) ?? new Set<string>();
+    for (const d of days) set.add(d);
+    datesByUser.set(uid, set);
+  }
+
   // Running cumulative of an author's distinct activities up to and including
   // each post — so a post's pill shows where they were at when they posted it.
   const cumulativeByPost = new Map<string, Set<string>>();
@@ -324,12 +355,19 @@ export default async function Home() {
       const info = computeStreak(datesByUser.get(m.user_id) ?? new Set(), tz);
 
       const logged = todayActsByUser.get(m.user_id)?.size ?? 0;
-      const progress = totalActivities > 0 ? logged / totalActivities : 0;
-      const ringDone = totalActivities > 0 && logged >= totalActivities;
+      // A completed plan today counts as a full check-in (ring filled).
+      const planToday =
+        planDaysByUser.get(m.user_id)?.has(localDate(new Date(), tz)) ?? false;
+      const progress = planToday
+        ? 1
+        : totalActivities > 0
+          ? logged / totalActivities
+          : 0;
+      const ringDone = planToday || (totalActivities > 0 && logged >= totalActivities);
       // Any activity logged today counts as "checked in", even a partial day —
       // otherwise a 2/5 day reads as "no check-ins yet" while the ring shows
       // progress. Streaks still require a full day; this is just the label.
-      const checkedInToday = logged > 0;
+      const checkedInToday = logged > 0 || planToday;
 
       let state: "today" | "pending" | "out" | "new";
       let value: number | null;
@@ -471,6 +509,24 @@ export default async function Home() {
                 duration: number | null;
               } => !!a.src,
             );
+          if (p.source === "plan") {
+            return (
+              <PlanRecapCard
+                key={p.id}
+                postId={p.id}
+                authorId={p.author_id}
+                authorName={author?.name ?? "Member"}
+                authorAvatar={author?.avatar ?? null}
+                createdAt={p.created_at}
+                photos={photos}
+                planItems={p.plan_items ?? null}
+                reactions={reactionsByPost.get(p.id) ?? {}}
+                comments={commentsByPost.get(p.id) ?? []}
+                viewerId={user.id}
+              />
+            );
+          }
+
           // Running total as of this post (chronological), not the whole day.
           const cumActIds = cumulativeByPost.get(p.id) ?? new Set<string>();
           const activityItems = activities

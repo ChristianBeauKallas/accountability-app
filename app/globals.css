@@ -4738,6 +4738,74 @@ button.coaching-open {
 .adj-callout-note { margin: 0.4rem 0 0.2rem; font-style: italic; font-size: 0.86rem; }
 .adj-callout-reason { margin: 0; font-size: 0.8rem; color: var(--muted); }
 
+/* Plan recap card in the group feed */
+.post.plan-recap {
+  border-left: 3px solid var(--accent);
+}
+.pr-tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: 6px;
+  padding: 2px 7px;
+}
+.pr-lead {
+  font-weight: 700;
+  font-size: 0.92rem;
+  margin: 0.1rem 0 0.7rem;
+}
+.pr-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.pr-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.65rem;
+  background: var(--bg-2);
+  border-radius: 10px;
+}
+.pr-ic {
+  font-size: 1rem;
+  flex: none;
+}
+.pr-txt {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.pr-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-variant-numeric: tabular-nums;
+}
+.share-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0.8rem 0 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.share-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
 .cf-label .req {
   font-size: 0.62rem;
   font-weight: 700;

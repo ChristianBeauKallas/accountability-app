@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { syncPlanRecap } from "@/lib/plan-recap";
 import type { PlanExercise } from "@/lib/types";
 
 type SetRow = { weight: string; reps: string };
@@ -216,6 +217,7 @@ export default function WorkoutLogger({
     }
 
     setBusy(false);
+    void syncPlanRecap(day);
     router.push(`/coaching?d=${day}`);
     router.refresh();
 
