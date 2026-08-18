@@ -16,7 +16,11 @@ const WD: Record<string, number> = {
   Sun: 7,
 };
 
-export default async function WorkoutPage() {
+export default async function WorkoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ d?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -43,11 +47,15 @@ export default async function WorkoutPage() {
     .eq("id", user.id)
     .maybeSingle();
   const tz = profile?.timezone ?? "America/New_York";
-  const today = localDate(new Date(), tz);
+  const realToday = localDate(new Date(), tz);
+  const sp = (await searchParams) ?? {};
+  const today =
+    typeof sp.d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.d) && sp.d <= realToday
+      ? sp.d
+      : realToday;
   const wdShort = new Intl.DateTimeFormat("en-US", {
-    timeZone: tz,
     weekday: "short",
-  }).format(new Date());
+  }).format(new Date(today + "T12:00:00"));
   const weekday = WD[wdShort] ?? 1;
 
   // Today's prescribed workout from the active plan.
@@ -142,7 +150,7 @@ export default async function WorkoutPage() {
           <div>
             <h1>{title}</h1>
             <p className="subtitle">
-              <Link href="/coaching">‹ Your day</Link>
+              <Link href={`/coaching?d=${today}`}>‹ Your day</Link>
             </p>
           </div>
         </div>

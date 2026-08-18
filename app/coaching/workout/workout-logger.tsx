@@ -208,14 +208,15 @@ export default function WorkoutLogger({
           relationship_id: relationshipId,
           client_id: userId,
           tracker_id: wt.id,
-          happened_at: new Date().toISOString(),
+          // Anchor to the logged day (noon) so backdated workouts land right.
+          happened_at: new Date(day + "T12:00:00").toISOString(),
           detail,
         });
       }
     }
 
     setBusy(false);
-    router.push("/coaching");
+    router.push(`/coaching?d=${day}`);
     router.refresh();
 
     function fail(msg: string) {
@@ -245,23 +246,29 @@ export default function WorkoutLogger({
               {ex.sets.map((s, si) => (
                 <div className="wl-set" key={si}>
                   <span className="wl-sn">Set {si + 1}</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    className="wl-in"
-                    placeholder="lb"
-                    value={s.weight}
-                    onChange={(e) => setCell(ei, si, "weight", e.target.value)}
-                  />
+                  <label className="wl-field">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      className="wl-in"
+                      placeholder="0"
+                      value={s.weight}
+                      onChange={(e) => setCell(ei, si, "weight", e.target.value)}
+                    />
+                    <span className="wl-unit">lb</span>
+                  </label>
                   <span className="wl-x">×</span>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    className="wl-in"
-                    placeholder="reps"
-                    value={s.reps}
-                    onChange={(e) => setCell(ei, si, "reps", e.target.value)}
-                  />
+                  <label className="wl-field">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      className="wl-in"
+                      placeholder="0"
+                      value={s.reps}
+                      onChange={(e) => setCell(ei, si, "reps", e.target.value)}
+                    />
+                    <span className="wl-unit">reps</span>
+                  </label>
                   <button className="wl-rm" onClick={() => removeSet(ei, si)} aria-label="Remove set">
                     ✕
                   </button>

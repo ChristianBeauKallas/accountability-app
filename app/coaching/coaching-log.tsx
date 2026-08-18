@@ -56,6 +56,13 @@ function fmtTime(iso: string): string {
     minute: "2-digit",
   });
 }
+function fmtDay(d: string): string {
+  return new Date(d + "T12:00:00").toLocaleDateString([], {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 // Turn an exercise into a clean one-liner. Only show a "N×" multiplier for
 // real multi-set work (lifts); a single set (a run segment) just shows its
@@ -95,6 +102,10 @@ export default function CoachingLog({
   planSummary,
   todayWorkout,
   today,
+  selectedDay,
+  isToday = true,
+  prevHref,
+  nextHref,
   buildBanner,
   manageHref,
 }: {
@@ -125,6 +136,10 @@ export default function CoachingLog({
     adjustReason: string | null;
   } | null;
   today?: string;
+  selectedDay?: string;
+  isToday?: boolean;
+  prevHref?: string | null;
+  nextHref?: string | null;
   buildBanner?: { text: string; href: string | null } | null;
   manageHref?: string | null;
 }) {
@@ -177,13 +192,19 @@ export default function CoachingLog({
       sumByTracker.set(e.tracker_id, (sumByTracker.get(e.tracker_id) ?? 0) + e.amount);
   }
 
+  function defaultWhen(): string {
+    // Backdating: default the timestamp to the viewed day (noon), not "now".
+    if (isToday || !selectedDay) return toLocalInput(new Date().toISOString());
+    return toLocalInput(new Date(selectedDay + "T12:00:00").toISOString());
+  }
+
   function openNew(tracker: CoachingTracker) {
     setErr(null);
     setMealSaved(false);
     setDraft({
       tracker,
       entry: null,
-      when: toLocalInput(new Date().toISOString()),
+      when: defaultWhen(),
       detail: "",
       amount: "",
       files: [],
@@ -363,6 +384,11 @@ export default function CoachingLog({
 
   async function save() {
     if (!draft) return;
+    // A meal needs a photo — it's what makes the macro estimate trustworthy.
+    if (draft.tracker.wants_macros && draft.previews.length === 0) {
+      setErr("Add a photo of your meal first.");
+      return;
+    }
     setBusy(true);
     setErr(null);
     const supabase = createClient();
@@ -600,7 +626,7 @@ export default function CoachingLog({
       <header className="board-head">
         <div className="board-head-top">
           <div>
-            <h1>Your day</h1>
+            <h1>{isToday ? "Your day" : "Past day"}</h1>
             <p className="subtitle">
               <Link href="/">‹ Feed</Link>
             </p>
@@ -612,6 +638,34 @@ export default function CoachingLog({
           )}
         </div>
       </header>
+
+      {selectedDay && (
+        <nav className="day-nav">
+          {prevHref ? (
+            <Link href={prevHref} className="day-nav-btn" aria-label="Previous day">
+              ‹
+            </Link>
+          ) : (
+            <span className="day-nav-btn disabled">‹</span>
+          )}
+          <span className="day-nav-date">
+            {isToday ? "Today" : fmtDay(selectedDay)}
+          </span>
+          {nextHref ? (
+            <Link href={nextHref} className="day-nav-btn" aria-label="Next day">
+              ›
+            </Link>
+          ) : (
+            <span className="day-nav-btn disabled">›</span>
+          )}
+        </nav>
+      )}
+
+      {!isToday && (
+        <div className="backdate-note">
+          📅 Viewing a past day — anything you log saves to this date.
+        </div>
+      )}
 
       {buildBanner &&
         (buildBanner.href ? (
@@ -683,20 +737,31 @@ export default function CoachingLog({
                 <p className="wc-reason">✦ {todayWorkout.adjustReason}</p>
               )}
               <div className="wc-actions">
-                <Link href="/coaching/workout" className="wc-log-btn">
+                <Link
+                  href={
+                    isToday || !selectedDay
+                      ? "/coaching/workout"
+                      : `/coaching/workout?d=${selectedDay}`
+                  }
+                  className="wc-log-btn"
+                >
                   🏋️ Log this workout
                 </Link>
-                <button
-                  type="button"
-                  className="wc-adjust-btn"
-                  onClick={() => setAdjustOpen(true)}
-                >
-                  🎙️ {todayWorkout.adjusted ? "Adjust again" : "Make adjustments"}
-                </button>
+                {isToday && (
+                  <button
+                    type="button"
+                    className="wc-adjust-btn"
+                    onClick={() => setAdjustOpen(true)}
+                  >
+                    🎙️ {todayWorkout.adjusted ? "Adjust again" : "Make adjustments"}
+                  </button>
+                )}
               </div>
-              <p className="wc-hint">
-                Sore, short on time, low energy? Tell us and we&apos;ll adapt today&apos;s session.
-              </p>
+              {isToday && (
+                <p className="wc-hint">
+                  Sore, short on time, low energy? Tell us and we&apos;ll adapt today&apos;s session.
+                </p>
+              )}
             </div>
           ) : (
             <div className="zone-card">{workoutTrackers.map(trackerRow)}</div>
@@ -960,6 +1025,11 @@ export default function CoachingLog({
 
               {draft.tracker.wants_photo && (
                 <>
+                  {draft.tracker.wants_macros && (
+                    <label className="cf-label">
+                      Photo <span className="req">required</span>
+                    </label>
+                  )}
                   <input
                     ref={fileInput}
                     type="file"
@@ -977,10 +1047,19 @@ export default function CoachingLog({
                   )}
                   <button
                     type="button"
-                    className="add-photo-btn"
+                    className={`add-photo-btn ${
+                      draft.tracker.wants_macros && draft.previews.length === 0
+                        ? "needed"
+                        : ""
+                    }`}
                     onClick={() => fileInput.current?.click()}
                   >
-                    📷 {draft.previews.length > 0 ? "Add another" : "Add photo"}
+                    📷{" "}
+                    {draft.previews.length > 0
+                      ? "Add another"
+                      : draft.tracker.wants_macros
+                        ? "Add a photo of your meal"
+                        : "Add photo"}
                   </button>
                 </>
               )}

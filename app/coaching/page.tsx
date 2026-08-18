@@ -21,7 +21,18 @@ const WD: Record<string, number> = {
 
 export const dynamic = "force-dynamic";
 
-export default async function CoachingPage() {
+// Add/subtract days on a YYYY-MM-DD string (calendar math, tz-safe).
+function shiftDay(d: string, delta: number): string {
+  const dt = new Date(d + "T12:00:00Z");
+  dt.setUTCDate(dt.getUTCDate() + delta);
+  return dt.toISOString().slice(0, 10);
+}
+
+export default async function CoachingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ d?: string }>;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -65,6 +76,16 @@ export default async function CoachingPage() {
   const tz = profile?.timezone ?? "America/New_York";
   const today = localDate(new Date(), tz);
 
+  // Which day are we viewing? Default today; never the future.
+  const sp = (await searchParams) ?? {};
+  const selectedDay =
+    typeof sp.d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.d) && sp.d <= today
+      ? sp.d
+      : today;
+  const isToday = selectedDay === today;
+  const prevDay = shiftDay(selectedDay, -1);
+  const nextDay = shiftDay(selectedDay, 1);
+
   const [{ data: trackers }, { data: recent }] = await Promise.all([
     supabase
       .from("coaching_trackers")
@@ -92,9 +113,9 @@ export default async function CoachingPage() {
   const daySet = new Set(allEntries.map((e) => localDate(e.happened_at, tz)));
   const { streak } = computeStreak(daySet, tz);
 
-  // Today's entries + their photos.
+  // The viewed day's entries + their photos.
   const todayEntries = allEntries.filter(
-    (e) => localDate(e.happened_at, tz) === today,
+    (e) => localDate(e.happened_at, tz) === selectedDay,
   );
   const todayIds = todayEntries.map((e) => e.id);
   const photosByEntry = new Map<string, string[]>();
@@ -131,12 +152,12 @@ export default async function CoachingPage() {
     photos: photosByEntry.get(e.id) ?? [],
   }));
 
-  // Coach's note for today.
+  // Coach's note for the viewed day.
   const { data: fb } = await supabase
     .from("coaching_feedback")
     .select("body")
     .eq("relationship_id", rel.id)
-    .eq("day", today)
+    .eq("day", selectedDay)
     .maybeSingle();
 
   // Adherence today: distinct trackers logged / active trackers.
@@ -184,11 +205,10 @@ export default async function CoachingPage() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  // Active plan → today's weekday, targets, and prescribed workout.
+  // Active plan → the viewed day's weekday, targets, and prescribed workout.
   const wdShort = new Intl.DateTimeFormat("en-US", {
-    timeZone: tz,
     weekday: "short",
-  }).format(new Date());
+  }).format(new Date(selectedDay + "T12:00:00"));
   const todayWeekday = WD[wdShort] ?? 1;
 
   const { data: planRows } = await supabase
@@ -227,12 +247,12 @@ export default async function CoachingPage() {
         adjustReason: null,
       };
 
-    // Did the client rework today's session? That overrides the card.
+    // Did the client rework this day's session? That overrides the card.
     const { data: adj } = await supabase
       .from("coaching_workout_adjustments")
       .select("title, detail, exercises, note, reason")
       .eq("relationship_id", rel.id)
-      .eq("day", today)
+      .eq("day", selectedDay)
       .maybeSingle();
     if (adj) {
       todayWorkout = {
@@ -295,6 +315,10 @@ export default async function CoachingPage() {
       planSummary={plan?.summary ?? null}
       todayWorkout={todayWorkout}
       today={today}
+      selectedDay={selectedDay}
+      isToday={isToday}
+      prevHref={`/coaching?d=${prevDay}`}
+      nextHref={isToday ? null : `/coaching?d=${nextDay}`}
       buildBanner={buildBanner}
       manageHref={plan ? manageHref : null}
     />
