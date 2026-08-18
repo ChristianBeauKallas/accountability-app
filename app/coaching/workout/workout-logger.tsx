@@ -227,6 +227,10 @@ export default function WorkoutLogger({
 
   return (
     <>
+      <div className="wl-banner">
+        📋 Log your workout — enter the weight &amp; reps you hit for each set,
+        then save.
+      </div>
       {state.map((ex, ei) => {
         const last = lastByExercise[ex.name];
         return (

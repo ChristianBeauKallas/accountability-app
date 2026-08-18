@@ -648,9 +648,17 @@ export default function CoachingLog({
           ) : (
             <span className="day-nav-btn disabled">‹</span>
           )}
-          <span className="day-nav-date">
-            {isToday ? "Today" : fmtDay(selectedDay)}
-          </span>
+          <label className="day-nav-date">
+            <span>{isToday ? "Today" : fmtDay(selectedDay)} ▾</span>
+            <input
+              type="date"
+              value={selectedDay}
+              max={today}
+              onChange={(e) => {
+                if (e.target.value) router.push(`/coaching?d=${e.target.value}`);
+              }}
+            />
+          </label>
           {nextHref ? (
             <Link href={nextHref} className="day-nav-btn" aria-label="Next day">
               ›

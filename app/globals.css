@@ -4496,10 +4496,25 @@ button.coaching-open {
   opacity: 0.3;
 }
 .day-nav-date {
+  position: relative;
   min-width: 9rem;
   text-align: center;
   font-weight: 700;
   font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.day-nav-date input[type="date"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  cursor: pointer;
 }
 .backdate-note {
   background: rgba(251, 191, 36, 0.12);
@@ -5018,12 +5033,22 @@ button.coaching-open {
   font-weight: 700;
   font-size: 0.85rem;
 }
+.wl-banner {
+  background: var(--accent-dim);
+  border: 1px solid rgba(62, 232, 122, 0.3);
+  color: var(--accent-2);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
 .wl-ex {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 0.9rem 1rem;
-  margin-bottom: 0.8rem;
+  padding: 0.75rem 0.85rem;
+  margin-bottom: 0.65rem;
 }
 .wl-ex-head {
   display: flex;
@@ -5053,30 +5078,31 @@ button.coaching-open {
 .wl-sets {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  margin: 0.7rem 0 0.5rem;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0.4rem;
 }
 .wl-set {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.3rem;
 }
 .wl-sn {
-  width: 2.6rem;
+  width: 2.3rem;
   flex: none;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: var(--muted);
   white-space: nowrap;
 }
 .wl-field {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0 0.6rem;
+  border-radius: 9px;
+  padding: 0 0.5rem;
 }
 .wl-field:focus-within {
   border-color: var(--accent);
@@ -5084,13 +5110,14 @@ button.coaching-open {
 .wl-in {
   flex: 1;
   min-width: 0;
+  width: 100%;
   background: none;
   border: 0;
   color: var(--text);
-  padding: 0.6rem 0;
+  padding: 0.5rem 0;
   text-align: right;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-family: inherit;
   font-variant-numeric: tabular-nums;
 }
@@ -5098,16 +5125,19 @@ button.coaching-open {
   outline: none;
 }
 .wl-unit {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--faint);
   font-weight: 600;
-  padding-left: 0.45rem;
+  padding-left: 0.3rem;
   flex: none;
 }
 .wl-x {
   color: var(--faint);
   flex: none;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+}
+.wl-rm {
+  flex: none;
 }
 .wl-rm {
   background: none;
