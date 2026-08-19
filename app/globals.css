@@ -4366,12 +4366,30 @@ button.coaching-open {
 .wc-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.4rem;
+  gap: 0.6rem;
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 .wc-title {
   font-weight: 800;
   font-size: 1.05rem;
+  margin-right: auto;
+}
+.wc-chevron {
+  color: var(--muted);
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+  flex: none;
+}
+.wc-chevron.open {
+  transform: rotate(180deg);
 }
 .wc-tag {
   font-size: 0.64rem;
@@ -4616,8 +4634,21 @@ button.coaching-open {
 .zrow-add {
   margin-left: auto;
   font-size: 1.15rem;
-  color: var(--faint);
+  color: var(--accent);
   font-weight: 700;
+}
+.zone-log-btn {
+  width: 100%;
+  margin-top: 0.55rem;
+  padding: 0.7rem;
+  border-radius: 12px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(62, 232, 122, 0.25);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .wc-actions {
@@ -5095,12 +5126,6 @@ button.coaching-open {
 }
 
 /* workout card link + logger */
-.wc-log-btn {
-  display: inline-block;
-  color: var(--accent);
-  font-weight: 700;
-  font-size: 0.85rem;
-}
 .wl-banner {
   background: var(--accent-dim);
   border: 1px solid rgba(62, 232, 122, 0.3);

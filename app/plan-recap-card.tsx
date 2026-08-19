@@ -47,6 +47,19 @@ export default function PlanRecapCard({
   const habits = planItems?.habits ?? [];
   const firstName = authorName.split(" ")[0];
 
+  // A specific summary of what they actually did.
+  const phrases: string[] = [];
+  if (workouts.length > 0) phrases.push("completed a workout");
+  if (meals) phrases.push(`logged ${meals.count} meal${meals.count === 1 ? "" : "s"}`);
+  if (habits.length > 0) phrases.push(habits.map((h) => h.label).join(", "));
+  const joined =
+    phrases.length <= 1
+      ? phrases[0] ?? "worked their plan"
+      : phrases.length === 2
+        ? `${phrases[0]} and ${phrases[1]}`
+        : `${phrases.slice(0, -1).join(", ")}, and ${phrases[phrases.length - 1]}`;
+  const lead = `${firstName} ${joined} toward their plan today`;
+
   return (
     <article className="post plan-recap">
       <div className="post-head">
@@ -60,7 +73,7 @@ export default function PlanRecapCard({
         </div>
       </div>
 
-      <p className="pr-lead">{firstName} worked their plan today</p>
+      <p className="pr-lead">{lead}</p>
 
       {photos.length > 0 && <PostGallery photos={photos} />}
 

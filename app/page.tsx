@@ -26,6 +26,8 @@ type MemberRow = {
 };
 
 type PlanItems = {
+  progress?: number;
+  complete?: boolean;
   workouts?: { title: string; effort: string | null }[];
   meals?: {
     count: number;
@@ -293,11 +295,20 @@ export default async function Home() {
   // Unify with My Plan: a day that produced a plan-recap post counts as a
   // completed (checked-in) day too, so coached folks aren't logging twice.
   const planDaysByUser = new Map<string, Set<string>>();
+  // Today's recap progress per user — drives the ring (full only when complete).
+  const planTodayByUser = new Map<string, { progress: number; complete: boolean }>();
   for (const p of posts) {
     if (p.source !== "plan" || !p.day) continue;
     const s = planDaysByUser.get(p.author_id) ?? new Set<string>();
     s.add(p.day);
     planDaysByUser.set(p.author_id, s);
+    const tz = tzByUser.get(p.author_id) ?? "America/New_York";
+    if (p.day === localDate(new Date(), tz)) {
+      planTodayByUser.set(p.author_id, {
+        progress: Number(p.plan_items?.progress ?? 1),
+        complete: Boolean(p.plan_items?.complete),
+      });
+    }
   }
   for (const [uid, days] of planDaysByUser) {
     const set = datesByUser.get(uid) ?? new Set<string>();
@@ -347,19 +358,20 @@ export default async function Home() {
       const info = computeStreak(datesByUser.get(m.user_id) ?? new Set(), tz);
 
       const logged = todayActsByUser.get(m.user_id)?.size ?? 0;
-      // A completed plan today counts as a full check-in (ring filled).
-      const planToday =
-        planDaysByUser.get(m.user_id)?.has(localDate(new Date(), tz)) ?? false;
-      const progress = planToday
-        ? 1
+      // Plan-based: the ring reflects how much of today's plan is done, and
+      // fills fully ("win") only when the whole day is complete.
+      const planT = planTodayByUser.get(m.user_id) ?? null;
+      const progress = planT
+        ? planT.progress
         : totalActivities > 0
           ? logged / totalActivities
           : 0;
-      const ringDone = planToday || (totalActivities > 0 && logged >= totalActivities);
-      // Any activity logged today counts as "checked in", even a partial day —
-      // otherwise a 2/5 day reads as "no check-ins yet" while the ring shows
-      // progress. Streaks still require a full day; this is just the label.
-      const checkedInToday = logged > 0 || planToday;
+      const ringDone = planT
+        ? planT.complete
+        : totalActivities > 0 && logged >= totalActivities;
+      // Logging anything today counts as "checked in" (keeps the streak); the
+      // ring above still only fills fully on a completed day.
+      const checkedInToday = logged > 0 || !!planT;
 
       let state: "today" | "pending" | "out" | "new";
       let value: number | null;
@@ -454,7 +466,9 @@ export default async function Home() {
             </span>
             <span className="rb-sub">
               {r.state === "today"
-                ? "Done today"
+                ? r.ringDone
+                  ? "Done today ✓"
+                  : `${Math.round(r.progress * 100)}% today`
                 : subLabel(r.state, r.value)}
             </span>
           </Link>

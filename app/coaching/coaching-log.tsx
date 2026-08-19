@@ -102,6 +102,7 @@ export default function CoachingLog({
   targets,
   planSummary,
   todayWorkout,
+  displayName = "Your",
   today,
   selectedDay,
   isToday = true,
@@ -136,6 +137,7 @@ export default function CoachingLog({
     adjustNote: string | null;
     adjustReason: string | null;
   } | null;
+  displayName?: string;
   today?: string;
   selectedDay?: string;
   isToday?: boolean;
@@ -153,6 +155,9 @@ export default function CoachingLog({
   const [estimating, setEstimating] = useState(false);
   const [mealSaved, setMealSaved] = useState(false);
   const [shareToFeed, setShareToFeed] = useState(false);
+  const [workoutOpen, setWorkoutOpen] = useState(false);
+  const firstName = displayName.split(" ")[0];
+  const possessive = /s$/i.test(firstName) ? `${firstName}'` : `${firstName}'s`;
   const fileInput = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -630,6 +635,8 @@ export default function CoachingLog({
     if (t.wants_amount && sum != null)
       badge = `${sum}${t.target ? `/${t.target}` : ""}${t.unit ?? ""}`;
     else if (t.repeatable && count > 0) badge = `×${count}`;
+    // Repeatable trackers always show a "＋" so it's clear you can log another.
+    const canAddMore = t.repeatable || count === 0;
     return (
       <button key={t.id} type="button" className="zrow" onClick={() => openNew(t)}>
         <span className={`zrow-check ${count > 0 ? "done" : ""}`}>
@@ -637,11 +644,8 @@ export default function CoachingLog({
         </span>
         <span className="zrow-emoji">{t.emoji ?? "✅"}</span>
         <span className="zrow-label">{t.label}</span>
-        {badge ? (
-          <span className="zrow-badge">{badge}</span>
-        ) : (
-          <span className="zrow-add">＋</span>
-        )}
+        {badge && <span className="zrow-badge">{badge}</span>}
+        {canAddMore && <span className="zrow-add">＋</span>}
       </button>
     );
   };
@@ -651,7 +655,7 @@ export default function CoachingLog({
       <header className="board-head">
         <div className="board-head-top">
           <div>
-            <h1>{isToday ? "Your day" : "Past day"}</h1>
+            <h1>{displayName === "Your" ? "Your plan" : `${possessive} plan`}</h1>
             <p className="subtitle">
               <Link href="/">‹ Feed</Link>
             </p>
@@ -747,27 +751,38 @@ export default function CoachingLog({
 
           {todayWorkout ? (
             <div className="workout-card">
-              <div className="wc-head">
+              <button
+                type="button"
+                className="wc-head"
+                onClick={() => setWorkoutOpen((o) => !o)}
+                aria-expanded={workoutOpen}
+              >
                 <span className="wc-title">{todayWorkout.title}</span>
                 <span className={`wc-tag ${todayWorkout.adjusted ? "adj" : ""}`}>
                   {todayWorkout.adjusted ? "✦ Adjusted" : "Today"}
                 </span>
-              </div>
-              {todayWorkout.detail && (
-                <p className="wc-detail">{todayWorkout.detail}</p>
-              )}
-              {todayWorkout.exercises && todayWorkout.exercises.length > 0 && (
-                <ul className="wc-ex">
-                  {todayWorkout.exercises.map((e, i) => (
-                    <li key={i}>
-                      <span className="wc-ex-name">{exLine(e.name, e.sets, e.reps)}</span>
-                      {e.cue && <span className="wc-cue">{e.cue}</span>}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {todayWorkout.adjusted && todayWorkout.adjustReason && (
-                <p className="wc-reason">✦ {todayWorkout.adjustReason}</p>
+                <span className={`wc-chevron ${workoutOpen ? "open" : ""}`}>▾</span>
+              </button>
+
+              {workoutOpen && (
+                <>
+                  {todayWorkout.detail && (
+                    <p className="wc-detail">{todayWorkout.detail}</p>
+                  )}
+                  {todayWorkout.exercises && todayWorkout.exercises.length > 0 && (
+                    <ul className="wc-ex">
+                      {todayWorkout.exercises.map((e, i) => (
+                        <li key={i}>
+                          <span className="wc-ex-name">{exLine(e.name, e.sets, e.reps)}</span>
+                          {e.cue && <span className="wc-cue">{e.cue}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {todayWorkout.adjusted && todayWorkout.adjustReason && (
+                    <p className="wc-reason">✦ {todayWorkout.adjustReason}</p>
+                  )}
+                </>
               )}
               <div className="wc-actions">
                 <Link
@@ -778,7 +793,7 @@ export default function CoachingLog({
                   }
                   className="wc-log-btn"
                 >
-                  🏋️ Log this workout
+                  🏋️ Log workout
                 </Link>
                 {isToday && (
                   <button
@@ -830,6 +845,15 @@ export default function CoachingLog({
             )}
             {mealTrackers.map(trackerRow)}
             {waterTrackers.map(trackerRow)}
+            {mealTrackers[0] && (
+              <button
+                type="button"
+                className="zone-log-btn"
+                onClick={() => openNew(mealTrackers[0])}
+              >
+                ＋ Log a meal
+              </button>
+            )}
           </div>
         </section>
       )}

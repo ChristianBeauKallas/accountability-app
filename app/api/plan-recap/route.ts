@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
   const { data: trackers } = await admin
     .from("coaching_trackers")
-    .select("id, label, emoji, wants_macros")
+    .select("id, label, emoji, wants_macros, days, active")
     .eq("relationship_id", rel.id);
   const trackerById = new Map(
     (trackers ?? []).map((t) => [t.id as string, t]),
@@ -119,6 +119,20 @@ export async function POST(req: Request) {
   const hasSomething =
     workouts.length > 0 || meals.count > 0 || habits.length > 0;
 
+  // Real completion: of everything DUE today (incl. private weight/selfie),
+  // how much has been logged? "Win" only when it's all done.
+  const wd = new Date(day + "T12:00:00").getDay();
+  const isoWd = wd === 0 ? 7 : wd;
+  const loggedTrackerIds = new Set(entries.map((e) => e.tracker_id as string));
+  const dueToday = (trackers ?? []).filter((t) => {
+    if (t.active === false) return false;
+    const days = (t.days as number[] | null) ?? [];
+    return days.length === 0 || days.includes(isoWd);
+  });
+  const satisfied = dueToday.filter((t) => loggedTrackerIds.has(t.id as string)).length;
+  const progress = dueToday.length > 0 ? satisfied / dueToday.length : hasSomething ? 1 : 0;
+  const complete = dueToday.length > 0 && satisfied >= dueToday.length;
+
   // Find any existing recap for this person/day.
   const { data: existing } = await admin
     .from("group_posts")
@@ -135,6 +149,8 @@ export async function POST(req: Request) {
   }
 
   const plan_items = {
+    progress: Math.round(progress * 100) / 100,
+    complete,
     workouts,
     meals:
       meals.count > 0
