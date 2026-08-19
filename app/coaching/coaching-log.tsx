@@ -251,6 +251,38 @@ export default function CoachingLog({
     setErr(null);
   }
 
+  // A pure checkmark tracker (no note/photo/amount/macros) logs with one tap.
+  const isCheckOnly = (t: CoachingTracker) =>
+    !t.wants_note && !t.wants_photo && !t.wants_amount && !t.wants_macros;
+
+  const [quickBusy, setQuickBusy] = useState<string | null>(null);
+  async function quickToggle(t: CoachingTracker) {
+    if (quickBusy) return;
+    setQuickBusy(t.id);
+    const supabase = createClient();
+    const existing = initialEntries.filter((e) => e.tracker_id === t.id);
+    if (existing.length > 0) {
+      await supabase
+        .from("coaching_entries")
+        .delete()
+        .in("id", existing.map((e) => e.id));
+    } else {
+      const when =
+        isToday || !selectedDay
+          ? new Date().toISOString()
+          : new Date(selectedDay + "T12:00:00").toISOString();
+      await supabase.from("coaching_entries").insert({
+        relationship_id: relationshipId,
+        client_id: userId,
+        tracker_id: t.id,
+        happened_at: when,
+      });
+    }
+    setQuickBusy(null);
+    void syncPlanRecap(selectedDay ?? today ?? new Date().toISOString().slice(0, 10));
+    router.refresh();
+  }
+
   // "Get macros" — estimate from the newly-added photo (if any) + the note.
   async function getMacros() {
     if (!draft) return;
@@ -635,10 +667,17 @@ export default function CoachingLog({
     if (t.wants_amount && sum != null)
       badge = `${sum}${t.target ? `/${t.target}` : ""}${t.unit ?? ""}`;
     else if (t.repeatable && count > 0) badge = `×${count}`;
+    const check = isCheckOnly(t);
     // Repeatable trackers always show a "＋" so it's clear you can log another.
-    const canAddMore = t.repeatable || count === 0;
+    const canAddMore = !check && (t.repeatable || count === 0);
     return (
-      <button key={t.id} type="button" className="zrow" onClick={() => openNew(t)}>
+      <button
+        key={t.id}
+        type="button"
+        className="zrow"
+        disabled={quickBusy === t.id}
+        onClick={() => (check ? quickToggle(t) : openNew(t))}
+      >
         <span className={`zrow-check ${count > 0 ? "done" : ""}`}>
           {count > 0 ? "✓" : ""}
         </span>

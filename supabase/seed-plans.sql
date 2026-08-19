@@ -47,7 +47,8 @@ new_plan as (
     (select carbs_target from vars), (select fat_target from vars),
     (select water_target from vars), (select goal_weight from vars),
     '{1,2,3,4,5,6}',
-    '[{"name":"Mobility - 10 min","days":[2,4,7]}]'::jsonb
+    '[{"name":"Mobility - 10 min","days":[2,4,7]},
+      {"name":"Read","days":[1,2,3,4,5,6,7],"check":true}]'::jsonb
   from rel
   returning id
 )
@@ -124,7 +125,8 @@ new_plan as (
     (select carbs_target from vars), (select fat_target from vars),
     (select water_target from vars), (select goal_weight from vars),
     '{1,2,3,4,5,6}',
-    '[{"name":"Mobility - 10 min","days":[2,4,7]}]'::jsonb
+    '[{"name":"Mobility - 10 min","days":[2,4,7]},
+      {"name":"Read","days":[1,2,3,4,5,6,7],"check":true}]'::jsonb
   from rel
   returning id
 )
