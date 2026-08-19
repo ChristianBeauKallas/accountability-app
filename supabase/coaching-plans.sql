@@ -48,6 +48,8 @@ create table if not exists public.coaching_plans (
   activated_at     timestamptz
 );
 create index if not exists idx_plans_rel on public.coaching_plans (relationship_id, created_at desc);
+-- Carry the client's goal weight onto the plan (used by adjustments + seeds).
+alter table public.coaching_plans add column if not exists goal_weight numeric;
 
 -- ---- prescribed workouts, one row per weekday of the plan --------------------
 create table if not exists public.coaching_plan_workouts (
