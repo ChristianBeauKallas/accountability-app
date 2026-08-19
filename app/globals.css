@@ -4703,6 +4703,38 @@ button.coaching-open {
   color: var(--accent-ink);
   background: var(--accent);
 }
+.wc-tag.done {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+.wc-log-btn.logged {
+  background: var(--surface-2);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  box-shadow: none;
+}
+.tomorrow-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.tm-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: auto;
+}
+.tomorrow-detail {
+  margin-top: 0.5rem;
+}
 
 .checkin-pair {
   display: grid;

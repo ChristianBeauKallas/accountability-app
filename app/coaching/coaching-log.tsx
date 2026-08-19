@@ -102,6 +102,8 @@ export default function CoachingLog({
   targets,
   planSummary,
   todayWorkout,
+  workoutLogged = false,
+  tomorrowWorkout,
   displayName = "Your",
   today,
   selectedDay,
@@ -137,6 +139,13 @@ export default function CoachingLog({
     adjustNote: string | null;
     adjustReason: string | null;
   } | null;
+  workoutLogged?: boolean;
+  tomorrowWorkout?: {
+    label: string;
+    title: string;
+    detail: string | null;
+    exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
+  } | null;
   displayName?: string;
   today?: string;
   selectedDay?: string;
@@ -156,6 +165,7 @@ export default function CoachingLog({
   const [mealSaved, setMealSaved] = useState(false);
   const [shareToFeed, setShareToFeed] = useState(false);
   const [workoutOpen, setWorkoutOpen] = useState(false);
+  const [tomorrowOpen, setTomorrowOpen] = useState(false);
   const firstName = displayName.split(" ")[0];
   const possessive = /s$/i.test(firstName) ? `${firstName}'` : `${firstName}'s`;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -797,8 +807,14 @@ export default function CoachingLog({
                 aria-expanded={workoutOpen}
               >
                 <span className="wc-title">{todayWorkout.title}</span>
-                <span className={`wc-tag ${todayWorkout.adjusted ? "adj" : ""}`}>
-                  {todayWorkout.adjusted ? "✦ Adjusted" : "Today"}
+                <span
+                  className={`wc-tag ${workoutLogged ? "done" : todayWorkout.adjusted ? "adj" : ""}`}
+                >
+                  {workoutLogged
+                    ? "✓ Completed"
+                    : todayWorkout.adjusted
+                      ? "✦ Adjusted"
+                      : "Today"}
                 </span>
                 <span className={`wc-chevron ${workoutOpen ? "open" : ""}`}>▾</span>
               </button>
@@ -830,9 +846,9 @@ export default function CoachingLog({
                       ? "/coaching/workout"
                       : `/coaching/workout?d=${selectedDay}`
                   }
-                  className="wc-log-btn"
+                  className={`wc-log-btn ${workoutLogged ? "logged" : ""}`}
                 >
-                  🏋️ Log workout
+                  {workoutLogged ? "✓ Workout logged — edit" : "🏋️ Log workout"}
                 </Link>
                 {isToday && (
                   <button
@@ -953,6 +969,48 @@ export default function CoachingLog({
               </button>
             )}
           </div>
+        </section>
+      )}
+
+      {/* ── Tomorrow — dial it in the night before ── */}
+      {tomorrowWorkout && (
+        <section className="zone">
+          <div className="zone-head">
+            <div className="eyebrow">
+              <span className="zdot" style={{ background: "var(--surface-2)" }}>
+                🔜
+              </span>{" "}
+              Tomorrow · {tomorrowWorkout.label}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="tomorrow-card"
+            onClick={() => setTomorrowOpen((o) => !o)}
+            aria-expanded={tomorrowOpen}
+          >
+            <span className="tm-title">{tomorrowWorkout.title}</span>
+            <span className={`wc-chevron ${tomorrowOpen ? "open" : ""}`}>▾</span>
+          </button>
+          {tomorrowOpen && (
+            <div className="zone-card tomorrow-detail">
+              {tomorrowWorkout.detail && (
+                <p className="wc-detail">{tomorrowWorkout.detail}</p>
+              )}
+              {tomorrowWorkout.exercises && tomorrowWorkout.exercises.length > 0 ? (
+                <ul className="wc-ex">
+                  {tomorrowWorkout.exercises.map((e, i) => (
+                    <li key={i}>
+                      <span className="wc-ex-name">{exLine(e.name, e.sets, e.reps)}</span>
+                      {e.cue && <span className="wc-cue">{e.cue}</span>}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="settings-hint">Rest / recovery day.</p>
+              )}
+            </div>
+          )}
         </section>
       )}
 

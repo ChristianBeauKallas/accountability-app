@@ -268,6 +268,42 @@ export default async function CoachingPage({
     }
   }
 
+  // Has this day's workout been logged? (drives the "✓ Completed" state)
+  const { data: wlogRow } = await supabase
+    .from("coaching_workout_logs")
+    .select("id")
+    .eq("relationship_id", rel.id)
+    .eq("day", selectedDay)
+    .maybeSingle();
+  const workoutLogged = !!wlogRow;
+
+  // Tomorrow's session — so you can dial it in the night before (today only).
+  let tomorrowWorkout: {
+    label: string;
+    title: string;
+    detail: string | null;
+    exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
+  } | null = null;
+  if (plan && isToday) {
+    const tomorrow = new Date(selectedDay + "T12:00:00");
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tWd = WD[new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(tomorrow)] ?? 1;
+    const tLabel = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(tomorrow);
+    const { data: tw } = await supabase
+      .from("coaching_plan_workouts")
+      .select("title, detail, exercises")
+      .eq("plan_id", plan.id)
+      .eq("weekday", tWd)
+      .maybeSingle();
+    if (tw)
+      tomorrowWorkout = {
+        label: tLabel,
+        title: tw.title as string,
+        detail: (tw.detail as string) ?? null,
+        exercises: (tw.exercises as never) ?? null,
+      };
+  }
+
   // When you run your own plan you're both sides — send yourself to the
   // builder instead of telling yourself to "hang tight".
   const selfCoached = rel.coach_id === user.id;
@@ -315,6 +351,8 @@ export default async function CoachingPage({
       }
       planSummary={plan?.summary ?? null}
       todayWorkout={todayWorkout}
+      workoutLogged={workoutLogged}
+      tomorrowWorkout={tomorrowWorkout}
       displayName={displayName}
       today={today}
       selectedDay={selectedDay}
