@@ -70,11 +70,12 @@ export default async function CoachingPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("timezone, display_name")
+    .select("timezone, display_name, equipment")
     .eq("id", user.id)
     .maybeSingle();
   const tz = profile?.timezone ?? "America/New_York";
   const displayName = profile?.display_name ?? "Your";
+  const equipment = (profile?.equipment as string | null) ?? null;
   const today = localDate(new Date(), tz);
 
   // Which day are we viewing? Default today; never the future.
@@ -353,6 +354,7 @@ export default async function CoachingPage({
       todayWorkout={todayWorkout}
       workoutLogged={workoutLogged}
       tomorrowWorkout={tomorrowWorkout}
+      equipment={equipment}
       displayName={displayName}
       today={today}
       selectedDay={selectedDay}

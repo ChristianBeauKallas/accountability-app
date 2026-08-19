@@ -135,6 +135,7 @@ export default function CoachingLog({
   todayWorkout,
   workoutLogged = false,
   tomorrowWorkout,
+  equipment = null,
   displayName = "Your",
   today,
   selectedDay,
@@ -177,6 +178,7 @@ export default function CoachingLog({
     detail: string | null;
     exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
   } | null;
+  equipment?: string | null;
   displayName?: string;
   today?: string;
   selectedDay?: string;
@@ -218,6 +220,8 @@ export default function CoachingLog({
     exercises: { name: string; sets?: number; reps?: string; cue?: string }[];
   } | null>(null);
   const [proposalText, setProposalText] = useState("");
+  const [saveEquipment, setSaveEquipment] = useState(false);
+  const [fitting, setFitting] = useState(false);
   const adjRecRef = useRef<MediaRecorder | null>(null);
   const adjChunks = useRef<Blob[]>([]);
 
@@ -671,6 +675,12 @@ export default function CoachingLog({
         },
         { onConflict: "relationship_id,day" },
       );
+    if (!error && saveEquipment && adjustNote.trim()) {
+      await supabase
+        .from("profiles")
+        .update({ equipment: adjustNote.trim() })
+        .eq("id", userId);
+    }
     setAdjustBusy(false);
     if (error) {
       setAdjustErr(error.message);
@@ -680,11 +690,55 @@ export default function CoachingLog({
     router.refresh();
   }
 
+  // One tap: rebuild today's workout around the client's SAVED equipment.
+  async function fitToEquipment() {
+    if (!equipment || !today) return;
+    setFitting(true);
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const res = await fetch("/api/adjust-workout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify({
+        relationshipId,
+        planWorkoutId: todayWorkout?.planWorkoutId ?? null,
+        note: `Equipment I have: ${equipment}. Rebuild the workout to use only this.`,
+      }),
+    });
+    if (!res.ok) {
+      setFitting(false);
+      return;
+    }
+    const p = await res.json();
+    await supabase.from("coaching_workout_adjustments").upsert(
+      {
+        relationship_id: relationshipId,
+        client_id: userId,
+        plan_workout_id: todayWorkout?.planWorkoutId ?? null,
+        day: today,
+        title: p.title,
+        detail: p.detail,
+        exercises: p.exercises,
+        note: `Fitted to my equipment: ${equipment}`,
+        reason: p.reason,
+      },
+      { onConflict: "relationship_id,day" },
+    );
+    setFitting(false);
+    router.refresh();
+  }
+
   function closeAdjust() {
     setAdjustOpen(false);
     setProposal(null);
     setProposalText("");
     setAdjustNote("");
+    setSaveEquipment(false);
     setAdjustErr(null);
   }
 
@@ -887,11 +941,27 @@ export default function CoachingLog({
                 >
                   {workoutLogged ? "✓ Workout logged — edit" : "🏋️ Log workout"}
                 </Link>
+                {isToday &&
+                  equipment &&
+                  !todayWorkout.adjusted &&
+                  (todayWorkout.exercises?.length ?? 0) > 0 && (
+                    <button
+                      type="button"
+                      className="wc-adjust-btn fit"
+                      onClick={fitToEquipment}
+                      disabled={fitting}
+                    >
+                      🔧 {fitting ? "Fitting to your gear…" : "Fit to my equipment"}
+                    </button>
+                  )}
                 {isToday && (
                   <button
                     type="button"
                     className="wc-adjust-btn"
-                    onClick={() => setAdjustOpen(true)}
+                    onClick={() => {
+                      if (equipment && !adjustNote) setAdjustNote(equipment);
+                      setAdjustOpen(true);
+                    }}
                   >
                     🎙️ {todayWorkout.adjusted ? "Adjust again" : "Make adjustments"}
                   </button>
@@ -899,8 +969,9 @@ export default function CoachingLog({
               </div>
               {isToday && (
                 <p className="wc-hint">
-                  Different equipment, sore, or short on time? Tap Make adjustments
-                  — tell us what you&apos;ve got and we&apos;ll rebuild today&apos;s session.
+                  {equipment
+                    ? `Fitting to: ${equipment}. Sore or short on time? Tap Make adjustments.`
+                    : "Different equipment, sore, or short on time? Tap Make adjustments — tell us what you've got and we'll rebuild today's session."}
                 </p>
               )}
             </div>
@@ -1438,6 +1509,14 @@ export default function CoachingLog({
                     Workout doesn&apos;t fit your equipment? Tap & talk — tell us
                     what you&apos;ve got and we&apos;ll build one that does.
                   </p>
+                  <label className="share-toggle">
+                    <input
+                      type="checkbox"
+                      checked={saveEquipment}
+                      onChange={(e) => setSaveEquipment(e.target.checked)}
+                    />
+                    <span>Remember this as my equipment (fits every day&apos;s workout)</span>
+                  </label>
 
                   {adjustErr && <p className="auth-error">{adjustErr}</p>}
 

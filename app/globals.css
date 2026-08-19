@@ -4691,6 +4691,11 @@ button.coaching-open {
   color: var(--faint);
   text-align: center;
 }
+.wc-adjust-btn.fit {
+  background: var(--accent-dim);
+  border-color: rgba(62, 232, 122, 0.35);
+  color: var(--accent);
+}
 .wc-reason {
   margin: 0.1rem 0 0.4rem;
   font-size: 0.78rem;
