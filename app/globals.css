@@ -4822,6 +4822,71 @@ button.coaching-open {
   border-radius: 99px;
   font-variant-numeric: tabular-nums;
 }
+.members-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border-soft);
+}
+.member-row:first-child {
+  border-top: 0;
+}
+.member-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.member-owner-tag {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+.member-remove {
+  margin-left: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 9px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.member-remove.danger {
+  background: rgba(252, 165, 165, 0.14);
+  border-color: rgba(252, 165, 165, 0.4);
+  color: var(--danger);
+}
+.member-confirm {
+  margin-left: auto;
+  display: flex;
+  gap: 0.4rem;
+}
+.member-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 9px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
 .share-toggle {
   display: flex;
   align-items: center;

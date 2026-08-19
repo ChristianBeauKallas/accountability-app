@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import GroupNameEditor from "./group-name-editor";
+import MembersManager from "./members-manager";
 import InviteLink from "./invite-link";
 import DeleteAccount from "./delete-account";
 import CoachingCard from "./coaching-card";
@@ -43,7 +44,7 @@ export default async function SettingsPage() {
   const [membersRes, myClientsRes, amClientRes] = await Promise.all([
     supabase
       .from("group_members")
-      .select("user_id, profiles(display_name)")
+      .select("user_id, role, profiles(display_name, avatar_url)")
       .eq("group_id", membership.group_id),
     supabase
       .from("coaching_relationships")
@@ -54,12 +55,25 @@ export default async function SettingsPage() {
       .select("id, coach_id")
       .eq("client_id", user.id),
   ]);
-  const memberList = ((membersRes.data ?? []) as unknown as {
+  const allMembers = (membersRes.data ?? []) as unknown as {
     user_id: string;
-    profiles: { display_name: string } | null;
-  }[])
+    role: string;
+    profiles: { display_name: string; avatar_url: string | null } | null;
+  }[];
+  const memberList = allMembers
     .filter((m) => m.user_id !== user.id)
     .map((m) => ({ id: m.user_id, name: m.profiles?.display_name ?? "Member" }));
+  // Full roster for the owner's member manager.
+  const groupMembers = allMembers
+    .map((m) => ({
+      id: m.user_id,
+      name: m.profiles?.display_name ?? "Member",
+      avatar: m.profiles?.avatar_url ?? null,
+      role: m.role,
+    }))
+    .sort((a, b) =>
+      a.role === "owner" ? -1 : b.role === "owner" ? 1 : a.name.localeCompare(b.name),
+    );
   const clientIds = new Set(
     (myClientsRes.data ?? []).map((r) => r.client_id as string),
   );
@@ -97,6 +111,22 @@ export default async function SettingsPage() {
           <GroupNameEditor
             groupId={membership.group_id}
             initial={membership.groups.name}
+          />
+        </section>
+      )}
+
+      {/* Members — owner sees everyone and can remove people */}
+      {isOwner && (
+        <section className="settings-card">
+          <h2 className="settings-title">Members</h2>
+          <p className="settings-hint">
+            Everyone in {membership.groups.name}. Removing someone takes them off
+            the roster and feed — they can rejoin with the invite link.
+          </p>
+          <MembersManager
+            groupId={membership.group_id}
+            ownerId={user.id}
+            members={groupMembers}
           />
         </section>
       )}
