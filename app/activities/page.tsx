@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import ActivitiesManager from "./activities-manager";
 import GroupNameEditor from "./group-name-editor";
 import InviteLink from "./invite-link";
 import DeleteAccount from "./delete-account";
 import CoachingCard from "./coaching-card";
 import Tour from "../tour";
-import type { Activity } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -34,21 +32,11 @@ export default async function SettingsPage() {
 
   const isOwner = membership.role === "owner";
 
-  const [{ data }, { data: profile }] = await Promise.all([
-    supabase
-      .from("activities")
-      .select("*")
-      .eq("group_id", membership.group_id)
-      .eq("active", true)
-      .order("sort_order"),
-    supabase
-      .from("profiles")
-      .select("display_name, avatar_url")
-      .eq("id", user.id)
-      .maybeSingle(),
-  ]);
-
-  const activities = (data ?? []) as Activity[];
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
 
   // Coaching: group members (for the "coach a teammate" picker), who I coach,
   // and whether I'm being coached.
@@ -102,38 +90,14 @@ export default async function SettingsPage() {
         />
       </section>
 
-      {/* Group name + activities — owner edits, members view */}
-      {isOwner ? (
-        <>
-          <section className="settings-card">
-            <h2 className="settings-title">Group name</h2>
-            <GroupNameEditor
-              groupId={membership.group_id}
-              initial={membership.groups.name}
-            />
-          </section>
-          <section className="settings-card">
-            <h2 className="settings-title">Daily activities</h2>
-            <ActivitiesManager
-              groupId={membership.group_id}
-              initial={activities}
-            />
-          </section>
-        </>
-      ) : (
+      {/* Group name — owner edits */}
+      {isOwner && (
         <section className="settings-card">
-          <h2 className="settings-title">Daily activities</h2>
-          <p className="settings-hint">
-            Your group&apos;s daily activities. Only the owner can change these.
-          </p>
-          <ul className="settings-activity-list">
-            {activities.map((a) => (
-              <li key={a.id}>
-                <span className="settings-activity-emoji">{a.emoji ?? "✅"}</span>
-                <span>{a.name}</span>
-              </li>
-            ))}
-          </ul>
+          <h2 className="settings-title">Group name</h2>
+          <GroupNameEditor
+            groupId={membership.group_id}
+            initial={membership.groups.name}
+          />
         </section>
       )}
 

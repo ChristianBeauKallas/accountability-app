@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import Onboarding from "./onboarding";
-import Composer from "./composer";
 import Tour from "./tour";
 import InstallModal from "./install-modal";
-import PostingTour from "./posting-tour";
 import PostCard from "./post-card";
 import PlanRecapCard from "./plan-recap-card";
 import { Avatar } from "./avatar";
@@ -341,12 +339,6 @@ export default async function Home() {
     todayActsByUser.set(p.author_id, set);
   }
 
-  // Current user's remaining (un-logged) activities for today.
-  const myLoggedToday = todayActsByUser.get(user.id) ?? new Set<string>();
-  const remainingActivities = activities.filter((a) => !myLoggedToday.has(a.id));
-  const allDoneToday =
-    totalActivities > 0 && remainingActivities.length === 0;
-
   // Compute streak + today status per member, derive a display state, and sort
   // as a leaderboard (positive streaks on top, people slipping at the bottom).
   const roster = members
@@ -444,7 +436,6 @@ export default async function Home() {
 
       <NotifPrompt userId={user.id} />
       <InstallModal userId={user.id} onboarded={!!onboardedAt} />
-      <PostingTour userId={user.id} onboarded={!!onboardedAt} />
 
       {/* Roster — everyone, whether they've checked in today, and their streak */}
       <section className="roster-board">
@@ -463,21 +454,12 @@ export default async function Home() {
             </span>
             <span className="rb-sub">
               {r.state === "today"
-                ? `${r.logged}/${totalActivities} today`
+                ? "Done today"
                 : subLabel(r.state, r.value)}
             </span>
           </Link>
         ))}
       </section>
-
-      {/* Compose */}
-      <Composer
-        activities={remainingActivities}
-        groupId={groupId}
-        userId={user.id}
-        done={allDoneToday}
-        remainingCount={remainingActivities.length}
-      />
 
       {/* Feed */}
       <section className="panel">
