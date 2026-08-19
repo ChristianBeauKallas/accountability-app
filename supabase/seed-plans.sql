@@ -64,7 +64,7 @@ from new_plan np, (values
       {"name":"C1 · Hanging leg raise","sets":3,"reps":"12","cue":"superset C - slow, no swing"},
       {"name":"C2 · Plank","sets":3,"reps":"45 sec","cue":"superset C - ribs down, squeeze glutes"}]'::jsonb),
   (2,'Easy run','run','Conversational base run',
-    '[{"name":"Easy run","sets":1,"reps":"4 miles easy @ 10:45-11:15/mi","cue":"you can talk in full sentences"}]'::jsonb),
+    '[{"name":"Easy run","sets":1,"reps":"4 miles easy @ 10:45-11:30/mi · ~45 min","cue":"you can talk in full sentences"}]'::jsonb),
   (3,'Push (superset)','lift','1 compound + 3 supersets · ~50-60 min',
     '[{"name":"Bench press","sets":4,"reps":"6","cue":"compound - full chest contact, controlled descent"},
       {"name":"A1 · Incline dumbbell press","sets":3,"reps":"8","cue":"superset A - deep stretch"},
@@ -75,7 +75,7 @@ from new_plan np, (values
       {"name":"C2 · Face pull","sets":3,"reps":"15","cue":"superset C - posture for running"}]'::jsonb),
   (4,'Tempo run','run','Quality - race-pace work',
     '[{"name":"Warm-up","sets":1,"reps":"1 mile easy","cue":"ease in"},
-      {"name":"Tempo","sets":1,"reps":"3 miles @ 9:00-9:10/mi","cue":"comfortably hard, controlled breathing"},
+      {"name":"Tempo","sets":1,"reps":"3 miles @ 9:20-9:40/mi (race pace) · ~28 min","cue":"comfortably hard, controlled breathing"},
       {"name":"Cool-down","sets":1,"reps":"1 mile easy","cue":"shake it out"}]'::jsonb),
   (5,'Pull (superset)','lift','1 compound + 3 supersets · ~50-60 min',
     '[{"name":"Barbell row","sets":4,"reps":"6","cue":"compound - flat back, drive the elbows"},
@@ -86,7 +86,7 @@ from new_plan np, (values
       {"name":"C1 · Rear delt fly","sets":3,"reps":"15","cue":"superset C - soft elbows"},
       {"name":"C2 · EZ-bar curl","sets":3,"reps":"12","cue":"superset C - controlled"}]'::jsonb),
   (6,'Long run','run','The priority session - steady + easy',
-    '[{"name":"Long run","sets":1,"reps":"6 miles easy @ 10:30-11:00/mi","cue":"steady aerobic pace - fuel and hydrate"}]'::jsonb),
+    '[{"name":"Long run","sets":1,"reps":"6 miles easy @ 10:30-11:15/mi · ~70 min","cue":"steady - last mile at 9:30-10:00 goal pace"}]'::jsonb),
   (7,'Rest','rest','Recovery walk + mobility - weigh-in + progress photo', null::jsonb)
 ) as w(weekday,title,kind,detail,exercises);
 
@@ -142,7 +142,7 @@ from new_plan np, (values
       {"name":"C1 · Hanging leg raise","sets":3,"reps":"12","cue":"superset C - slow, no swing"},
       {"name":"C2 · Plank","sets":3,"reps":"45 sec","cue":"superset C - ribs down, squeeze glutes"}]'::jsonb),
   (2,'Easy run','run','Conversational base run',
-    '[{"name":"Easy run","sets":1,"reps":"4 miles easy @ 10:45-11:15/mi","cue":"you can talk in full sentences"}]'::jsonb),
+    '[{"name":"Easy run","sets":1,"reps":"4 miles easy @ 10:45-11:30/mi · ~45 min","cue":"you can talk in full sentences"}]'::jsonb),
   (3,'Push (superset)','lift','1 compound + 3 supersets · ~50-60 min',
     '[{"name":"Bench press","sets":4,"reps":"6","cue":"compound - full chest contact, controlled descent"},
       {"name":"A1 · Incline dumbbell press","sets":3,"reps":"8","cue":"superset A - deep stretch"},
@@ -153,7 +153,7 @@ from new_plan np, (values
       {"name":"C2 · Face pull","sets":3,"reps":"15","cue":"superset C - posture for running"}]'::jsonb),
   (4,'Tempo run','run','Quality - race-pace work',
     '[{"name":"Warm-up","sets":1,"reps":"1 mile easy","cue":"ease in"},
-      {"name":"Tempo","sets":1,"reps":"3 miles @ 9:00-9:10/mi","cue":"comfortably hard, controlled breathing"},
+      {"name":"Tempo","sets":1,"reps":"3 miles @ 9:20-9:40/mi (race pace) · ~28 min","cue":"comfortably hard, controlled breathing"},
       {"name":"Cool-down","sets":1,"reps":"1 mile easy","cue":"shake it out"}]'::jsonb),
   (5,'Pull (superset)','lift','1 compound + 3 supersets · ~50-60 min',
     '[{"name":"Barbell row","sets":4,"reps":"6","cue":"compound - flat back, drive the elbows"},
@@ -164,7 +164,7 @@ from new_plan np, (values
       {"name":"C1 · Rear delt fly","sets":3,"reps":"15","cue":"superset C - soft elbows"},
       {"name":"C2 · EZ-bar curl","sets":3,"reps":"12","cue":"superset C - controlled"}]'::jsonb),
   (6,'Long run','run','The priority session - steady + easy',
-    '[{"name":"Long run","sets":1,"reps":"6 miles easy @ 10:30-11:00/mi","cue":"steady aerobic pace - fuel and hydrate"}]'::jsonb),
+    '[{"name":"Long run","sets":1,"reps":"6 miles easy @ 10:30-11:15/mi · ~70 min","cue":"steady - last mile at 9:30-10:00 goal pace"}]'::jsonb),
   (7,'Rest','rest','Recovery walk + mobility - weigh-in + progress photo', null::jsonb)
 ) as w(weekday,title,kind,detail,exercises);
 
