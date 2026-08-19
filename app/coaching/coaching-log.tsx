@@ -76,6 +76,37 @@ function exLine(name: string, sets?: number, reps?: string): string {
   return scheme ? `${name} — ${scheme}` : name;
 }
 
+type Ex = { name: string; sets?: number; reps?: string; cue?: string };
+// Editable text form of a workout: one exercise per line "Name — 3x8 — cue".
+function exercisesToText(ex: Ex[] | null | undefined): string {
+  if (!ex || ex.length === 0) return "";
+  return ex
+    .map((e) => {
+      const scheme = e.sets && e.sets > 1 ? `${e.sets}x${e.reps ?? ""}` : e.reps ?? "";
+      return [e.name, scheme, e.cue].filter(Boolean).join(" — ");
+    })
+    .join("\n");
+}
+function textToExercises(text: string): Ex[] {
+  return text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const parts = line.split("—").map((p) => p.trim());
+      const name = parts[0] ?? line;
+      const scheme = parts[1] ?? "";
+      const cue = parts[2] ?? "";
+      const m = scheme.match(/(\d+)\s*[x×]\s*(.+)/);
+      return {
+        name,
+        sets: m ? Number(m[1]) : undefined,
+        reps: m ? m[2].trim() : scheme || undefined,
+        cue: cue || undefined,
+      };
+    });
+}
+
 type Draft = {
   tracker: CoachingTracker;
   entry: CoachingEntry | null;
@@ -186,6 +217,7 @@ export default function CoachingLog({
     reason: string | null;
     exercises: { name: string; sets?: number; reps?: string; cue?: string }[];
   } | null>(null);
+  const [proposalText, setProposalText] = useState("");
   const adjRecRef = useRef<MediaRecorder | null>(null);
   const adjChunks = useRef<Blob[]>([]);
 
@@ -611,7 +643,9 @@ export default function CoachingLog({
       setAdjustErr(d.error ?? "Couldn't build the adjustment.");
       return;
     }
-    setProposal(await res.json());
+    const p = await res.json();
+    setProposal(p);
+    setProposalText(exercisesToText(p.exercises)); // editable before applying
   }
 
   async function applyAdjustment() {
@@ -619,6 +653,8 @@ export default function CoachingLog({
     setAdjustBusy(true);
     setAdjustErr(null);
     const supabase = createClient();
+    // Honor any edits the client made to the proposed workout.
+    const finalExercises = textToExercises(proposalText);
     const { error } = await supabase
       .from("coaching_workout_adjustments")
       .upsert(
@@ -629,7 +665,7 @@ export default function CoachingLog({
           day: today,
           title: proposal.title,
           detail: proposal.detail,
-          exercises: proposal.exercises,
+          exercises: finalExercises.length > 0 ? finalExercises : proposal.exercises,
           note: adjustNote.trim() || null,
           reason: proposal.reason,
         },
@@ -647,6 +683,7 @@ export default function CoachingLog({
   function closeAdjust() {
     setAdjustOpen(false);
     setProposal(null);
+    setProposalText("");
     setAdjustNote("");
     setAdjustErr(null);
   }
@@ -862,7 +899,8 @@ export default function CoachingLog({
               </div>
               {isToday && (
                 <p className="wc-hint">
-                  Sore, short on time, low energy? Tell us and we&apos;ll adapt today&apos;s session.
+                  Different equipment, sore, or short on time? Tap Make adjustments
+                  — tell us what you&apos;ve got and we&apos;ll rebuild today&apos;s session.
                 </p>
               )}
             </div>
@@ -1361,8 +1399,9 @@ export default function CoachingLog({
               {!proposal ? (
                 <>
                   <p className="adj-sub">
-                    How are you feeling, and what should change? Talk it through —
-                    soreness, time, energy, equipment. We&apos;ll rework just today.
+                    What should change? Talk it through — the equipment you have,
+                    soreness, time, or energy. We&apos;ll rebuild just today&apos;s
+                    session around it.
                   </p>
                   <textarea
                     className="pm-textarea"
@@ -1372,7 +1411,7 @@ export default function CoachingLog({
                     placeholder={
                       adjustWriting
                         ? "Cleaning it up…"
-                        : "e.g. My knee's a little sore and I only have 40 minutes"
+                        : "e.g. I only have dumbbells and a bench, no barbell or machines"
                     }
                   />
                   <div className="cf-dictate">
@@ -1395,6 +1434,10 @@ export default function CoachingLog({
                       </button>
                     )}
                   </div>
+                  <p className="adj-hint">
+                    Workout doesn&apos;t fit your equipment? Tap & talk — tell us
+                    what you&apos;ve got and we&apos;ll build one that does.
+                  </p>
 
                   {adjustErr && <p className="auth-error">{adjustErr}</p>}
 
@@ -1418,18 +1461,18 @@ export default function CoachingLog({
                     <span className="adj-badge">✦ Proposed for today</span>
                     <h3 className="adj-title">{proposal.title}</h3>
                     {proposal.detail && <p className="adj-detail">{proposal.detail}</p>}
-                    {proposal.exercises.length > 0 && (
-                      <ul className="wc-ex">
-                        {proposal.exercises.map((e, i) => (
-                          <li key={i}>
-                            <span className="wc-ex-name">{exLine(e.name, e.sets, e.reps)}</span>
-                            {e.cue && <span className="wc-cue">{e.cue}</span>}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
                     {proposal.reason && <p className="adj-reason">✦ {proposal.reason}</p>}
                   </div>
+                  <label className="cf-label">
+                    Edit anything before you apply — one exercise per line
+                  </label>
+                  <textarea
+                    className="pm-textarea"
+                    rows={Math.min(10, Math.max(4, proposalText.split("\n").length + 1))}
+                    value={proposalText}
+                    onChange={(e) => setProposalText(e.target.value)}
+                    placeholder="Dumbbell bench — 4x8 — controlled"
+                  />
 
                   {adjustErr && <p className="auth-error">{adjustErr}</p>}
 

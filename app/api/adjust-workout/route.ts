@@ -65,10 +65,13 @@ export async function POST(req: Request) {
     `Plan context: week ${plan?.week_number ?? "?"}. ${plan?.summary ?? ""}\n` +
     `Today's prescribed workout: ${prescribed ? JSON.stringify(prescribed) : "none — build something sensible"}\n\n` +
     `The client just said: "${note}"\n\n` +
-    "Rework the session to honor what they said (soreness, time, energy, " +
-    "equipment, mood) while keeping it useful toward their goal. If they're " +
-    "hurt, lower impact / avoid the aggravating movement. If they're short on " +
-    "time, trim volume and keep the highest-value work. Keep it realistic. Then " +
+    "Rework the session to honor what they said while keeping it useful toward " +
+    "their goal. EQUIPMENT IS THE PRIORITY: if they name the equipment they have " +
+    "(or don't have), rebuild every exercise to use ONLY what they've got — swap " +
+    "barbell/machine moves for dumbbell, bodyweight, or band versions as needed, " +
+    "and never prescribe a movement they can't do. If they're hurt, lower impact " +
+    "/ avoid the aggravating movement. If they're short on time, trim volume and " +
+    "keep the highest-value work. Keep it realistic. Then " +
     "write a ONE-sentence 'reason' explaining the change in plain, encouraging " +
     "language.\n\n" +
     "FORMATTING (renders on a phone): title = 2-4 words; detail = one short line; " +

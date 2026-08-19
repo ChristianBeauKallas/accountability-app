@@ -4772,6 +4772,14 @@ button.coaching-open {
 .mini-cta { font-size: 0.66rem; color: var(--muted); margin-top: 0.15rem; }
 
 .adj-sub { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.7rem; }
+.adj-hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: var(--accent-2);
+  background: var(--accent-dim);
+  border-radius: 9px;
+  padding: 0.55rem 0.7rem;
+}
 .adj-preview {
   background: var(--bg-2);
   border: 1px solid rgba(62, 232, 122, 0.25);
