@@ -416,14 +416,14 @@ a {
 /* ---- Roster board (grid of everyone: today status + signed streak) -------- */
 .roster-board {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
   margin-bottom: 1.4rem;
 }
 
 @media (max-width: 360px) {
   .roster-board {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -436,7 +436,7 @@ a {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0.6rem 0.4rem 0.5rem;
+  padding: 0.5rem 0.25rem 0.45rem;
   text-decoration: none;
   color: inherit;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -509,7 +509,7 @@ a {
 }
 
 .rb-name {
-  font-size: 0.86rem;
+  font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -517,9 +517,10 @@ a {
 }
 
 .rb-sub {
-  font-size: 0.68rem;
+  font-size: 0.63rem;
   font-weight: 400;
   color: var(--faint);
+  line-height: 1.25;
 }
 
 .rb-card.rb-today .rb-sub {

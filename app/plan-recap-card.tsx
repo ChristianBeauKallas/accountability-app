@@ -92,7 +92,6 @@ export default function PlanRecapCard({
           <span className="post-author">{authorName}</span>
         </Link>
         <div className="post-head-right">
-          <span className="pr-tag" title="Plan">📋</span>
           {edited && <span className="pr-updated">updated</span>}
           <PostDate iso={edited ? (updatedAt as string) : createdAt} />
         </div>
