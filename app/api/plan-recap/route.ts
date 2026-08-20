@@ -94,6 +94,7 @@ export async function POST(req: Request) {
 
   const mealEntryIds: string[] = [];
   const meals = { count: 0, calories: 0, protein: 0 };
+  const water = { oz: 0, unit: "oz" };
   const habitMap = new Map<string, { label: string; emoji: string; count: number }>();
 
   for (const e of entries) {
@@ -106,6 +107,12 @@ export async function POST(req: Request) {
       meals.calories += Number(e.calories ?? 0);
       meals.protein += Number(e.protein_g ?? 0);
       mealEntryIds.push(e.id as string);
+      continue;
+    }
+    // Water gets its own amount-based line, not a habit checkmark.
+    if (/water|drink|hydrat/i.test(label) || (t as { unit?: string }).unit === "oz") {
+      water.oz += Number(e.amount ?? 0);
+      water.unit = ((t as { unit?: string }).unit as string) ?? "oz";
       continue;
     }
     if (/workout|exercise|training|lift|run|cardio/i.test(label)) continue; // covered by wlog
@@ -162,6 +169,7 @@ export async function POST(req: Request) {
             target_protein: plan?.protein_target ?? null,
           }
         : null,
+    water: water.oz > 0 ? { oz: Math.round(water.oz), unit: water.unit } : null,
     habits,
   };
 
@@ -174,6 +182,7 @@ export async function POST(req: Request) {
         ? `${Math.round(meals.calories)}/${plan.calorie_target} cal`
         : `${meals.count} meal${meals.count > 1 ? "s" : ""}`,
     );
+  if (water.oz > 0) bits.push(`${Math.round(water.oz)} ${water.unit} water`);
   if (habits.length > 0) bits.push(habits.map((h) => h.label).join(", "));
   const caption = bits.join(" · ") || null;
 
