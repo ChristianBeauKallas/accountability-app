@@ -52,10 +52,11 @@ export async function GET(
 }
 
 async function render(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ postId: string }> },
 ) {
   const { postId } = await params;
+  const chosenMediaId = new URL(req.url).searchParams.get("media");
 
   // Must be signed in, and can only render your OWN post (these are private).
   const server = await createServerClient();
@@ -69,7 +70,7 @@ async function render(
   const { data: post } = await admin
     .from("group_posts")
     .select(
-      "id, author_id, group_id, created_at, source, day, plan_items, media(type, storage_path)",
+      "id, author_id, group_id, created_at, source, day, plan_items, media(id, type, storage_path)",
     )
     .eq("id", postId)
     .maybeSingle();
@@ -80,7 +81,7 @@ async function render(
   // Plan recaps use a different data shape (plan_items) than legacy activity
   // posts — render the plan-driven card for those.
   if (post.source === "plan") {
-    return renderPlan(post, user.id, admin);
+    return renderPlan(post, user.id, admin, chosenMediaId);
   }
 
   const [{ data: group }, { data: activities }, { data: profile }, { data: posts }] =
@@ -476,9 +477,14 @@ type PlanItems = {
 
 async function loadBackdrop(
   admin: ReturnType<typeof createAdminClient>,
-  media: { type: string; storage_path: string }[],
+  media: { id: string; type: string; storage_path: string }[],
+  chosenMediaId?: string | null,
 ): Promise<string | null> {
-  const img = media.find((m) => m.type === "image");
+  if (chosenMediaId === "none") return null; // explicit "no background"
+  const images = media.filter((m) => m.type === "image");
+  // Use the picked photo when it's one of this post's images; else the first.
+  const img =
+    (chosenMediaId && images.find((m) => m.id === chosenMediaId)) || images[0];
   if (!img) return null;
   try {
     const sharp = (await import("sharp")).default;
@@ -504,10 +510,11 @@ async function renderPlan(
     created_at: string;
     day: string | null;
     plan_items: PlanItems | null;
-    media: { type: string; storage_path: string }[];
+    media: { id: string; type: string; storage_path: string }[];
   },
   userId: string,
   admin: ReturnType<typeof createAdminClient>,
+  chosenMediaId?: string | null,
 ) {
   const [{ data: profile }, { data: recaps }] = await Promise.all([
     admin
@@ -553,7 +560,7 @@ async function renderPlan(
   if (pi.water) chips.push({ emoji: "💧", name: `${pi.water.oz} ${pi.water.unit}` });
   for (const h of pi.habits ?? []) chips.push({ emoji: h.emoji ?? "✅", name: h.label });
 
-  const photo = await loadBackdrop(admin, post.media ?? []);
+  const photo = await loadBackdrop(admin, post.media ?? [], chosenMediaId);
 
   const dateLabel = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,

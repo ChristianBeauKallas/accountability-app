@@ -45,6 +45,7 @@ export type PlanRecapData = {
   createdAt: string;
   updatedAt?: string | null;
   photos: string[];
+  photoChoices?: { id: string; url: string }[];
   planItems: PlanItems | null;
   reactions: Record<string, { count: number; mine: boolean }>;
   comments: { id: string; body: string; authorName: string }[];
@@ -59,6 +60,7 @@ export default function PlanRecapCard({
   createdAt,
   updatedAt,
   photos,
+  photoChoices,
   planItems,
   reactions,
   comments,
@@ -95,7 +97,9 @@ export default function PlanRecapCard({
         <div className="post-head-right">
           {edited && <span className="pr-updated">updated</span>}
           <PostDate iso={edited ? (updatedAt as string) : createdAt} />
-          {viewerId === authorId && <RecapMenu postId={postId} />}
+          {viewerId === authorId && (
+            <RecapMenu postId={postId} photoChoices={photoChoices ?? []} />
+          )}
         </div>
       </div>
 

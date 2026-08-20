@@ -484,10 +484,11 @@ export default async function Home() {
         )}
         {posts.map((p) => {
           const author = memberInfo.get(p.author_id);
-          const photos = p.media
+          const photoChoices = p.media
             .filter((m) => m.type === "image")
-            .map((m) => signedByPath.get(m.storage_path))
-            .filter((s): s is string => !!s);
+            .map((m) => ({ id: m.id, url: signedByPath.get(m.storage_path) }))
+            .filter((c): c is { id: string; url: string } => !!c.url);
+          const photos = photoChoices.map((c) => c.url);
           const audios = p.media
             .filter((m) => m.type === "audio")
             .map((m) => ({
@@ -517,6 +518,7 @@ export default async function Home() {
                 createdAt={p.created_at}
                 updatedAt={p.updated_at ?? null}
                 photos={photos}
+                photoChoices={photoChoices}
                 planItems={p.plan_items ?? null}
                 reactions={reactionsByPost.get(p.id) ?? {}}
                 comments={commentsByPost.get(p.id) ?? []}

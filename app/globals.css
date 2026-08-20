@@ -3896,6 +3896,41 @@ button.head-icon {
   flex: 1;
 }
 
+.story-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.6rem 0 0.3rem;
+}
+.story-pick {
+  position: relative;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+  background: var(--surface);
+}
+.story-pick:active {
+  border-color: var(--accent);
+  transform: scale(0.97);
+}
+.story-pick img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.story-pick-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
 /* ============================= Coaching ============================= */
 .coach-stats {
   display: flex;
