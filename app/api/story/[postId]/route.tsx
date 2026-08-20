@@ -532,13 +532,9 @@ async function renderPlan(
   const days = new Set<string>();
   for (const r of recaps ?? []) if (r.day) days.add(r.day as string);
   const { streak } = computeStreak(days, tz);
-  const nowLocal = localDate(new Date(), tz);
-  const monthPrefix = nowLocal.slice(0, 7);
-  const thisMonth = [...days].filter((d) => d.slice(0, 7) === monthPrefix).length;
 
   const fraction = Math.max(0, Math.min(1, Number(pi.progress ?? 0)));
   const complete = !!pi.complete;
-  const pct = Math.round(fraction * 100);
 
   // Chips from the plan items.
   const chips: { emoji: string; name: string }[] = [];
@@ -556,15 +552,6 @@ async function renderPlan(
   }
   if (pi.water) chips.push({ emoji: "💧", name: `${pi.water.oz} ${pi.water.unit}` });
   for (const h of pi.habits ?? []) chips.push({ emoji: h.emoji ?? "✅", name: h.label });
-
-  // Stat strip.
-  type Stat = { n: string; l: string; hero?: boolean };
-  const stats: Stat[] = [];
-  if (streak > 0) stats.push({ n: `🔥 ${streak}`, l: "Day streak", hero: true });
-  if (thisMonth > 0) stats.push({ n: `${thisMonth}`, l: "📅 This month" });
-  if (pi.meals && pi.meals.protein > 0)
-    stats.push({ n: `${pi.meals.protein}g`, l: "💪 Protein" });
-  if (!stats.some((s) => s.hero) && stats.length) stats[0].hero = true;
 
   const photo = await loadBackdrop(admin, post.media ?? []);
 
@@ -638,20 +625,20 @@ async function renderPlan(
               style={{ position: "absolute", top: 0, left: 0 }}
             />
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div style={{ display: "flex", fontSize: complete ? 200 : 156, fontWeight: 800, color: WHITE, lineHeight: 1 }}>
-                {complete ? "✓" : `${pct}%`}
+              <div style={{ display: "flex", fontSize: 260, fontWeight: 800, color: WHITE, lineHeight: 1 }}>
+                {streak}
               </div>
               <div
                 style={{
                   display: "flex",
-                  marginTop: 24,
-                  fontSize: 28,
+                  marginTop: 20,
+                  fontSize: 30,
                   fontWeight: 800,
-                  letterSpacing: 5,
+                  letterSpacing: 6,
                   color: ACCENT,
                 }}
               >
-                {complete ? "DAY COMPLETE" : "ON PLAN TODAY"}
+                🔥 DAY STREAK
               </div>
             </div>
           </div>
@@ -687,45 +674,6 @@ async function renderPlan(
               </div>
             ))}
           </div>
-
-          <div style={{ display: "flex", flexGrow: 0.6 }} />
-
-          {/* stat strip */}
-          {stats.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                width: "100%",
-                border: "2px solid rgba(255,255,255,0.14)",
-                borderRadius: 28,
-                overflow: "hidden",
-              }}
-            >
-              {stats.map((s, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    flexGrow: s.hero ? 1.3 : 1,
-                    padding: "30px 12px",
-                    backgroundColor: s.hero ? ACCENT_DIM : "rgba(255,255,255,0.03)",
-                    borderLeft: i === 0 ? "none" : "2px solid rgba(255,255,255,0.12)",
-                  }}
-                >
-                  <div style={{ display: "flex", fontSize: s.hero ? 88 : 66, fontWeight: 800, color: s.hero ? ACCENT : WHITE }}>
-                    {s.n}
-                  </div>
-                  <div style={{ display: "flex", fontSize: 27, fontWeight: 700, letterSpacing: 2, color: s.hero ? ACCENT_2 : MUTED }}>
-                    {s.l.toUpperCase()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
 
           <div style={{ display: "flex", flexGrow: 1 }} />
 
