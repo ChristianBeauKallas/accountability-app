@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import SwRegister from "./sw-register";
 import InstallPrompt from "./install-prompt";
 import BottomNav from "./nav";
+import TimezoneSync from "./timezone-sync";
 
 export const metadata: Metadata = {
   applicationName: "Get Better",
@@ -65,6 +66,7 @@ export default async function RootLayout({
         {/* Only nudge to install once they're signed in — it must never sit on
             top of the login / signup / invite flow. */}
         {user && <InstallPrompt />}
+        {user && <TimezoneSync />}
         <SwRegister />
       </body>
     </html>

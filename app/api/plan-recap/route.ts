@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { verifyBearer } from "@/lib/auth-api";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { localDate } from "@/lib/streaks";
+import { sendPushToUsers } from "@/lib/push-server";
+import { vapidSubject } from "@/lib/vapid";
 
 export const runtime = "nodejs";
 
@@ -143,7 +145,7 @@ export async function POST(req: Request) {
   // Find any existing recap for this person/day.
   const { data: existing } = await admin
     .from("group_posts")
-    .select("id")
+    .select("id, plan_items, notified_at")
     .eq("author_id", user.id)
     .eq("day", day)
     .eq("source", "plan")
@@ -240,5 +242,130 @@ export async function POST(req: Request) {
     }
   }
 
+  // ---- Notify the group (milestones + throttle) ----
+  // We push on three moments: the day's FIRST recap in the whole group
+  // (kickoff), a person's OWN first recap of the day, and when they finish a
+  // workout. Any later log only re-pings if it's been >30 min since the last
+  // push for this recap — so "bump every log" doesn't spam everyone.
+  try {
+    await maybeNotify({
+      admin,
+      req,
+      groupId,
+      authorId: user.id,
+      day,
+      caption,
+      isNewPost: !existing,
+      prevWorkouts: (existing?.plan_items as { workouts?: unknown[] } | null)
+        ?.workouts?.length ?? 0,
+      nowWorkouts: workouts.length,
+      lastNotifiedAt: (existing?.notified_at as string | null) ?? null,
+      postId,
+    });
+  } catch {
+    // Never let a push failure break the log write.
+  }
+
   return NextResponse.json({ ok: true, postId });
+}
+
+async function maybeNotify(args: {
+  admin: ReturnType<typeof createAdminClient>;
+  req: Request;
+  groupId: string;
+  authorId: string;
+  day: string;
+  caption: string | null;
+  isNewPost: boolean;
+  prevWorkouts: number;
+  nowWorkouts: number;
+  lastNotifiedAt: string | null;
+  postId: string;
+}) {
+  const {
+    admin,
+    req,
+    groupId,
+    authorId,
+    day,
+    caption,
+    isNewPost,
+    prevWorkouts,
+    nowWorkouts,
+    lastNotifiedAt,
+    postId,
+  } = args;
+
+  const workoutJustDone = nowWorkouts > prevWorkouts;
+
+  // 30-minute throttle: skip a re-ping unless a milestone forces it.
+  const throttled =
+    !!lastNotifiedAt &&
+    Date.now() - new Date(lastNotifiedAt).getTime() < 30 * 60 * 1000;
+
+  // Only push on a milestone, or on a non-throttled update.
+  const milestone = isNewPost || workoutJustDone;
+  if (!milestone && throttled) return;
+
+  // Author name + the rest of the group (recipients).
+  const { data: mates } = await admin
+    .from("group_members")
+    .select("user_id, profiles(display_name)")
+    .eq("group_id", groupId);
+  const rows = (mates ?? []) as unknown as {
+    user_id: string;
+    profiles: { display_name: string | null } | { display_name: string | null }[] | null;
+  }[];
+  const nameOf = (p: (typeof rows)[number]["profiles"]) =>
+    (Array.isArray(p) ? p[0]?.display_name : p?.display_name) ?? null;
+  const author =
+    nameOf(rows.find((r) => r.user_id === authorId)?.profiles ?? null) ??
+    "Someone";
+  const recipients = rows
+    .map((r) => r.user_id)
+    .filter((id) => id !== authorId);
+  if (recipients.length === 0) return;
+
+  // Is this the FIRST plan recap of the day in the whole group?
+  let firstInGroup = false;
+  if (isNewPost) {
+    const { data: others } = await admin
+      .from("group_posts")
+      .select("id")
+      .eq("group_id", groupId)
+      .eq("day", day)
+      .eq("source", "plan")
+      .neq("author_id", authorId)
+      .limit(1);
+    firstInGroup = (others ?? []).length === 0;
+  }
+
+  let title: string;
+  let body: string;
+  if (firstInGroup) {
+    title = `${author} kicked off the day 🔥`;
+    body = caption
+      ? `First check-in is up — ${caption}. Who's next?`
+      : "First check-in of the day is up. Who's next?";
+  } else if (isNewPost) {
+    title = `${author} checked in ✅`;
+    body = caption ?? "Logged their plan for today.";
+  } else if (workoutJustDone) {
+    title = `${author} finished a workout 💪`;
+    body = caption ?? "Just logged their training.";
+  } else {
+    title = `${author} added to their day`;
+    body = caption ?? "Updated today's plan.";
+  }
+
+  await sendPushToUsers(
+    recipients,
+    { title, body, url: "/", tag: `plan-${authorId}-${day}` },
+    vapidSubject(req),
+  );
+
+  await admin
+    .from("group_posts")
+    .update({ notified_at: new Date().toISOString() })
+    .eq("id", postId);
 }
