@@ -509,25 +509,22 @@ async function renderPlan(
   userId: string,
   admin: ReturnType<typeof createAdminClient>,
 ) {
-  const [{ data: group }, { data: profile }, { data: recaps }] =
-    await Promise.all([
-      admin.from("groups").select("name").eq("id", post.group_id).maybeSingle(),
-      admin
-        .from("profiles")
-        .select("display_name, timezone")
-        .eq("id", userId)
-        .maybeSingle(),
-      admin
-        .from("group_posts")
-        .select("day")
-        .eq("author_id", userId)
-        .eq("group_id", post.group_id)
-        .eq("source", "plan")
-        .limit(500),
-    ]);
+  const [{ data: profile }, { data: recaps }] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("display_name, timezone")
+      .eq("id", userId)
+      .maybeSingle(),
+    admin
+      .from("group_posts")
+      .select("day")
+      .eq("author_id", userId)
+      .eq("group_id", post.group_id)
+      .eq("source", "plan")
+      .limit(500),
+  ]);
 
   const tz = profile?.timezone ?? "America/New_York";
-  const groupName = group?.name ?? "NPSF";
   const displayName = profile?.display_name ?? "Member";
   const pi = post.plan_items ?? {};
 
@@ -620,18 +617,6 @@ async function renderPlan(
             padding: "104px 96px",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              fontSize: 30,
-              fontWeight: 800,
-              letterSpacing: 10,
-              color: "rgba(255,255,255,0.78)",
-            }}
-          >
-            {groupName.toUpperCase()}
-          </div>
-
           <div style={{ display: "flex", flexGrow: 0.7 }} />
 
           {/* hero ring — today's plan progress */}

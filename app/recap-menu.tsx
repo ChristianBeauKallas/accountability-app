@@ -2,20 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
-// Share-to-story button for a plan recap. Two-step by design: the first tap
-// builds the 9:16 graphic server-side and shows a preview; the actual
-// navigator.share() fires from a fresh tap on the preview (iOS only allows
-// share() inside a live user gesture, which the await would otherwise consume).
-export default function StoryShare({ postId }: { postId: string }) {
+// Compact ⋯ menu on a plan recap (own posts only): Share to story, or Delete.
+// Share is two-step by design — the first tap builds the 9:16 graphic and shows
+// a preview; navigator.share() fires from a fresh tap on the preview (iOS only
+// allows share() inside a live user gesture).
+export default function RecapMenu({ postId }: { postId: string }) {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [preview, setPreview] = useState<{ file: File; url: string } | null>(null);
 
   useEffect(() => setMounted(true), []);
 
-  async function build() {
+  async function buildStory() {
+    setOpen(false);
     setErr(null);
     setBusy(true);
     try {
@@ -72,17 +78,52 @@ export default function StoryShare({ postId }: { postId: string }) {
     }
   }
 
+  async function doDelete() {
+    setBusy(true);
+    setErr(null);
+    const supabase = createClient();
+    const { error } = await supabase.from("group_posts").delete().eq("id", postId);
+    setBusy(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    setConfirmDelete(false);
+    router.refresh();
+  }
+
   return (
     <>
       <button
         type="button"
-        className="pr-share"
-        onClick={build}
+        className="post-menu-btn"
+        aria-label="Post options"
+        onClick={() => setOpen((o) => !o)}
         disabled={busy}
-        aria-label="Share to story"
       >
-        {busy ? "Creating…" : "📸 Share"}
+        ⋯
       </button>
+
+      {open && (
+        <>
+          <div className="post-menu-catch" onClick={() => setOpen(false)} />
+          <div className="post-menu">
+            <button type="button" onClick={buildStory}>
+              📸 Share to story
+            </button>
+            <button
+              type="button"
+              className="danger"
+              onClick={() => {
+                setConfirmDelete(true);
+                setOpen(false);
+              }}
+            >
+              🗑️ Delete post
+            </button>
+          </div>
+        </>
+      )}
 
       {mounted &&
         (err || preview) &&
@@ -93,11 +134,7 @@ export default function StoryShare({ postId }: { postId: string }) {
                 <>
                   <h2 className="tour-title">Ready to share</h2>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    className="story-preview-img"
-                    src={preview.url}
-                    alt="Your story graphic"
-                  />
+                  <img className="story-preview-img" src={preview.url} alt="Your story graphic" />
                   <button type="button" className="tour-action" onClick={doShare}>
                     Share to Instagram…
                   </button>
@@ -123,6 +160,36 @@ export default function StoryShare({ postId }: { postId: string }) {
                   </div>
                 </>
               )}
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {mounted &&
+        confirmDelete &&
+        createPortal(
+          <div className="tour-overlay" role="dialog" aria-modal="true">
+            <div className="tour-card pm-card">
+              <div className="tour-icon">🗑️</div>
+              <h2 className="tour-title">Delete this post?</h2>
+              <p className="tour-body">
+                This removes it from the group feed. Your logged workout, meals,
+                and habits stay in My Plan.
+              </p>
+              {err && <p className="auth-error">{err}</p>}
+              <div className="tour-nav">
+                <button
+                  type="button"
+                  className="tour-back"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={busy}
+                >
+                  Cancel
+                </button>
+                <button type="button" className="pm-delete" onClick={doDelete} disabled={busy}>
+                  {busy ? "Deleting…" : "Delete"}
+                </button>
+              </div>
             </div>
           </div>,
           document.body,
