@@ -6,12 +6,13 @@ import { sendPushToUsers, pushConfigured } from "@/lib/push-server";
 
 export const runtime = "nodejs";
 
-// Hourly plan reminders. Two kinds, both timezone-aware and self-deduping
-// (each nudge fires at exactly one local hour, so an hourly cron sends it once):
+// Hourly plan reminders. Two kinds, both personal, timezone-aware, and
+// self-deduping (each nudge fires at exactly one local hour, so an hourly cron
+// sends it once):
 //   • Meal nudges — at breakfast/lunch/dinner, if the person hasn't logged
-//     enough meals yet, remind them (personal, never called out to the group).
-//   • Dead-group — at night, if NOBODY in the group has checked in all day,
-//     nudge every member to be the first.
+//     enough meals yet, remind them.
+//   • End-of-day — at 8pm, if the person hasn't checked in at all today, nudge
+//     them not to end the day at zero (independent of what the group did).
 //
 // Wire this to an hourly scheduler (pg_cron/pg_net or cron-job.org). If
 // CRON_SECRET is set, callers must send `Authorization: Bearer <secret>`.
@@ -44,14 +45,12 @@ export async function GET(req: Request) {
   const tzByUser = new Map(
     (profs ?? []).map((p) => [p.id as string, (p.timezone as string) ?? "America/New_York"]),
   );
-  // group → all member user_ids (whole group, not just notif-enabled).
-  const groupMembers = new Map<string, string[]>();
-  // user → their group_ids (usually one).
+  // user → their group_ids (usually one). Used only to skip users who aren't
+  // in a group yet — the nudge itself is about the person's own logging.
   const userGroups = new Map<string, string[]>();
   for (const m of members ?? []) {
     const g = m.group_id as string;
     const u = m.user_id as string;
-    groupMembers.set(g, [...(groupMembers.get(g) ?? []), u]);
     userGroups.set(u, [...(userGroups.get(u) ?? []), g]);
   }
 
@@ -123,39 +122,36 @@ export async function GET(req: Request) {
     if (n > 0) mealNudges++;
   }
 
-  // ---- Dead-group (group-level, 8pm) ----
-  // At each member's local 8pm, if NO ONE in the group has checked in for that
-  // member's local day, nudge them to break the silence.
-  let deadGroup = 0;
-  const handledDead = new Set<string>();
+  // ---- End-of-day nudge (personal, 8pm) ----
+  // At each user's local 8pm, if THEY haven't checked in at all today, nudge
+  // them not to end the day at zero — whether or not others have logged.
+  let endOfDay = 0;
   for (const uid of notifUsers) {
-    if (handledDead.has(uid)) continue;
     const tz = tzByUser.get(uid) ?? "America/New_York";
     if (localHour(tz) !== 20) continue;
+    if ((userGroups.get(uid) ?? []).length === 0) continue;
     const today = localDate(now, tz);
 
-    const groups = userGroups.get(uid) ?? [];
-    // Group is "alive" today if anyone in any of the user's groups has a recap.
-    const alive = (recaps ?? []).some(
+    // Have THEY posted a recap today?
+    const checkedIn = (recaps ?? []).some(
       (r) =>
-        groups.includes(r.group_id as string) &&
+        r.author_id === uid &&
         localDate(r.created_at as string, tz) === today,
     );
-    if (alive) continue;
+    if (checkedIn) continue;
 
-    handledDead.add(uid);
     const n = await sendPushToUsers(
       [uid],
       {
-        title: "The group's been quiet today 👀",
-        body: "Nobody's checked in yet — be the one to get it going.",
-        url: "/",
-        tag: `deadgroup-${today}`,
+        title: "Don't end the day at zero 🌙",
+        body: "You haven't checked in yet today — tap to log before bed.",
+        url: "/plan",
+        tag: `endofday-${today}`,
       },
       vapidSubject(req),
     );
-    if (n > 0) deadGroup++;
+    if (n > 0) endOfDay++;
   }
 
-  return NextResponse.json({ ok: true, mealNudges, deadGroup, checked: notifUsers.length });
+  return NextResponse.json({ ok: true, mealNudges, endOfDay, checked: notifUsers.length });
 }
