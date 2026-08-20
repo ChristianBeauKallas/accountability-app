@@ -120,6 +120,45 @@ export default async function WorkoutPage({
     existingSets = (s ?? []) as typeof existingSets;
   }
 
+  // Is today a run? Runs skip the sets/reps grid — just a screenshot + effort.
+  const isRun = /\b(run|jog|tempo|interval|mile|shakeout|long)\b/i.test(title);
+
+  // Any run screenshot already uploaded today (attached to the Workout entry).
+  const existingRunPhotos: string[] = [];
+  if (isRun) {
+    const { data: wtracker } = await supabase
+      .from("coaching_trackers")
+      .select("id")
+      .eq("relationship_id", rel.id)
+      .eq("label", "Workout")
+      .maybeSingle();
+    if (wtracker) {
+      const startISO = new Date(today + "T00:00:00").toISOString();
+      const endISO = new Date(new Date(today + "T00:00:00").getTime() + 86400000).toISOString();
+      const { data: wentry } = await supabase
+        .from("coaching_entries")
+        .select("id")
+        .eq("tracker_id", wtracker.id)
+        .gte("happened_at", startISO)
+        .lt("happened_at", endISO)
+        .limit(1)
+        .maybeSingle();
+      if (wentry) {
+        const { data: wmedia } = await supabase
+          .from("media")
+          .select("storage_path")
+          .eq("entry_id", wentry.id)
+          .eq("type", "image");
+        for (const m of wmedia ?? []) {
+          const { data: signed } = await supabase.storage
+            .from("media")
+            .createSignedUrl(m.storage_path as string, 3600);
+          if (signed?.signedUrl) existingRunPhotos.push(signed.signedUrl);
+        }
+      }
+    }
+  }
+
   // Last-time weights per exercise (for the progression prefill).
   const names = exercises.map((e) => e.name);
   const lastByExercise: Record<string, { weight: number | null; reps: number | null }> = {};
@@ -167,6 +206,8 @@ export default async function WorkoutPage({
         existingEffort={(existingLog?.effort as string) ?? null}
         existingSets={existingSets}
         lastByExercise={lastByExercise}
+        isRun={isRun}
+        existingRunPhotos={existingRunPhotos}
       />
     </main>
   );

@@ -95,6 +95,7 @@ export async function POST(req: Request) {
   if (wlog) workouts.push({ title: wlog.title as string, effort: (wlog.effort as string) ?? null });
 
   const mealEntryIds: string[] = [];
+  const workoutEntryIds: string[] = [];
   const meals = { count: 0, calories: 0, protein: 0 };
   const water = { oz: 0, unit: "oz" };
   const habitMap = new Map<string, { label: string; emoji: string; count: number }>();
@@ -117,7 +118,11 @@ export async function POST(req: Request) {
       water.unit = ((t as { unit?: string }).unit as string) ?? "oz";
       continue;
     }
-    if (/workout|exercise|training|lift|run|cardio/i.test(label)) continue; // covered by wlog
+    if (/workout|exercise|training|lift|run|cardio/i.test(label)) {
+      // Covered by wlog, but keep the entry id so any run screenshot posts.
+      workoutEntryIds.push(e.id as string);
+      continue;
+    }
     const key = label;
     const h = habitMap.get(key) ?? { label, emoji: (t.emoji as string) ?? "✅", count: 0 };
     h.count += 1;
@@ -214,13 +219,14 @@ export async function POST(req: Request) {
     postId = created.id as string;
   }
 
-  // Bring meal photos into the feed post (a parallel media row pointing at the
-  // same file — makes it group-readable without moving/copying the file).
-  if (mealEntryIds.length > 0) {
+  // Bring meal + run photos into the feed post (a parallel media row pointing
+  // at the same file — makes it group-readable without moving/copying it).
+  const photoEntryIds = [...mealEntryIds, ...workoutEntryIds];
+  if (photoEntryIds.length > 0) {
     const { data: mealMedia } = await admin
       .from("media")
       .select("storage_path")
-      .in("entry_id", mealEntryIds)
+      .in("entry_id", photoEntryIds)
       .eq("type", "image");
     const { data: already } = await admin
       .from("media")

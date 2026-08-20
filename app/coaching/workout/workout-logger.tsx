@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { syncPlanRecap } from "@/lib/plan-recap";
@@ -25,6 +25,8 @@ export default function WorkoutLogger({
   existingEffort,
   existingSets,
   lastByExercise,
+  isRun,
+  existingRunPhotos,
 }: {
   relationshipId: string;
   userId: string;
@@ -41,12 +43,27 @@ export default function WorkoutLogger({
     reps: number | null;
   }[];
   lastByExercise: Record<string, { weight: number | null; reps: number | null }>;
+  isRun: boolean;
+  existingRunPhotos: string[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [effort, setEffort] = useState<string | null>(existingEffort);
   const [newExercise, setNewExercise] = useState("");
+
+  // Run screenshots: files to upload + previews (already-uploaded + new).
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [runFiles, setRunFiles] = useState<File[]>([]);
+  const [runPreviews, setRunPreviews] = useState<string[]>(existingRunPhotos);
+
+  function onRunFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setRunFiles((prev) => [...prev, ...files]);
+    setRunPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+    e.target.value = "";
+  }
 
   const [state, setState] = useState<ExState[]>(() => build());
 
@@ -155,34 +172,37 @@ export default function WorkoutLogger({
       logId = data.id as string;
     }
 
-    // Replace the sets.
+    // Replace the sets. Runs have none — just clear any that existed.
     await supabase.from("coaching_exercise_sets").delete().eq("workout_log_id", logId);
-    const rows: {
-      workout_log_id: string;
-      exercise_name: string;
-      set_index: number;
-      weight: number | null;
-      reps: number | null;
-    }[] = [];
-    for (const ex of state) {
-      ex.sets.forEach((s, i) => {
-        if (s.weight.trim() || s.reps.trim()) {
-          rows.push({
-            workout_log_id: logId as string,
-            exercise_name: ex.name,
-            set_index: i + 1,
-            weight: s.weight.trim() ? Number(s.weight) : null,
-            reps: s.reps.trim() ? Number(s.reps) : null,
-          });
-        }
-      });
-    }
-    if (rows.length > 0) {
-      const { error } = await supabase.from("coaching_exercise_sets").insert(rows);
-      if (error) return fail(error.message);
+    if (!isRun) {
+      const rows: {
+        workout_log_id: string;
+        exercise_name: string;
+        set_index: number;
+        weight: number | null;
+        reps: number | null;
+      }[] = [];
+      for (const ex of state) {
+        ex.sets.forEach((s, i) => {
+          if (s.weight.trim() || s.reps.trim()) {
+            rows.push({
+              workout_log_id: logId as string,
+              exercise_name: ex.name,
+              set_index: i + 1,
+              weight: s.weight.trim() ? Number(s.weight) : null,
+              reps: s.reps.trim() ? Number(s.reps) : null,
+            });
+          }
+        });
+      }
+      if (rows.length > 0) {
+        const { error } = await supabase.from("coaching_exercise_sets").insert(rows);
+        if (error) return fail(error.message);
+      }
     }
 
     // Mark the "Workout" tracker done today so it counts toward adherence.
+    let workoutEntryId: string | null = null;
     const { data: wt } = await supabase
       .from("coaching_trackers")
       .select("id")
@@ -204,15 +224,42 @@ export default function WorkoutLogger({
       const detail = `${title}${effort ? ` · felt ${effort}` : ""}`;
       if (ex) {
         await supabase.from("coaching_entries").update({ detail }).eq("id", ex.id);
+        workoutEntryId = ex.id as string;
       } else {
-        await supabase.from("coaching_entries").insert({
-          relationship_id: relationshipId,
-          client_id: userId,
-          tracker_id: wt.id,
-          // Anchor to the logged day (noon) so backdated workouts land right.
-          happened_at: new Date(day + "T12:00:00").toISOString(),
-          detail,
+        const { data: created } = await supabase
+          .from("coaching_entries")
+          .insert({
+            relationship_id: relationshipId,
+            client_id: userId,
+            tracker_id: wt.id,
+            // Anchor to the logged day (noon) so backdated workouts land right.
+            happened_at: new Date(day + "T12:00:00").toISOString(),
+            detail,
+          })
+          .select("id")
+          .single();
+        workoutEntryId = (created?.id as string) ?? null;
+      }
+    }
+
+    // Upload any run screenshots, attached to the Workout entry so the recap
+    // can surface them in the group feed.
+    if (isRun && runFiles.length > 0 && workoutEntryId) {
+      for (let i = 0; i < runFiles.length; i++) {
+        const f = runFiles[i];
+        const ext = f.name.split(".").pop() || "jpg";
+        const path = `${userId}/run-${workoutEntryId}-${Date.now()}-${i}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("media")
+          .upload(path, f, { contentType: f.type });
+        if (upErr) return fail(upErr.message);
+        const { error: mErr } = await supabase.from("media").insert({
+          owner_id: userId,
+          type: "image",
+          storage_path: path,
+          entry_id: workoutEntryId,
         });
+        if (mErr) return fail(mErr.message);
       }
     }
 
@@ -225,6 +272,59 @@ export default function WorkoutLogger({
       setErr(msg);
       setBusy(false);
     }
+  }
+
+  if (isRun) {
+    return (
+      <>
+        <div className="wl-banner">
+          🏃 Log your run — add a screenshot of it, mark how it felt, then save.
+        </div>
+
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={onRunFiles}
+        />
+        {runPreviews.length > 0 && (
+          <div className="cf-photos">
+            {runPreviews.map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={src} alt="" />
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          className="add-photo-btn"
+          onClick={() => fileInput.current?.click()}
+        >
+          📷 {runPreviews.length > 0 ? "Add another screenshot" : "Add a screenshot of your run"}
+        </button>
+
+        <section className="wl-effort">
+          <span className="cf-label">How&apos;d it feel?</span>
+          <div className="eopts">
+            {["easy", "right", "hard"].map((e) => (
+              <button
+                key={e}
+                className={`eopt ${effort === e ? "on" : ""}`}
+                onClick={() => setEffort(e)}
+              >
+                {e[0].toUpperCase() + e.slice(1)}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {err && <p className="auth-error">{err}</p>}
+        <button className="btn-primary wl-save" onClick={save} disabled={busy}>
+          {busy ? "Saving…" : "Save workout ›"}
+        </button>
+      </>
+    );
   }
 
   return (
