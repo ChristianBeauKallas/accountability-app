@@ -4,6 +4,7 @@ import PostGallery from "./post-gallery";
 import PostComments from "./post-comments";
 import ReactionBar from "./reaction-bar";
 import PostDate from "./post-date";
+import StoryShare from "./story-share";
 
 export type PlanItems = {
   workouts?: { title: string; effort: string | null }[];
@@ -94,6 +95,7 @@ export default function PlanRecapCard({
         <div className="post-head-right">
           {edited && <span className="pr-updated">updated</span>}
           <PostDate iso={edited ? (updatedAt as string) : createdAt} />
+          {viewerId === authorId && <StoryShare postId={postId} />}
         </div>
       </div>
 

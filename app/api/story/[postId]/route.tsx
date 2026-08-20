@@ -69,13 +69,19 @@ async function render(
   const { data: post } = await admin
     .from("group_posts")
     .select(
-      "id, author_id, group_id, created_at, media(type, storage_path)",
+      "id, author_id, group_id, created_at, source, day, plan_items, media(type, storage_path)",
     )
     .eq("id", postId)
     .maybeSingle();
   if (!post) return new NextResponse("Not found", { status: 404 });
   if (post.author_id !== user.id)
     return new NextResponse("Forbidden", { status: 403 });
+
+  // Plan recaps use a different data shape (plan_items) than legacy activity
+  // posts — render the plan-driven card for those.
+  if (post.source === "plan") {
+    return renderPlan(post, user.id, admin);
+  }
 
   const [{ data: group }, { data: activities }, { data: profile }, { data: posts }] =
     await Promise.all([
@@ -432,6 +438,336 @@ async function render(
             </div>
             <div style={{ display: "flex", fontSize: 32, fontWeight: 500, color: "rgba(255,255,255,0.66)" }}>
               · {monthLabel}
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+    {
+      width: W,
+      height: H,
+      emoji: "twemoji",
+      fonts: [
+        { name: "Inter", data: interMedium, weight: 500, style: "normal" },
+        { name: "Inter", data: interBold, weight: 700, style: "normal" },
+        { name: "Inter", data: interExtraBold, weight: 800, style: "normal" },
+      ],
+      headers: { "Cache-Control": "private, no-store, max-age=0" },
+    },
+  );
+}
+
+// ---- Plan-recap story --------------------------------------------------------
+
+type PlanItems = {
+  progress?: number;
+  complete?: boolean;
+  workouts?: { title: string; effort: string | null }[];
+  meals?: {
+    count: number;
+    calories: number;
+    protein: number;
+    target_calories: number | null;
+    target_protein: number | null;
+  } | null;
+  water?: { oz: number; unit: string } | null;
+  habits?: { label: string; emoji: string; count: number }[];
+};
+
+async function loadBackdrop(
+  admin: ReturnType<typeof createAdminClient>,
+  media: { type: string; storage_path: string }[],
+): Promise<string | null> {
+  const img = media.find((m) => m.type === "image");
+  if (!img) return null;
+  try {
+    const sharp = (await import("sharp")).default;
+    const { data: blob } = await admin.storage
+      .from("media")
+      .download(img.storage_path);
+    if (!blob) return null;
+    const out = await sharp(Buffer.from(await blob.arrayBuffer()))
+      .resize(W, H, { fit: "cover", position: "attention" })
+      .grayscale()
+      .modulate({ brightness: 0.5 })
+      .jpeg({ quality: 78 })
+      .toBuffer();
+    return `data:image/jpeg;base64,${out.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+async function renderPlan(
+  post: {
+    group_id: string;
+    created_at: string;
+    day: string | null;
+    plan_items: PlanItems | null;
+    media: { type: string; storage_path: string }[];
+  },
+  userId: string,
+  admin: ReturnType<typeof createAdminClient>,
+) {
+  const [{ data: group }, { data: profile }, { data: recaps }] =
+    await Promise.all([
+      admin.from("groups").select("name").eq("id", post.group_id).maybeSingle(),
+      admin
+        .from("profiles")
+        .select("display_name, timezone")
+        .eq("id", userId)
+        .maybeSingle(),
+      admin
+        .from("group_posts")
+        .select("day")
+        .eq("author_id", userId)
+        .eq("group_id", post.group_id)
+        .eq("source", "plan")
+        .limit(500),
+    ]);
+
+  const tz = profile?.timezone ?? "America/New_York";
+  const groupName = group?.name ?? "NPSF";
+  const displayName = profile?.display_name ?? "Member";
+  const pi = post.plan_items ?? {};
+
+  // Streak + this-month from the days this person posted a plan recap.
+  const days = new Set<string>();
+  for (const r of recaps ?? []) if (r.day) days.add(r.day as string);
+  const { streak } = computeStreak(days, tz);
+  const nowLocal = localDate(new Date(), tz);
+  const monthPrefix = nowLocal.slice(0, 7);
+  const thisMonth = [...days].filter((d) => d.slice(0, 7) === monthPrefix).length;
+
+  const fraction = Math.max(0, Math.min(1, Number(pi.progress ?? 0)));
+  const complete = !!pi.complete;
+  const pct = Math.round(fraction * 100);
+
+  // Chips from the plan items.
+  const chips: { emoji: string; name: string }[] = [];
+  for (const w of pi.workouts ?? []) {
+    const isRun = /run|tempo|long|mile|jog|interval/i.test(w.title);
+    chips.push({ emoji: isRun ? "🏃" : "🏋️", name: w.title });
+  }
+  if (pi.meals) {
+    chips.push({
+      emoji: "🍽️",
+      name: pi.meals.calories > 0
+        ? `${pi.meals.calories} cal`
+        : `${pi.meals.count} meal${pi.meals.count === 1 ? "" : "s"}`,
+    });
+  }
+  if (pi.water) chips.push({ emoji: "💧", name: `${pi.water.oz} ${pi.water.unit}` });
+  for (const h of pi.habits ?? []) chips.push({ emoji: h.emoji ?? "✅", name: h.label });
+
+  // Stat strip.
+  type Stat = { n: string; l: string; hero?: boolean };
+  const stats: Stat[] = [];
+  if (streak > 0) stats.push({ n: `🔥 ${streak}`, l: "Day streak", hero: true });
+  if (thisMonth > 0) stats.push({ n: `${thisMonth}`, l: "📅 This month" });
+  if (pi.meals && pi.meals.protein > 0)
+    stats.push({ n: `${pi.meals.protein}g`, l: "💪 Protein" });
+  if (!stats.some((s) => s.hero) && stats.length) stats[0].hero = true;
+
+  const photo = await loadBackdrop(admin, post.media ?? []);
+
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(post.created_at));
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: W,
+          height: H,
+          display: "flex",
+          position: "relative",
+          fontFamily: "Inter",
+          backgroundColor: "#07090c",
+          backgroundImage:
+            "radial-gradient(120% 60% at 50% 18%, #12202b 0%, #0a0f16 55%, #05070a 100%)",
+        }}
+      >
+        {photo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} width={W} height={H} style={{ position: "absolute", top: 0, left: 0 }} />
+        )}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: W,
+            height: H,
+            display: "flex",
+            backgroundImage:
+              "linear-gradient(180deg, rgba(5,7,10,0.55) 0%, rgba(5,7,10,0.72) 42%, rgba(5,7,10,0.94) 100%)",
+          }}
+        />
+
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: W,
+            height: H,
+            padding: "104px 96px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              fontSize: 30,
+              fontWeight: 800,
+              letterSpacing: 10,
+              color: "rgba(255,255,255,0.78)",
+            }}
+          >
+            {groupName.toUpperCase()}
+          </div>
+
+          <div style={{ display: "flex", flexGrow: 0.7 }} />
+
+          {/* hero ring — today's plan progress */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 460,
+              height: 460,
+              position: "relative",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={ringDataUri(complete ? 1 : fraction, 460, 32)}
+              width={460}
+              height={460}
+              style={{ position: "absolute", top: 0, left: 0 }}
+            />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ display: "flex", fontSize: complete ? 200 : 156, fontWeight: 800, color: WHITE, lineHeight: 1 }}>
+                {complete ? "✓" : `${pct}%`}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  marginTop: 24,
+                  fontSize: 28,
+                  fontWeight: 800,
+                  letterSpacing: 5,
+                  color: ACCENT,
+                }}
+              >
+                {complete ? "DAY COMPLETE" : "ON PLAN TODAY"}
+              </div>
+            </div>
+          </div>
+
+          {/* chips */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 16,
+              marginTop: 64,
+              maxWidth: 900,
+            }}
+          >
+            {chips.map((c, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  backgroundColor: ACCENT_DIM,
+                  border: `2px solid ${ACCENT}`,
+                  borderRadius: 999,
+                  padding: "12px 26px",
+                  fontSize: 34,
+                  fontWeight: 600,
+                  color: ACCENT_2,
+                }}
+              >
+                {c.emoji} {c.name}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", flexGrow: 0.6 }} />
+
+          {/* stat strip */}
+          {stats.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                border: "2px solid rgba(255,255,255,0.14)",
+                borderRadius: 28,
+                overflow: "hidden",
+              }}
+            >
+              {stats.map((s, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    flexGrow: s.hero ? 1.3 : 1,
+                    padding: "30px 12px",
+                    backgroundColor: s.hero ? ACCENT_DIM : "rgba(255,255,255,0.03)",
+                    borderLeft: i === 0 ? "none" : "2px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  <div style={{ display: "flex", fontSize: s.hero ? 88 : 66, fontWeight: 800, color: s.hero ? ACCENT : WHITE }}>
+                    {s.n}
+                  </div>
+                  <div style={{ display: "flex", fontSize: 27, fontWeight: 700, letterSpacing: 2, color: s.hero ? ACCENT_2 : MUTED }}>
+                    {s.l.toUpperCase()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: "flex", flexGrow: 1 }} />
+
+          {/* who */}
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 72,
+                height: 72,
+                borderRadius: 999,
+                border: `3px solid ${ACCENT}`,
+                backgroundColor: "#22303f",
+                fontSize: 34,
+                fontWeight: 800,
+                color: WHITE,
+              }}
+            >
+              {displayName.trim().charAt(0).toUpperCase() || "?"}
+            </div>
+            <div style={{ display: "flex", fontSize: 40, fontWeight: 800, color: WHITE }}>
+              {displayName}
+            </div>
+            <div style={{ display: "flex", fontSize: 32, fontWeight: 500, color: "rgba(255,255,255,0.66)" }}>
+              · {dateLabel}
             </div>
           </div>
         </div>
