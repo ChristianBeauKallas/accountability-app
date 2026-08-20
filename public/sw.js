@@ -1,7 +1,7 @@
 // Minimal service worker: makes the app installable and gives it an offline
 // shell. We stay network-first for navigations so signed-in users always get
 // fresh, auth-correct pages, and cache-first only for static assets.
-const CACHE = "accountability-v1";
+const CACHE = "accountability-v2";
 
 self.addEventListener("install", () => self.skipWaiting());
 

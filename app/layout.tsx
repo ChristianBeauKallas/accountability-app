@@ -5,6 +5,7 @@ import SwRegister from "./sw-register";
 import InstallPrompt from "./install-prompt";
 import BottomNav from "./nav";
 import TimezoneSync from "./timezone-sync";
+import VersionWatch from "./version-watch";
 
 export const metadata: Metadata = {
   applicationName: "Get Better",
@@ -67,6 +68,7 @@ export default async function RootLayout({
             top of the login / signup / invite flow. */}
         {user && <InstallPrompt />}
         {user && <TimezoneSync />}
+        <VersionWatch />
         <SwRegister />
       </body>
     </html>
