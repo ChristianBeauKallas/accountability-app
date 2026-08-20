@@ -18,19 +18,19 @@ export type PlanItems = {
   habits?: { label: string; emoji: string; count: number }[];
 };
 
-// Turn a tracker label into a natural verb phrase for the caption.
+// Turn a tracker label into a natural first-person verb phrase.
 function habitPhrase(label: string): string {
   const l = label.toLowerCase();
   if (l.includes("jiu") || l.includes("jitsu") || l.includes("bjj")) return "trained jiu-jitsu";
-  if (l.includes("step")) return "hit their steps";
+  if (l.includes("step")) return "hit my steps";
   if (l.includes("podcast")) return "listened to a podcast";
-  if (l.includes("mobility") || l.includes("stretch")) return "did their mobility";
+  if (l.includes("mobility") || l.includes("stretch")) return "did my mobility";
   if (l.includes("read") || l.includes("book") || l.includes("bible")) return "read";
   return `did ${label.toLowerCase()}`;
 }
 
 function naturalJoin(arr: string[]): string {
-  if (arr.length === 0) return "worked their plan";
+  if (arr.length === 0) return "worked my plan";
   if (arr.length === 1) return arr[0];
   if (arr.length === 2) return `${arr[0]} and ${arr[1]}`;
   return `${arr.slice(0, -1).join(", ")}, and ${arr[arr.length - 1]}`;
@@ -42,6 +42,7 @@ export type PlanRecapData = {
   authorName: string;
   authorAvatar: string | null;
   createdAt: string;
+  updatedAt?: string | null;
   photos: string[];
   planItems: PlanItems | null;
   reactions: Record<string, { count: number; mine: boolean }>;
@@ -55,6 +56,7 @@ export default function PlanRecapCard({
   authorName,
   authorAvatar,
   createdAt,
+  updatedAt,
   photos,
   planItems,
   reactions,
@@ -65,18 +67,22 @@ export default function PlanRecapCard({
   const meals = planItems?.meals ?? null;
   const water = planItems?.water ?? null;
   const habits = planItems?.habits ?? [];
-  const firstName = authorName.split(" ")[0];
 
-  // A natural summary of what they actually did — the way a person would say it.
+  // First-person summary — reads like the person wrote it, not the system.
   const phrases: string[] = [];
   if (workouts.length > 0) {
     const isRun = /run|tempo|long|mile|jog|interval/i.test(workouts[0].title);
-    phrases.push(isRun ? "got their run in" : "got their workout in");
+    phrases.push(isRun ? "got my run in" : "got my workout in");
   }
   if (meals) phrases.push(`logged ${meals.count} meal${meals.count === 1 ? "" : "s"}`);
   if (water) phrases.push(`drank ${water.oz} ${water.unit} of water`);
   for (const h of habits) phrases.push(habitPhrase(h.label));
-  const lead = `${firstName} ${naturalJoin(phrases)} today`;
+  const sentence = naturalJoin(phrases);
+  const lead = `${sentence.charAt(0).toUpperCase()}${sentence.slice(1)} today`;
+
+  const edited =
+    !!updatedAt &&
+    new Date(updatedAt).getTime() - new Date(createdAt).getTime() > 60_000;
 
   return (
     <article className="post plan-recap">
@@ -86,8 +92,9 @@ export default function PlanRecapCard({
           <span className="post-author">{authorName}</span>
         </Link>
         <div className="post-head-right">
-          <span className="pr-tag">📋 Plan</span>
-          <PostDate iso={createdAt} />
+          <span className="pr-tag" title="Plan">📋</span>
+          {edited && <span className="pr-updated">updated</span>}
+          <PostDate iso={edited ? (updatedAt as string) : createdAt} />
         </div>
       </div>
 

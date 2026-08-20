@@ -189,9 +189,10 @@ export async function POST(req: Request) {
   let postId: string;
   if (existing) {
     postId = existing.id as string;
+    // Bump to the top of the feed on every log.
     await admin
       .from("group_posts")
-      .update({ caption, plan_items })
+      .update({ caption, plan_items, updated_at: new Date().toISOString() })
       .eq("id", postId);
   } else {
     const { data: created, error } = await admin

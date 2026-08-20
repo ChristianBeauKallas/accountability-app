@@ -44,6 +44,7 @@ type PostRow = {
   author_id: string;
   caption: string | null;
   created_at: string;
+  updated_at?: string | null;
   source?: string | null;
   day?: string | null;
   plan_items?: PlanItems | null;
@@ -125,10 +126,10 @@ export default async function Home() {
     supabase
       .from("group_posts")
       .select(
-        "id, author_id, caption, created_at, source, day, plan_items, post_activities(activity_id), media(id, type, storage_path)",
+        "id, author_id, caption, created_at, updated_at, source, day, plan_items, post_activities(activity_id), media(id, type, storage_path)",
       )
       .eq("group_id", groupId)
-      .order("created_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .limit(100),
   ]);
 
@@ -514,6 +515,7 @@ export default async function Home() {
                 authorName={author?.name ?? "Member"}
                 authorAvatar={author?.avatar ?? null}
                 createdAt={p.created_at}
+                updatedAt={p.updated_at ?? null}
                 photos={photos}
                 planItems={p.plan_items ?? null}
                 reactions={reactionsByPost.get(p.id) ?? {}}
