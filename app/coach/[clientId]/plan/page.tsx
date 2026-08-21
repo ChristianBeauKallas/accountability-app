@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { CoachingIntake, CoachingPlan, PlanWorkout } from "@/lib/types";
 import CoachPlanEditor from "./coach-plan-editor";
+import CopyPlanCard from "./copy-plan";
 
 export const dynamic = "force-dynamic";
 
@@ -127,6 +128,43 @@ export default async function CoachPlanPage({
     };
   }
 
+  // Other clients of this coach whose plans could be copied onto this person.
+  const { data: allRels } = await supabase
+    .from("coaching_relationships")
+    .select("id, client_id")
+    .eq("coach_id", user.id);
+  const otherRels = (allRels ?? []).filter((r) => r.client_id !== clientId);
+  const copySources: { id: string; name: string }[] = [];
+  if (otherRels.length > 0) {
+    const relIds = otherRels.map((r) => r.id as string);
+    const [{ data: plannedRows }, { data: srcProfiles }] = await Promise.all([
+      supabase
+        .from("coaching_plans")
+        .select("relationship_id")
+        .in("relationship_id", relIds)
+        .in("status", ["active", "draft"]),
+      supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in(
+          "id",
+          otherRels.map((r) => r.client_id as string),
+        ),
+    ]);
+    const hasPlan = new Set((plannedRows ?? []).map((p) => p.relationship_id as string));
+    const nameById = new Map(
+      (srcProfiles ?? []).map((p) => [p.id as string, p.display_name as string]),
+    );
+    for (const r of otherRels) {
+      if (!hasPlan.has(r.id as string)) continue;
+      copySources.push({
+        id: r.client_id as string,
+        name: nameById.get(r.client_id as string) ?? "Client",
+      });
+    }
+    copySources.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   return (
     <main className="board">
       <header className="board-head">
@@ -139,6 +177,8 @@ export default async function CoachPlanPage({
           </div>
         </div>
       </header>
+
+      <CopyPlanCard targetClientId={clientId} sources={copySources} />
 
       <CoachPlanEditor
         clientId={clientId}
