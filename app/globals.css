@@ -4756,6 +4756,29 @@ button.coaching-open {
   border-color: rgba(62, 232, 122, 0.35);
   color: var(--accent);
 }
+.wc-adjust-btn.push {
+  color: var(--muted);
+}
+.wc-push-confirm {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.wc-push-confirm p {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text);
+}
+.wc-push-btns {
+  display: flex;
+  gap: 0.6rem;
+}
+.wc-push-btns button {
+  flex: 1;
+}
 .wc-reason {
   margin: 0.1rem 0 0.4rem;
   font-size: 0.78rem;

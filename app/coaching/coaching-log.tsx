@@ -199,6 +199,8 @@ export default function CoachingLog({
   const [shareToFeed, setShareToFeed] = useState(false);
   const [workoutOpen, setWorkoutOpen] = useState(false);
   const [tomorrowOpen, setTomorrowOpen] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const [confirmPush, setConfirmPush] = useState(false);
   const firstName = displayName.split(" ")[0];
   const possessive = /s$/i.test(firstName) ? `${firstName}'` : `${firstName}'s`;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -742,6 +744,30 @@ export default function CoachingLog({
     setAdjustErr(null);
   }
 
+  // Push the whole plan forward one day (missed-day slide, not a skip).
+  async function pushDay() {
+    setPushing(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const res = await fetch("/api/push-plan", {
+        method: "POST",
+        headers: session
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : undefined,
+      });
+      if (!res.ok) throw new Error();
+      setConfirmPush(false);
+      router.refresh();
+    } catch {
+      // Best-effort — leave the confirm open so they can retry.
+    } finally {
+      setPushing(false);
+    }
+  }
+
   // Sort today's trackers into the labeled zones.
   function zoneOf(t: CoachingTracker): "workout" | "meal" | "water" | "weight" | "photo" | "dev" {
     const l = t.label.toLowerCase();
@@ -966,13 +992,51 @@ export default function CoachingLog({
                     🎙️ {todayWorkout.adjusted ? "Adjust again" : "Make adjustments"}
                   </button>
                 )}
+                {isToday && !workoutLogged && (
+                  <button
+                    type="button"
+                    className="wc-adjust-btn push"
+                    onClick={() => setConfirmPush(true)}
+                    disabled={pushing}
+                  >
+                    ⏭️ Push to tomorrow
+                  </button>
+                )}
               </div>
-              {isToday && (
-                <p className="wc-hint">
-                  {equipment
-                    ? `Fitting to: ${equipment}. Sore or short on time? Tap Make adjustments.`
-                    : "Different equipment, sore, or short on time? Tap Make adjustments — tell us what you've got and we'll rebuild today's session."}
-                </p>
+              {isToday && confirmPush ? (
+                <div className="wc-push-confirm">
+                  <p>
+                    Push your whole plan forward a day? Today&apos;s workout
+                    moves to tomorrow and the rest of the week slides with it —
+                    nothing gets skipped.
+                  </p>
+                  <div className="wc-push-btns">
+                    <button
+                      type="button"
+                      className="tour-back"
+                      onClick={() => setConfirmPush(false)}
+                      disabled={pushing}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="tour-next"
+                      onClick={pushDay}
+                      disabled={pushing}
+                    >
+                      {pushing ? "Pushing…" : "Push a day"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                isToday && (
+                  <p className="wc-hint">
+                    {equipment
+                      ? `Fitting to: ${equipment}. Sore or short on time? Tap Make adjustments.`
+                      : "Different equipment, sore, or short on time? Tap Make adjustments — tell us what you've got and we'll rebuild today's session."}
+                  </p>
+                )
               )}
             </div>
           ) : (
