@@ -1395,7 +1395,7 @@ export default function CoachingLog({
                 <>
                   <button
                     type="button"
-                    className="tour-action"
+                    className="tour-action meal-macros-btn"
                     onClick={getMacros}
                     disabled={estimating}
                   >
@@ -1480,7 +1480,13 @@ export default function CoachingLog({
 
               {err && <p className="auth-error">{err}</p>}
 
-              <div className="tour-nav">
+              <div
+                className={`tour-nav${
+                  draft.tracker.wants_macros && !draft.macros && !draft.entry
+                    ? " single"
+                    : ""
+                }`}
+              >
                 {draft.entry ? (
                   <button
                     type="button"
@@ -1500,14 +1506,16 @@ export default function CoachingLog({
                     Cancel
                   </button>
                 )}
-                <button
-                  type="button"
-                  className="tour-next"
-                  onClick={save}
-                  disabled={busy}
-                >
-                  {busy ? "Saving…" : "Save"}
-                </button>
+                {(!draft.tracker.wants_macros || draft.macros) && (
+                  <button
+                    type="button"
+                    className="tour-next"
+                    onClick={save}
+                    disabled={busy}
+                  >
+                    {busy ? "Saving…" : "Save"}
+                  </button>
+                )}
               </div>
               {draft.entry && (
                 <button
