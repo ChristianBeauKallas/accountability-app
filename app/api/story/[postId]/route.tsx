@@ -482,6 +482,21 @@ type PlanItems = {
   habits?: { label: string; emoji: string; count: number }[];
 };
 
+// Public avatar URL → data URI so it embeds in the raster. null on any failure
+// (we fall back to the initial).
+async function loadAvatar(url: string | null | undefined): Promise<string | null> {
+  if (!url) return null;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    const type = res.headers.get("content-type") || "image/jpeg";
+    return `data:${type};base64,${buf.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
 async function loadBackdrop(
   admin: ReturnType<typeof createAdminClient>,
   media: { id: string; type: string; storage_path: string }[],
@@ -526,7 +541,7 @@ async function renderPlan(
   const [{ data: profile }, { data: recaps }] = await Promise.all([
     admin
       .from("profiles")
-      .select("display_name, timezone")
+      .select("display_name, timezone, avatar_url")
       .eq("id", userId)
       .maybeSingle(),
     admin
@@ -569,6 +584,7 @@ async function renderPlan(
   for (const h of pi.habits ?? []) chips.push({ emoji: h.emoji ?? "✅", name: h.label });
 
   const photo = await loadBackdrop(admin, post.media ?? [], chosenMediaId);
+  const avatar = await loadAvatar(profile?.avatar_url as string | null);
 
   const dateLabel = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
@@ -632,25 +648,9 @@ async function renderPlan(
               position: "relative",
             }}
           >
-            {/* Completed-day flourish: a soft accent bloom behind the ring. */}
-            {complete && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: -30,
-                  left: -30,
-                  width: 620,
-                  height: 620,
-                  display: "flex",
-                  borderRadius: 999,
-                  backgroundImage:
-                    "radial-gradient(circle, rgba(62,232,122,0.30) 0%, rgba(62,232,122,0) 66%)",
-                }}
-              />
-            )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={ringDataUri(complete ? 1 : fraction, 560, 30, undefined, ACCENT, true)}
+              src={ringDataUri(complete ? 1 : fraction, 560, 30)}
               width={560}
               height={560}
               style={{ position: "absolute", top: 0, left: 0 }}
@@ -743,25 +743,41 @@ async function renderPlan(
 
           <div style={{ display: "flex", flexGrow: 0.6 }} />
 
-          {/* who — name above the date */}
+          {/* who — profile picture, name, then date */}
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 76,
-                height: 76,
-                borderRadius: 999,
-                border: `3px solid ${ACCENT}`,
-                backgroundColor: "#22303f",
-                fontSize: 36,
-                fontWeight: 800,
-                color: WHITE,
-              }}
-            >
-              {displayName.trim().charAt(0).toUpperCase() || "?"}
-            </div>
+            {avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatar}
+                width={84}
+                height={84}
+                style={{
+                  width: 84,
+                  height: 84,
+                  borderRadius: 999,
+                  objectFit: "cover",
+                  border: `3px solid ${ACCENT}`,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 84,
+                  height: 84,
+                  borderRadius: 999,
+                  border: `3px solid ${ACCENT}`,
+                  backgroundColor: "#22303f",
+                  fontSize: 38,
+                  fontWeight: 800,
+                  color: WHITE,
+                }}
+              >
+                {displayName.trim().charAt(0).toUpperCase() || "?"}
+              </div>
+            )}
             <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", fontSize: 44, fontWeight: 800, color: WHITE, lineHeight: 1.1 }}>
                 {displayName}
