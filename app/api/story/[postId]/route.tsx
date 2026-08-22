@@ -632,6 +632,22 @@ async function renderPlan(
               position: "relative",
             }}
           >
+            {/* Completed-day flourish: a soft accent bloom behind the ring. */}
+            {complete && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: -30,
+                  left: -30,
+                  width: 620,
+                  height: 620,
+                  display: "flex",
+                  borderRadius: 999,
+                  backgroundImage:
+                    "radial-gradient(circle, rgba(62,232,122,0.30) 0%, rgba(62,232,122,0) 66%)",
+                }}
+              />
+            )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={ringDataUri(complete ? 1 : fraction, 560, 30, undefined, ACCENT, true)}
@@ -665,7 +681,7 @@ async function renderPlan(
               flexWrap: "wrap",
               justifyContent: "center",
               gap: 16,
-              marginTop: 64,
+              marginTop: 52,
               maxWidth: 900,
             }}
           >
@@ -690,7 +706,18 @@ async function renderPlan(
             ))}
           </div>
 
-          <div style={{ display: "flex", flexGrow: 1 }} />
+          {/* hairline divider between what-you-did and the streak */}
+          <div
+            style={{
+              display: "flex",
+              width: 240,
+              height: 2,
+              marginTop: 44,
+              backgroundColor: "rgba(255,255,255,0.12)",
+            }}
+          />
+
+          <div style={{ display: "flex", flexGrow: 0.9 }} />
 
           {/* streak badge */}
           {streak > 0 && (

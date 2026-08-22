@@ -181,6 +181,21 @@ export default function RecapMenu({
         )}
 
       {mounted &&
+        busy &&
+        !preview &&
+        !err &&
+        createPortal(
+          <div className="tour-overlay" role="dialog" aria-modal="true">
+            <div className="tour-card pm-card story-building">
+              <div className="story-spinner" />
+              <h2 className="tour-title">Creating your story…</h2>
+              <p className="tour-body">Building your shareable graphic — one sec.</p>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {mounted &&
         (err || preview) &&
         createPortal(
           <div className="tour-overlay" role="dialog" aria-modal="true">
