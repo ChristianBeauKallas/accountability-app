@@ -542,6 +542,10 @@ async function renderPlan(
 
   const fraction = Math.max(0, Math.min(1, Number(pi.progress ?? 0)));
   const complete = !!pi.complete;
+  const pct = Math.round(fraction * 100);
+  const tagline = complete
+    ? "Another one in the books 🔒"
+    : "Putting in the work 💪";
 
   // Chips from the plan items.
   const chips: { emoji: string; name: string }[] = [];
@@ -632,20 +636,20 @@ async function renderPlan(
               style={{ position: "absolute", top: 0, left: 0 }}
             />
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div style={{ display: "flex", fontSize: 260, fontWeight: 800, color: WHITE, lineHeight: 1 }}>
-                {streak}
+              <div style={{ display: "flex", fontSize: complete ? 210 : 156, fontWeight: 800, color: WHITE, lineHeight: 1 }}>
+                {complete ? "✓" : `${pct}%`}
               </div>
               <div
                 style={{
                   display: "flex",
-                  marginTop: 20,
+                  marginTop: 22,
                   fontSize: 30,
                   fontWeight: 800,
-                  letterSpacing: 6,
+                  letterSpacing: 5,
                   color: ACCENT,
                 }}
               >
-                🔥 DAY STREAK
+                {complete ? "PLAN COMPLETE" : "ON PLAN TODAY"}
               </div>
             </div>
           </div>
@@ -683,6 +687,41 @@ async function renderPlan(
           </div>
 
           <div style={{ display: "flex", flexGrow: 1 }} />
+
+          {/* streak badge + hype line */}
+          {streak > 0 && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                backgroundColor: ACCENT_DIM,
+                border: `2px solid ${ACCENT}`,
+                borderRadius: 999,
+                padding: "16px 40px",
+              }}
+            >
+              <div style={{ display: "flex", fontSize: 66, fontWeight: 800, color: ACCENT, lineHeight: 1 }}>
+                🔥 {streak}
+              </div>
+              <div style={{ display: "flex", fontSize: 32, fontWeight: 800, letterSpacing: 4, color: ACCENT_2 }}>
+                DAY STREAK
+              </div>
+            </div>
+          )}
+          <div
+            style={{
+              display: "flex",
+              marginTop: streak > 0 ? 26 : 0,
+              fontSize: 34,
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.82)",
+            }}
+          >
+            {tagline}
+          </div>
+
+          <div style={{ display: "flex", flexGrow: 0.5 }} />
 
           {/* who */}
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
