@@ -1,7 +1,7 @@
 // Minimal service worker: makes the app installable and gives it an offline
 // shell. We stay network-first for navigations so signed-in users always get
 // fresh, auth-correct pages, and cache-first only for static assets.
-const CACHE = "accountability-v2";
+const CACHE = "accountability-v3";
 
 self.addEventListener("install", () => self.skipWaiting());
 
@@ -61,17 +61,12 @@ self.addEventListener("fetch", (event) => {
   // Only handle our own origin — never touch Supabase API/auth/storage calls.
   if (url.origin !== self.location.origin) return;
 
-  // Navigations: network-first, fall back to the last cached page offline.
+  // Navigations: always network, never cached. These pages are per-user and
+  // auth-dependent — caching them risks serving a stale "logged-out" or
+  // "not-a-member" shell from a previous state on the next cold open. If the
+  // network is unavailable we let the request fail rather than show stale auth.
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE).then((c) => c.put(request, copy));
-          return resp;
-        })
-        .catch(() => caches.match(request).then((c) => c || caches.match("/"))),
-    );
+    event.respondWith(fetch(request));
     return;
   }
 

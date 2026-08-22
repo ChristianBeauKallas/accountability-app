@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import Onboarding from "./onboarding";
 import Tour from "./tour";
 import InstallModal from "./install-modal";
@@ -76,7 +77,12 @@ export default async function Home() {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: memberships } = await supabase
+  // Use the admin client (keyed by the already-verified user id) for the
+  // membership gate. An RLS-scoped read can momentarily come back empty during
+  // a post-login / cold-open token race, which would wrongly bounce a real
+  // member to the "start a group" onboarding screen.
+  const admin = createAdminClient();
+  const { data: memberships } = await admin
     .from("group_members")
     .select("group_id, role, groups(name, invite_code)")
     .eq("user_id", user.id);
