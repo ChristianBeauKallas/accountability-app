@@ -489,9 +489,21 @@ async function loadAvatar(url: string | null | undefined): Promise<string | null
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
-    const buf = Buffer.from(await res.arrayBuffer());
-    const type = res.headers.get("content-type") || "image/jpeg";
-    return `data:${type};base64,${buf.toString("base64")}`;
+    const input = Buffer.from(await res.arrayBuffer());
+    try {
+      // Auto-orient (fixes phone photos saved "sideways" via EXIF) and
+      // center-crop to a clean square so it sits right in the circle.
+      const sharp = (await import("sharp")).default;
+      const out = await sharp(input)
+        .rotate()
+        .resize(240, 240, { fit: "cover", position: "centre" })
+        .jpeg({ quality: 84 })
+        .toBuffer();
+      return `data:image/jpeg;base64,${out.toString("base64")}`;
+    } catch {
+      const type = res.headers.get("content-type") || "image/jpeg";
+      return `data:${type};base64,${input.toString("base64")}`;
+    }
   } catch {
     return null;
   }
@@ -743,48 +755,48 @@ async function renderPlan(
 
           <div style={{ display: "flex", flexGrow: 0.6 }} />
 
-          {/* who — profile picture, name, then date */}
-          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            {avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatar}
-                width={84}
-                height={84}
-                style={{
-                  width: 84,
-                  height: 84,
-                  borderRadius: 999,
-                  objectFit: "cover",
-                  border: `3px solid ${ACCENT}`,
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 84,
-                  height: 84,
-                  borderRadius: 999,
-                  border: `3px solid ${ACCENT}`,
-                  backgroundColor: "#22303f",
-                  fontSize: 38,
-                  fontWeight: 800,
-                  color: WHITE,
-                }}
-              >
-                {displayName.trim().charAt(0).toUpperCase() || "?"}
-              </div>
-            )}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", fontSize: 44, fontWeight: 800, color: WHITE, lineHeight: 1.1 }}>
+          {/* who — photo + name on one row, date centered below both */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+              {avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatar}
+                  width={104}
+                  height={104}
+                  style={{
+                    width: 104,
+                    height: 104,
+                    borderRadius: 999,
+                    objectFit: "cover",
+                    border: `3px solid ${ACCENT}`,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 104,
+                    height: 104,
+                    borderRadius: 999,
+                    border: `3px solid ${ACCENT}`,
+                    backgroundColor: "#22303f",
+                    fontSize: 46,
+                    fontWeight: 800,
+                    color: WHITE,
+                  }}
+                >
+                  {displayName.trim().charAt(0).toUpperCase() || "?"}
+                </div>
+              )}
+              <div style={{ display: "flex", fontSize: 50, fontWeight: 800, color: WHITE }}>
                 {displayName}
               </div>
-              <div style={{ display: "flex", fontSize: 30, fontWeight: 500, color: "rgba(255,255,255,0.6)" }}>
-                {dateLabel}
-              </div>
+            </div>
+            <div style={{ display: "flex", fontSize: 32, fontWeight: 500, color: "rgba(255,255,255,0.6)" }}>
+              {dateLabel}
             </div>
           </div>
         </div>
