@@ -473,9 +473,15 @@ export default function CoachingLog({
 
   async function save() {
     if (!draft) return;
-    // A meal needs a photo — it's what makes the macro estimate trustworthy.
-    if (draft.tracker.wants_macros && draft.previews.length === 0) {
-      setErr("Add a photo of your meal first.");
+    // A photo is encouraged (better macro estimate) but not required — just make
+    // sure there's *something* to log: a description, a photo, or macros.
+    if (
+      draft.tracker.wants_macros &&
+      !draft.detail.trim() &&
+      draft.previews.length === 0 &&
+      !draft.macros
+    ) {
+      setErr("Add a photo or a quick description of your meal.");
       return;
     }
     setBusy(true);
@@ -1352,11 +1358,6 @@ export default function CoachingLog({
 
               {draft.tracker.wants_photo && (
                 <>
-                  {draft.tracker.wants_macros && (
-                    <label className="cf-label">
-                      Photo <span className="req">required</span>
-                    </label>
-                  )}
                   <input
                     ref={fileInput}
                     type="file"
@@ -1374,20 +1375,19 @@ export default function CoachingLog({
                   )}
                   <button
                     type="button"
-                    className={`add-photo-btn ${
-                      draft.tracker.wants_macros && draft.previews.length === 0
-                        ? "needed"
-                        : ""
-                    }`}
+                    className="add-photo-btn"
                     onClick={() => fileInput.current?.click()}
                   >
                     📷{" "}
                     {draft.previews.length > 0
-                      ? "Add another"
-                      : draft.tracker.wants_macros
-                        ? "Add a photo of your meal"
-                        : "Add photo"}
+                      ? "Add another photo"
+                      : "Add a photo"}
                   </button>
+                  {draft.tracker.wants_macros && draft.previews.length === 0 && (
+                    <p className="cf-photo-hint">
+                      Optional — a photo makes your macro estimate more accurate.
+                    </p>
+                  )}
                 </>
               )}
 

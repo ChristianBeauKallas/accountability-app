@@ -1886,16 +1886,15 @@ span.avatar-lg.avatar-fallback {
 .dictate-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  background: linear-gradient(135deg, var(--accent-2), var(--accent));
-  color: var(--accent-ink);
-  border: none;
+  gap: 0.45rem;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 1rem 2.2rem;
-  font-size: 1.1rem;
-  font-weight: 700;
+  padding: 0.55rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-glow);
 }
 .dictate-btn.recording {
   background: var(--danger);
@@ -4100,6 +4099,14 @@ button.head-icon {
 }
 .cf-dictate {
   margin: 0.45rem 0 0.2rem;
+  display: flex;
+  justify-content: flex-end;
+}
+.cf-photo-hint {
+  margin: 0.4rem 0.1rem 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--faint);
 }
 .cf-photos {
   display: flex;
