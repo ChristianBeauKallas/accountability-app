@@ -24,6 +24,7 @@ export default function RecapMenu({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [picking, setPicking] = useState(false);
   const [preview, setPreview] = useState<{ file: File; url: string } | null>(null);
+  const [done, setDone] = useState<null | "shared" | "saved">(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -69,29 +70,67 @@ export default function RecapMenu({
     });
   }
 
-  function download() {
+  function canShareFile(): boolean {
+    if (!preview) return false;
+    const nav = navigator as Navigator & {
+      canShare?: (d: { files: File[] }) => boolean;
+    };
+    return !!nav.canShare && nav.canShare({ files: [preview.file] });
+  }
+
+  // Desktop fallback only — on iOS this opens the broken file page, so we only
+  // reach it when the Web Share API isn't available (e.g. a desktop browser).
+  function triggerDownload() {
     if (!preview) return;
     const a = document.createElement("a");
     a.href = preview.url;
     a.download = "npsf-story.png";
     a.click();
-    closePreview();
   }
 
+  // "Share to Instagram…" — open the share sheet.
   async function doShare() {
     if (!preview) return;
-    const nav = navigator as Navigator & {
-      canShare?: (d: { files: File[] }) => boolean;
-    };
-    if (!nav.canShare || !nav.canShare({ files: [preview.file] })) {
-      download();
+    if (!canShareFile()) {
+      triggerDownload();
+      closePreview();
+      setDone("saved");
       return;
     }
     try {
       await navigator.share({ files: [preview.file] });
       closePreview();
+      setDone("shared");
     } catch (e) {
-      if ((e as Error)?.name !== "AbortError") download();
+      // AbortError = they backed out of the sheet; leave the preview up.
+      if ((e as Error)?.name !== "AbortError") {
+        triggerDownload();
+        closePreview();
+        setDone("saved");
+      }
+    }
+  }
+
+  // "Save image" — the only reliable path to the Photos library on iOS is the
+  // share sheet's "Save Image" action, so route through it.
+  async function saveImage() {
+    if (!preview) return;
+    if (!canShareFile()) {
+      triggerDownload();
+      closePreview();
+      setDone("saved");
+      return;
+    }
+    try {
+      await navigator.share({ files: [preview.file] });
+      closePreview();
+      setDone("saved");
+    } catch (e) {
+      if ((e as Error)?.name !== "AbortError") {
+        triggerDownload();
+        closePreview();
+        setDone("saved");
+      }
     }
   }
 
@@ -196,6 +235,28 @@ export default function RecapMenu({
         )}
 
       {mounted &&
+        done &&
+        createPortal(
+          <div className="tour-overlay" role="dialog" aria-modal="true">
+            <div className="tour-card pm-card story-building">
+              <div className="tour-icon">{done === "saved" ? "✅" : "🎉"}</div>
+              <h2 className="tour-title">
+                {done === "saved" ? "Saved to your Photos" : "Shared!"}
+              </h2>
+              <p className="tour-body">
+                {done === "saved"
+                  ? "Open Instagram → your Story → and pick it from your camera roll."
+                  : "Your story is on its way. Nice work today."}
+              </p>
+              <button type="button" className="tour-action" onClick={() => setDone(null)}>
+                Done
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {mounted &&
         (err || preview) &&
         createPortal(
           <div className="tour-overlay" role="dialog" aria-modal="true">
@@ -212,7 +273,7 @@ export default function RecapMenu({
                     <button type="button" className="tour-back" onClick={closePreview}>
                       Cancel
                     </button>
-                    <button type="button" className="tour-back" onClick={download}>
+                    <button type="button" className="tour-back" onClick={saveImage}>
                       Save image
                     </button>
                   </div>
