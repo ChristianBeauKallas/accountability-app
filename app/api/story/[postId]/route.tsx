@@ -25,13 +25,20 @@ function ringDataUri(
   stroke: number,
   track = "rgba(255,255,255,0.12)",
   fg = ACCENT,
+  glow = false,
 ) {
   const r = (size - stroke) / 2;
   const c = size / 2;
   const circ = 2 * Math.PI * r;
   const off = circ * (1 - Math.max(0, Math.min(1, fraction)));
+  // A wide, faint copy of the progress arc behind the crisp one reads as a
+  // neon halo — no SVG filters needed (keeps the raster reliable).
+  const halo = glow
+    ? `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${fg}" stroke-opacity="0.28" stroke-width="${stroke * 2.4}" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}" transform="rotate(-90 ${c} ${c})"/>`
+    : "";
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${track}" stroke-width="${stroke}"/>
+    ${halo}
     <circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${fg}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}" transform="rotate(-90 ${c} ${c})"/>
   </svg>`;
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
@@ -543,9 +550,6 @@ async function renderPlan(
   const fraction = Math.max(0, Math.min(1, Number(pi.progress ?? 0)));
   const complete = !!pi.complete;
   const pct = Math.round(fraction * 100);
-  const tagline = complete
-    ? "Another one in the books 🔒"
-    : "Putting in the work 💪";
 
   // Chips from the plan items.
   const chips: { emoji: string; name: string }[] = [];
@@ -623,16 +627,16 @@ async function renderPlan(
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 460,
-              height: 460,
+              width: 560,
+              height: 560,
               position: "relative",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={ringDataUri(complete ? 1 : fraction, 460, 32)}
-              width={460}
-              height={460}
+              src={ringDataUri(complete ? 1 : fraction, 560, 30, undefined, ACCENT, true)}
+              width={560}
+              height={560}
               style={{ position: "absolute", top: 0, left: 0 }}
             />
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -688,65 +692,56 @@ async function renderPlan(
 
           <div style={{ display: "flex", flexGrow: 1 }} />
 
-          {/* streak badge + hype line */}
+          {/* streak badge */}
           {streak > 0 && (
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: 18,
                 backgroundColor: ACCENT_DIM,
                 border: `2px solid ${ACCENT}`,
                 borderRadius: 999,
-                padding: "16px 40px",
+                padding: "20px 48px",
               }}
             >
-              <div style={{ display: "flex", fontSize: 66, fontWeight: 800, color: ACCENT, lineHeight: 1 }}>
+              <div style={{ display: "flex", fontSize: 82, fontWeight: 800, color: ACCENT, lineHeight: 1 }}>
                 🔥 {streak}
               </div>
-              <div style={{ display: "flex", fontSize: 32, fontWeight: 800, letterSpacing: 4, color: ACCENT_2 }}>
+              <div style={{ display: "flex", fontSize: 38, fontWeight: 800, letterSpacing: 4, color: ACCENT_2 }}>
                 DAY STREAK
               </div>
             </div>
           )}
-          <div
-            style={{
-              display: "flex",
-              marginTop: streak > 0 ? 26 : 0,
-              fontSize: 34,
-              fontWeight: 700,
-              color: "rgba(255,255,255,0.82)",
-            }}
-          >
-            {tagline}
-          </div>
 
-          <div style={{ display: "flex", flexGrow: 0.5 }} />
+          <div style={{ display: "flex", flexGrow: 0.6 }} />
 
-          {/* who */}
+          {/* who — name above the date */}
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 72,
-                height: 72,
+                width: 76,
+                height: 76,
                 borderRadius: 999,
                 border: `3px solid ${ACCENT}`,
                 backgroundColor: "#22303f",
-                fontSize: 34,
+                fontSize: 36,
                 fontWeight: 800,
                 color: WHITE,
               }}
             >
               {displayName.trim().charAt(0).toUpperCase() || "?"}
             </div>
-            <div style={{ display: "flex", fontSize: 40, fontWeight: 800, color: WHITE }}>
-              {displayName}
-            </div>
-            <div style={{ display: "flex", fontSize: 32, fontWeight: 500, color: "rgba(255,255,255,0.66)" }}>
-              · {dateLabel}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", fontSize: 44, fontWeight: 800, color: WHITE, lineHeight: 1.1 }}>
+                {displayName}
+              </div>
+              <div style={{ display: "flex", fontSize: 30, fontWeight: 500, color: "rgba(255,255,255,0.6)" }}>
+                {dateLabel}
+              </div>
             </div>
           </div>
         </div>
