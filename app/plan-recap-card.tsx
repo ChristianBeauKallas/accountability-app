@@ -5,15 +5,24 @@ import PostComments from "./post-comments";
 import ReactionBar from "./reaction-bar";
 import PostDate from "./post-date";
 import RecapMenu from "./recap-menu";
+import RecapDetails from "./recap-details";
 
 export type PlanItems = {
-  workouts?: { title: string; effort: string | null }[];
+  workouts?: {
+    title: string;
+    effort: string | null;
+    exercises?: {
+      name: string;
+      sets: { weight: number | null; reps: number | null }[];
+    }[];
+  }[];
   meals?: {
     count: number;
     calories: number;
     protein: number;
     target_calories: number | null;
     target_protein: number | null;
+    items?: { detail: string | null; calories: number; protein: number }[];
   } | null;
   water?: { oz: number; unit: string } | null;
   habits?: { label: string; emoji: string; count: number }[];
@@ -107,46 +116,7 @@ export default function PlanRecapCard({
 
       {photos.length > 0 && <PostGallery photos={photos} />}
 
-      <ul className="pr-list">
-        {workouts.map((w, i) => (
-          <li key={`w${i}`}>
-            <span className="pr-ic">🏋️</span>
-            <span className="pr-txt">{w.title}</span>
-            {w.effort && <span className="pr-badge">felt {w.effort}</span>}
-          </li>
-        ))}
-        {meals && (
-          <li>
-            <span className="pr-ic">🍽️</span>
-            <span className="pr-txt">
-              {meals.count} meal{meals.count === 1 ? "" : "s"} logged
-            </span>
-            {meals.calories > 0 && (
-              <span className="pr-badge">
-                {meals.calories}
-                {meals.target_calories ? ` / ${meals.target_calories}` : ""} cal
-                {meals.protein > 0 ? ` · ${meals.protein}g P` : ""}
-              </span>
-            )}
-          </li>
-        )}
-        {water && (
-          <li>
-            <span className="pr-ic">💧</span>
-            <span className="pr-txt">Water</span>
-            <span className="pr-badge">
-              {water.oz} {water.unit}
-            </span>
-          </li>
-        )}
-        {habits.map((h, i) => (
-          <li key={`h${i}`}>
-            <span className="pr-ic">{h.emoji}</span>
-            <span className="pr-txt">{h.label}</span>
-            {h.count > 1 && <span className="pr-badge">×{h.count}</span>}
-          </li>
-        ))}
-      </ul>
+      <RecapDetails planItems={planItems ?? {}} />
 
       <PostComments
         postId={postId}

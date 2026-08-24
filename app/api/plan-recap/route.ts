@@ -75,10 +75,29 @@ export async function POST(req: Request) {
   // Logged workout (actual session).
   const { data: wlog } = await admin
     .from("coaching_workout_logs")
-    .select("title, effort")
+    .select("id, title, effort")
     .eq("relationship_id", rel.id)
     .eq("day", day)
     .maybeSingle();
+
+  // The sets they actually logged for that workout (grouped by exercise), so
+  // the feed can expand to show them.
+  let workoutExercises: { name: string; sets: { weight: number | null; reps: number | null }[] }[] = [];
+  if (wlog) {
+    const { data: sets } = await admin
+      .from("coaching_exercise_sets")
+      .select("exercise_name, set_index, weight, reps")
+      .eq("workout_log_id", wlog.id)
+      .order("set_index");
+    const byExercise = new Map<string, { weight: number | null; reps: number | null }[]>();
+    for (const s of sets ?? []) {
+      const name = s.exercise_name as string;
+      const arr = byExercise.get(name) ?? [];
+      arr.push({ weight: s.weight as number | null, reps: s.reps as number | null });
+      byExercise.set(name, arr);
+    }
+    workoutExercises = [...byExercise.entries()].map(([name, sets]) => ({ name, sets }));
+  }
 
   // Active plan targets.
   const { data: plan } = await admin
@@ -91,11 +110,21 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   // ---- Build the recap ----
-  const workouts: { title: string; effort: string | null }[] = [];
-  if (wlog) workouts.push({ title: wlog.title as string, effort: (wlog.effort as string) ?? null });
+  const workouts: {
+    title: string;
+    effort: string | null;
+    exercises?: { name: string; sets: { weight: number | null; reps: number | null }[] }[];
+  }[] = [];
+  if (wlog)
+    workouts.push({
+      title: wlog.title as string,
+      effort: (wlog.effort as string) ?? null,
+      exercises: workoutExercises.length > 0 ? workoutExercises : undefined,
+    });
 
   const mealEntryIds: string[] = [];
   const workoutEntryIds: string[] = [];
+  const mealItems: { detail: string | null; calories: number; protein: number }[] = [];
   const meals = { count: 0, calories: 0, protein: 0 };
   const water = { oz: 0, unit: "oz" };
   const habitMap = new Map<string, { label: string; emoji: string; count: number }>();
@@ -109,6 +138,11 @@ export async function POST(req: Request) {
       meals.count += 1;
       meals.calories += Number(e.calories ?? 0);
       meals.protein += Number(e.protein_g ?? 0);
+      mealItems.push({
+        detail: (e.detail as string) ?? null,
+        calories: Math.round(Number(e.calories ?? 0)),
+        protein: Math.round(Number(e.protein_g ?? 0)),
+      });
       mealEntryIds.push(e.id as string);
       continue;
     }
@@ -174,6 +208,7 @@ export async function POST(req: Request) {
             protein: Math.round(meals.protein),
             target_calories: plan?.calorie_target ?? null,
             target_protein: plan?.protein_target ?? null,
+            items: mealItems,
           }
         : null,
     water: water.oz > 0 ? { oz: Math.round(water.oz), unit: water.unit } : null,

@@ -4965,11 +4965,27 @@ button.coaching-open {
 }
 .pr-list li {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.65rem;
+  flex-direction: column;
   background: var(--bg-2);
   border-radius: 10px;
+  overflow: hidden;
+}
+.pr-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pr-row.static,
+.pr-row:disabled {
+  cursor: default;
 }
 .pr-ic {
   font-size: 1rem;
@@ -4978,6 +4994,44 @@ button.coaching-open {
 .pr-txt {
   font-weight: 600;
   font-size: 0.88rem;
+  margin-right: auto;
+}
+.pr-chev {
+  flex: none;
+  font-size: 0.7rem;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+.pr-chev.open {
+  transform: rotate(180deg);
+}
+.pr-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0 0.65rem 0.55rem;
+}
+.pr-ex,
+.pr-meal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.7rem;
+  font-size: 0.8rem;
+  padding: 0.32rem 0.5rem;
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 8px;
+}
+.pr-ex-name,
+.pr-meal-name {
+  font-weight: 600;
+}
+.pr-ex-sets,
+.pr-meal-macros {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  flex: none;
 }
 .pr-badge {
   margin-left: auto;
