@@ -5,7 +5,13 @@ import type { PlanItems } from "./plan-recap-card";
 
 // The expandable "what they did" list on a feed recap. Workout and meals rows
 // get a chevron to reveal the logged sets / individual meals right on the feed.
-export default function RecapDetails({ planItems }: { planItems: PlanItems }) {
+export default function RecapDetails({
+  planItems,
+  workoutPhotos = [],
+}: {
+  planItems: PlanItems;
+  workoutPhotos?: string[];
+}) {
   const workouts = planItems.workouts ?? [];
   const meals = planItems.meals ?? null;
   const water = planItems.water ?? null;
@@ -16,26 +22,27 @@ export default function RecapDetails({ planItems }: { planItems: PlanItems }) {
 
   const w = workouts[0];
   const exercises = w?.exercises ?? [];
+  const workoutExpandable = exercises.length > 0 || workoutPhotos.length > 0;
   const mealItems = meals?.items ?? [];
 
   return (
     <ul className="pr-list">
       {w && (
-        <li className={exercises.length > 0 ? "pr-expand" : ""}>
+        <li className={workoutExpandable ? "pr-expand" : ""}>
           <button
             type="button"
             className="pr-row"
-            onClick={() => exercises.length > 0 && setWorkoutOpen((o) => !o)}
-            disabled={exercises.length === 0}
+            onClick={() => workoutExpandable && setWorkoutOpen((o) => !o)}
+            disabled={!workoutExpandable}
           >
             <span className="pr-ic">🏋️</span>
             <span className="pr-txt">{w.title}</span>
             {w.effort && <span className="pr-badge">felt {w.effort}</span>}
-            {exercises.length > 0 && (
+            {workoutExpandable && (
               <span className={`pr-chev ${workoutOpen ? "open" : ""}`}>▾</span>
             )}
           </button>
-          {workoutOpen && exercises.length > 0 && (
+          {workoutOpen && workoutExpandable && (
             <div className="pr-detail">
               {exercises.map((ex, i) => (
                 <div key={i} className="pr-ex">
@@ -54,6 +61,10 @@ export default function RecapDetails({ planItems }: { planItems: PlanItems }) {
                       .join(", ")}
                   </span>
                 </div>
+              ))}
+              {workoutPhotos.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={`wp${i}`} className="pr-workout-photo" src={src} alt="Workout" />
               ))}
             </div>
           )}
