@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
@@ -144,6 +144,7 @@ export default function CoachingLog({
   nextHref,
   buildBanner,
   manageHref,
+  autoOpenTrackerId,
 }: {
   relationshipId: string;
   userId: string;
@@ -187,6 +188,7 @@ export default function CoachingLog({
   nextHref?: string | null;
   buildBanner?: { text: string; href: string | null } | null;
   manageHref?: string | null;
+  autoOpenTrackerId?: string | null;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -268,6 +270,18 @@ export default function CoachingLog({
       macros: null,
     });
   }
+  // Deep-link from the feed's quick-logger: open a tracker's sheet on load.
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (autoOpened.current || !autoOpenTrackerId) return;
+    const t = trackerById.get(autoOpenTrackerId);
+    if (t) {
+      autoOpened.current = true;
+      openNew(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenTrackerId]);
+
   function openEdit(entry: CoachingEntry) {
     const tracker = trackerById.get(entry.tracker_id);
     if (!tracker) return;

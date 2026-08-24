@@ -31,7 +31,7 @@ function shiftDay(d: string, delta: number): string {
 export default async function CoachingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ d?: string }>;
+  searchParams: Promise<{ d?: string; log?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -363,6 +363,9 @@ export default async function CoachingPage({
       nextHref={isToday ? null : `/coaching?d=${nextDay}`}
       buildBanner={buildBanner}
       manageHref={plan ? manageHref : null}
+      autoOpenTrackerId={
+        typeof sp.log === "string" && isToday ? sp.log : null
+      }
     />
   );
 }

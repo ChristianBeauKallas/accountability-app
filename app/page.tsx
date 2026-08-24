@@ -11,6 +11,7 @@ import { ProgressAvatar } from "./progress-avatar";
 import HeaderBell from "./header-bell";
 import HeaderDate from "./header-date";
 import NotifPrompt from "./notif-prompt";
+import QuickLogFab from "./quick-log-fab";
 import { computeStreak, localDate, fullCompletionDays } from "@/lib/streaks";
 import type { Activity } from "@/lib/types";
 
@@ -271,6 +272,86 @@ export default async function Home() {
     members.map((m) => [m.user_id, m.profiles?.timezone ?? "America/New_York"]),
   );
   const totalActivities = activities.length;
+
+  // ---- Quick-logger: today's due plan items, for the feed's + button ----
+  const myTz = tzByUser.get(user.id) ?? "America/New_York";
+  const myToday = localDate(new Date(), myTz);
+  let quickItems: {
+    id: string;
+    label: string;
+    emoji: string;
+    kind: "check" | "water" | "workout" | "open";
+    unit: string | null;
+    done: boolean;
+    todayAmount: number | null;
+  }[] = [];
+  let quickRelId: string | null = null;
+  if (coachingHref === "/coaching") {
+    const { data: myRel } = await supabase
+      .from("coaching_relationships")
+      .select("id")
+      .eq("client_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    if (myRel) {
+      quickRelId = myRel.id as string;
+      const wd = new Date(myToday + "T12:00:00").getDay();
+      const isoWd = wd === 0 ? 7 : wd;
+      const [{ data: qTrackers }, { data: qEntries }, { data: qWlog }] =
+        await Promise.all([
+          supabase
+            .from("coaching_trackers")
+            .select("id, label, emoji, unit, days, wants_note, wants_photo, wants_amount, wants_macros")
+            .eq("relationship_id", myRel.id)
+            .eq("active", true)
+            .order("sort_order"),
+          supabase
+            .from("coaching_entries")
+            .select("tracker_id, amount, happened_at")
+            .eq("relationship_id", myRel.id)
+            .gte("happened_at", new Date(Date.now() - 2 * 86400000).toISOString()),
+          supabase
+            .from("coaching_workout_logs")
+            .select("id")
+            .eq("relationship_id", myRel.id)
+            .eq("day", myToday)
+            .maybeSingle(),
+        ]);
+      const todaysEntries = (qEntries ?? []).filter(
+        (e) => localDate(e.happened_at as string, myTz) === myToday,
+      );
+      const loggedIds = new Set(todaysEntries.map((e) => e.tracker_id as string));
+      const waterByTracker = new Map<string, number>();
+      for (const e of todaysEntries)
+        waterByTracker.set(
+          e.tracker_id as string,
+          (waterByTracker.get(e.tracker_id as string) ?? 0) + Number(e.amount ?? 0),
+        );
+
+      for (const t of qTrackers ?? []) {
+        const days = (t.days as number[] | null) ?? [];
+        if (days.length > 0 && !days.includes(isoWd)) continue; // not due today
+        const label = (t.label as string) ?? "";
+        const l = label.toLowerCase();
+        const unit = (t.unit as string | null) ?? null;
+        let kind: "check" | "water" | "workout" | "open";
+        if (/water|drink|hydrat/.test(l) || unit === "oz") kind = "water";
+        else if (/workout|exercise|training|lift|run|cardio/.test(l)) kind = "workout";
+        else if (!t.wants_note && !t.wants_photo && !t.wants_amount && !t.wants_macros)
+          kind = "check";
+        else kind = "open";
+        quickItems.push({
+          id: t.id as string,
+          label,
+          emoji: (t.emoji as string) ?? "✅",
+          kind,
+          unit,
+          done: kind === "workout" ? !!qWlog : loggedIds.has(t.id as string),
+          todayAmount: kind === "water" ? waterByTracker.get(t.id as string) ?? 0 : null,
+        });
+      }
+    }
+  }
 
   // A day only counts toward a streak when ALL activities were logged that day.
   // Aggregate the distinct activities each member logged per local day, then
@@ -560,6 +641,15 @@ export default async function Home() {
           );
         })}
       </section>
+
+      {quickRelId && quickItems.length > 0 && (
+        <QuickLogFab
+          relationshipId={quickRelId}
+          userId={user.id}
+          day={myToday}
+          items={quickItems}
+        />
+      )}
     </main>
   );
 }
