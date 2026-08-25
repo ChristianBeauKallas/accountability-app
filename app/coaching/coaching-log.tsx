@@ -1024,23 +1024,13 @@ export default function CoachingLog({
                     ⏭️ Push to tomorrow
                   </button>
                 )}
-                {isToday && (
-                  <button
-                    type="button"
-                    className="wc-adjust-btn push"
-                    onClick={() => setConfirmShift("skip")}
-                    disabled={pushing}
-                  >
-                    ⏮️ Skip a day
-                  </button>
-                )}
               </div>
-              {isToday && confirmShift ? (
+              {isToday && confirmShift === "push" ? (
                 <div className="wc-push-confirm">
                   <p>
-                    {confirmShift === "push"
-                      ? "Push your whole plan forward a day? Today's workout moves to tomorrow and the rest of the week slides with it — nothing gets skipped."
-                      : "Skip a day and move the plan up? Tomorrow becomes what was the day after, and the rest of the week catches up a day — good for dropping an extra rest day."}
+                    Push your whole plan forward a day? Today&apos;s workout
+                    moves to tomorrow and the rest of the week slides with it —
+                    nothing gets skipped.
                   </p>
                   <div className="wc-push-btns">
                     <button
@@ -1054,14 +1044,10 @@ export default function CoachingLog({
                     <button
                       type="button"
                       className="tour-next"
-                      onClick={() => shiftPlan(confirmShift === "push" ? 1 : -1)}
+                      onClick={() => shiftPlan(1)}
                       disabled={pushing}
                     >
-                      {pushing
-                        ? "Working…"
-                        : confirmShift === "push"
-                          ? "Push a day"
-                          : "Skip a day"}
+                      {pushing ? "Working…" : "Push a day"}
                     </button>
                   </div>
                 </div>
@@ -1220,6 +1206,44 @@ export default function CoachingLog({
               )}
             </div>
           )}
+          {isToday &&
+            (confirmShift === "skip" ? (
+              <div className="wc-push-confirm">
+                <p>
+                  Skip {tomorrowWorkout.label} and pull the plan up a day?{" "}
+                  {tomorrowWorkout.label} becomes what was the day after, and the
+                  rest of the week catches up — good for dropping an extra rest
+                  day.
+                </p>
+                <div className="wc-push-btns">
+                  <button
+                    type="button"
+                    className="tour-back"
+                    onClick={() => setConfirmShift(null)}
+                    disabled={pushing}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="tour-next"
+                    onClick={() => shiftPlan(-1)}
+                    disabled={pushing}
+                  >
+                    {pushing ? "Working…" : "Skip this day"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="wc-adjust-btn push tomorrow-skip"
+                onClick={() => setConfirmShift("skip")}
+                disabled={pushing}
+              >
+                ⏮️ Skip this day
+              </button>
+            ))}
         </section>
       )}
 

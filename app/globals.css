@@ -4793,6 +4793,10 @@ button.coaching-open {
 .wc-adjust-btn.push {
   color: var(--muted);
 }
+.wc-adjust-btn.tomorrow-skip {
+  width: 100%;
+  margin-top: 0.6rem;
+}
 .wc-push-confirm {
   margin-top: 0.6rem;
   padding: 0.7rem 0.8rem;
