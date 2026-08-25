@@ -5033,12 +5033,6 @@ button.coaching-open {
   text-align: right;
   flex: none;
 }
-.pr-workout-photo {
-  width: 100%;
-  border-radius: 10px;
-  display: block;
-}
-
 /* ---- Quick-log FAB on the feed ------------------------------------------- */
 .qf-fab {
   position: fixed;

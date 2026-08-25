@@ -15,7 +15,6 @@ export type PlanItems = {
       name: string;
       sets: { weight: number | null; reps: number | null }[];
     }[];
-    photos?: string[];
   }[];
   meals?: {
     count: number;
@@ -56,7 +55,6 @@ export type PlanRecapData = {
   updatedAt?: string | null;
   photos: string[];
   photoChoices?: { id: string; url: string }[];
-  workoutPhotos?: string[];
   planItems: PlanItems | null;
   reactions: Record<string, { count: number; mine: boolean }>;
   comments: { id: string; body: string; authorName: string }[];
@@ -72,7 +70,6 @@ export default function PlanRecapCard({
   updatedAt,
   photos,
   photoChoices,
-  workoutPhotos,
   planItems,
   reactions,
   comments,
@@ -119,7 +116,7 @@ export default function PlanRecapCard({
 
       {photos.length > 0 && <PostGallery photos={photos} />}
 
-      <RecapDetails planItems={planItems ?? {}} workoutPhotos={workoutPhotos ?? []} />
+      <RecapDetails planItems={planItems ?? {}} />
 
       <PostComments
         postId={postId}

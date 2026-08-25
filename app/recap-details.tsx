@@ -5,13 +5,7 @@ import type { PlanItems } from "./plan-recap-card";
 
 // The expandable "what they did" list on a feed recap. Workout and meals rows
 // get a chevron to reveal the logged sets / individual meals right on the feed.
-export default function RecapDetails({
-  planItems,
-  workoutPhotos = [],
-}: {
-  planItems: PlanItems;
-  workoutPhotos?: string[];
-}) {
+export default function RecapDetails({ planItems }: { planItems: PlanItems }) {
   const workouts = planItems.workouts ?? [];
   const meals = planItems.meals ?? null;
   const water = planItems.water ?? null;
@@ -22,7 +16,7 @@ export default function RecapDetails({
 
   const w = workouts[0];
   const exercises = w?.exercises ?? [];
-  const workoutExpandable = exercises.length > 0 || workoutPhotos.length > 0;
+  const workoutExpandable = exercises.length > 0;
   const mealItems = meals?.items ?? [];
 
   return (
@@ -61,10 +55,6 @@ export default function RecapDetails({
                       .join(", ")}
                   </span>
                 </div>
-              ))}
-              {workoutPhotos.map((src, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={`wp${i}`} className="pr-workout-photo" src={src} alt="Workout" />
               ))}
             </div>
           )}

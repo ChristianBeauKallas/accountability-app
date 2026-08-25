@@ -30,7 +30,7 @@ type MemberRow = {
 type PlanItems = {
   progress?: number;
   complete?: boolean;
-  workouts?: { title: string; effort: string | null; photos?: string[] }[];
+  workouts?: { title: string; effort: string | null }[];
   meals?: {
     count: number;
     calories: number;
@@ -571,17 +571,8 @@ export default async function Home() {
         )}
         {posts.map((p) => {
           const author = memberInfo.get(p.author_id);
-          // Workout/run screenshots move under the workout expander, so keep
-          // them out of the top meal-photo strip.
-          const workoutPaths = new Set(
-            (p.plan_items?.workouts ?? []).flatMap((w) => w.photos ?? []),
-          );
-          const workoutPhotos = p.media
-            .filter((m) => m.type === "image" && workoutPaths.has(m.storage_path))
-            .map((m) => signedByPath.get(m.storage_path))
-            .filter((u): u is string => !!u);
           const photoChoices = p.media
-            .filter((m) => m.type === "image" && !workoutPaths.has(m.storage_path))
+            .filter((m) => m.type === "image")
             .map((m) => ({ id: m.id, url: signedByPath.get(m.storage_path) }))
             .filter((c): c is { id: string; url: string } => !!c.url);
           const photos = photoChoices.map((c) => c.url);
@@ -615,7 +606,6 @@ export default async function Home() {
                 updatedAt={p.updated_at ?? null}
                 photos={photos}
                 photoChoices={photoChoices}
-                workoutPhotos={workoutPhotos}
                 planItems={p.plan_items ?? null}
                 reactions={reactionsByPost.get(p.id) ?? {}}
                 comments={commentsByPost.get(p.id) ?? []}

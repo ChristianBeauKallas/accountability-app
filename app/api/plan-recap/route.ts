@@ -114,7 +114,6 @@ export async function POST(req: Request) {
     title: string;
     effort: string | null;
     exercises?: { name: string; sets: { weight: number | null; reps: number | null }[] }[];
-    photos?: string[];
   }[] = [];
   if (wlog)
     workouts.push({
@@ -164,18 +163,6 @@ export async function POST(req: Request) {
     habitMap.set(key, h);
   }
   const habits = [...habitMap.values()];
-
-  // Attach any workout/run screenshots to the workout, so the feed can reveal
-  // them when you expand it (rather than floating in the top photo strip).
-  if (workouts[0] && workoutEntryIds.length > 0) {
-    const { data: wMedia } = await admin
-      .from("media")
-      .select("storage_path")
-      .in("entry_id", workoutEntryIds)
-      .eq("type", "image");
-    const paths = (wMedia ?? []).map((m) => m.storage_path as string);
-    if (paths.length > 0) workouts[0].photos = paths;
-  }
 
   const hasSomething =
     workouts.length > 0 || meals.count > 0 || habits.length > 0;
