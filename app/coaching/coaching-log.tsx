@@ -202,7 +202,7 @@ export default function CoachingLog({
   const [workoutOpen, setWorkoutOpen] = useState(false);
   const [tomorrowOpen, setTomorrowOpen] = useState(false);
   const [pushing, setPushing] = useState(false);
-  const [confirmPush, setConfirmPush] = useState(false);
+  const [confirmShift, setConfirmShift] = useState<null | "push" | "skip">(null);
   const firstName = displayName.split(" ")[0];
   const possessive = /s$/i.test(firstName) ? `${firstName}'` : `${firstName}'s`;
   const fileInput = useRef<HTMLInputElement>(null);
@@ -764,8 +764,8 @@ export default function CoachingLog({
     setAdjustErr(null);
   }
 
-  // Push the whole plan forward one day (missed-day slide, not a skip).
-  async function pushDay() {
+  // Slide the whole plan a day: dir +1 pushes it later, -1 skips a day (earlier).
+  async function shiftPlan(dir: 1 | -1) {
     setPushing(true);
     try {
       const supabase = createClient();
@@ -774,12 +774,14 @@ export default function CoachingLog({
       } = await supabase.auth.getSession();
       const res = await fetch("/api/push-plan", {
         method: "POST",
-        headers: session
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : undefined,
+        headers: {
+          "Content-Type": "application/json",
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ direction: dir }),
       });
       if (!res.ok) throw new Error();
-      setConfirmPush(false);
+      setConfirmShift(null);
       router.refresh();
     } catch {
       // Best-effort — leave the confirm open so they can retry.
@@ -1016,25 +1018,35 @@ export default function CoachingLog({
                   <button
                     type="button"
                     className="wc-adjust-btn push"
-                    onClick={() => setConfirmPush(true)}
+                    onClick={() => setConfirmShift("push")}
                     disabled={pushing}
                   >
                     ⏭️ Push to tomorrow
                   </button>
                 )}
+                {isToday && (
+                  <button
+                    type="button"
+                    className="wc-adjust-btn push"
+                    onClick={() => setConfirmShift("skip")}
+                    disabled={pushing}
+                  >
+                    ⏮️ Skip a day
+                  </button>
+                )}
               </div>
-              {isToday && confirmPush ? (
+              {isToday && confirmShift ? (
                 <div className="wc-push-confirm">
                   <p>
-                    Push your whole plan forward a day? Today&apos;s workout
-                    moves to tomorrow and the rest of the week slides with it —
-                    nothing gets skipped.
+                    {confirmShift === "push"
+                      ? "Push your whole plan forward a day? Today's workout moves to tomorrow and the rest of the week slides with it — nothing gets skipped."
+                      : "Skip a day and move the plan up? Tomorrow becomes what was the day after, and the rest of the week catches up a day — good for dropping an extra rest day."}
                   </p>
                   <div className="wc-push-btns">
                     <button
                       type="button"
                       className="tour-back"
-                      onClick={() => setConfirmPush(false)}
+                      onClick={() => setConfirmShift(null)}
                       disabled={pushing}
                     >
                       Cancel
@@ -1042,10 +1054,14 @@ export default function CoachingLog({
                     <button
                       type="button"
                       className="tour-next"
-                      onClick={pushDay}
+                      onClick={() => shiftPlan(confirmShift === "push" ? 1 : -1)}
                       disabled={pushing}
                     >
-                      {pushing ? "Pushing…" : "Push a day"}
+                      {pushing
+                        ? "Working…"
+                        : confirmShift === "push"
+                          ? "Push a day"
+                          : "Skip a day"}
                     </button>
                   </div>
                 </div>

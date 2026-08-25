@@ -4,15 +4,20 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
-const rotate = (wd: number) => (wd % 7) + 1; // 1..7, +1 with Sun(7)→Mon(1)
+// Rotate an ISO weekday (1..7) by dir (+1 = later, -1 = earlier), wrapping.
+const rotate = (wd: number, dir: number) => ((wd - 1 + dir + 7) % 7) + 1;
 
-// "Push my plan a day": slide the entire recurring program forward one weekday
-// so a missed day isn't skipped — today's workout moves to tomorrow, and the
-// whole week (workouts + weekday-specific habits) shifts with it. Daily habits
-// (every weekday, or no weekday set) are unaffected. Repeatable.
+// Slide the entire recurring program by one weekday. direction:
+//   +1 ("push")  → everything moves a day LATER  (missed today → do it tomorrow)
+//   -1 ("skip")  → everything moves a day EARLIER (skip a rest day, catch up)
+// Workouts + weekday-specific habits shift together; daily habits are
+// unaffected. Repeatable in either direction.
 export async function POST(req: Request) {
   const user = await verifyBearer(req);
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const body = (await req.json().catch(() => null)) as { direction?: number } | null;
+  const dir = body?.direction === -1 ? -1 : 1;
 
   const admin = createAdminClient();
 
@@ -36,7 +41,7 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (!plan) return NextResponse.json({ error: "no active plan" }, { status: 404 });
 
-  // Rotate every workout's weekday forward one day.
+  // Rotate every workout's weekday by the chosen direction.
   const { data: workouts } = await admin
     .from("coaching_plan_workouts")
     .select("id, weekday")
@@ -45,7 +50,7 @@ export async function POST(req: Request) {
     (workouts ?? []).map((w) =>
       admin
         .from("coaching_plan_workouts")
-        .update({ weekday: rotate(w.weekday as number) })
+        .update({ weekday: rotate(w.weekday as number, dir) })
         .eq("id", w.id),
     ),
   );
@@ -63,7 +68,7 @@ export async function POST(req: Request) {
       .map((t) =>
         admin
           .from("coaching_trackers")
-          .update({ days: (t.days as number[]).map(rotate) })
+          .update({ days: (t.days as number[]).map((d) => rotate(d, dir)) })
           .eq("id", t.id),
       ),
   );
