@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { transcribe, polish, estimateMacros } from "@/lib/ai";
 import { syncPlanRecap } from "@/lib/plan-recap";
+import HabitManager from "./habit-manager";
 import type { CoachingTracker, CoachingEntry, SavedMeal } from "@/lib/types";
 
 function pickAudioMime(): string {
@@ -1109,15 +1110,26 @@ export default function CoachingLog({
       )}
 
       {/* ── Zone: Personal development ── */}
-      {devTrackers.length > 0 && (
+      {visibleTrackers.length > 0 && (
         <section className="zone">
-          <div className="zone-head">
-            <div className="eyebrow">
-              <span className="zdot dev">📖</span> Personal development
+          <div className="zone-head zone-head-row">
+            <div>
+              <div className="eyebrow">
+                <span className="zdot dev">📖</span> Personal development
+              </div>
+              <p className="zone-help">The habits you&apos;re building this week.</p>
             </div>
-            <p className="zone-help">The habits you&apos;re building this week.</p>
+            <HabitManager relationshipId={relationshipId} trackers={devTrackers} />
           </div>
-          <div className="zone-card">{devTrackers.map(trackerRow)}</div>
+          {devTrackers.length > 0 ? (
+            <div className="zone-card">{devTrackers.map(trackerRow)}</div>
+          ) : (
+            <div className="zone-card">
+              <p className="settings-hint dim">
+                No personal habits yet — tap Edit to add one.
+              </p>
+            </div>
+          )}
         </section>
       )}
 
