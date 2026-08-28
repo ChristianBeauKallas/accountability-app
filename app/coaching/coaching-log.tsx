@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { transcribe, polish, estimateMacros } from "@/lib/ai";
 import { syncPlanRecap } from "@/lib/plan-recap";
 import HabitManager from "./habit-manager";
+import WeekBoard from "./week-board";
 import type { CoachingTracker, CoachingEntry, SavedMeal } from "@/lib/types";
 
 function pickAudioMime(): string {
@@ -145,6 +146,7 @@ export default function CoachingLog({
   nextHref,
   buildBanner,
   manageHref,
+  week,
   autoOpenTrackerId,
 }: {
   relationshipId: string;
@@ -189,6 +191,7 @@ export default function CoachingLog({
   nextHref?: string | null;
   buildBanner?: { text: string; href: string | null } | null;
   manageHref?: string | null;
+  week?: { weekday: number; title: string | null }[];
   autoOpenTrackerId?: string | null;
 }) {
   const router = useRouter();
@@ -885,6 +888,10 @@ export default function CoachingLog({
             <span className="day-nav-btn disabled">›</span>
           )}
         </nav>
+      )}
+
+      {week && week.some((d) => d.title) && (
+        <WeekBoard week={week} today={today ?? selectedDay ?? ""} />
       )}
 
       {!isToday && (

@@ -269,6 +269,21 @@ export default async function CoachingPage({
     }
   }
 
+  // The whole week's sessions (for the swap-days calendar).
+  let week: { weekday: number; title: string | null }[] = [];
+  if (plan) {
+    const { data: allW } = await supabase
+      .from("coaching_plan_workouts")
+      .select("weekday, title")
+      .eq("plan_id", plan.id);
+    const byDay = new Map<number, string>();
+    for (const w of allW ?? []) byDay.set(w.weekday as number, w.title as string);
+    week = Array.from({ length: 7 }, (_, i) => ({
+      weekday: i + 1,
+      title: byDay.get(i + 1) ?? null,
+    }));
+  }
+
   // Has this day's workout been logged? (drives the "✓ Completed" state)
   const { data: wlogRow } = await supabase
     .from("coaching_workout_logs")
@@ -363,6 +378,7 @@ export default async function CoachingPage({
       nextHref={isToday ? null : `/coaching?d=${nextDay}`}
       buildBanner={buildBanner}
       manageHref={plan ? manageHref : null}
+      week={week}
       autoOpenTrackerId={
         typeof sp.log === "string" && isToday ? sp.log : null
       }

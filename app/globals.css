@@ -5037,6 +5037,81 @@ button.coaching-open {
   text-align: right;
   flex: none;
 }
+/* ---- Week board (day swapper) -------------------------------------------- */
+.wk {
+  margin: 0 0 1rem;
+}
+.wk-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.92rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.wk-hint {
+  margin: 0.6rem 0.2rem 0.5rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+}
+.wk-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.3rem;
+}
+.wk-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.15rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 74px;
+  justify-content: flex-start;
+}
+.wk-abbr {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.wk-day.today .wk-abbr {
+  color: var(--accent);
+}
+.wk-title {
+  font-size: 0.62rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  word-break: break-word;
+}
+.wk-day.rest .wk-title {
+  color: var(--faint);
+  font-weight: 500;
+}
+.wk-day.today {
+  border-color: rgba(62, 232, 122, 0.4);
+}
+.wk-day.picked {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  transform: scale(0.97);
+}
+
 /* ---- Personal-development habit manager ---------------------------------- */
 .zone-head-row {
   display: flex;
