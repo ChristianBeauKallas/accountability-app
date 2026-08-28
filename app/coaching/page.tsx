@@ -269,19 +269,38 @@ export default async function CoachingPage({
     }
   }
 
-  // The whole week's sessions (for the swap-days calendar).
-  let week: { weekday: number; title: string | null }[] = [];
+  // The next 14 days (for the two-week calendar / day-swapper). Each date's
+  // session = its per-date override if any, else the recurring template.
+  let fortnight: { date: string; title: string | null }[] = [];
   if (plan) {
-    const { data: allW } = await supabase
-      .from("coaching_plan_workouts")
-      .select("weekday, title")
-      .eq("plan_id", plan.id);
-    const byDay = new Map<number, string>();
-    for (const w of allW ?? []) byDay.set(w.weekday as number, w.title as string);
-    week = Array.from({ length: 7 }, (_, i) => ({
-      weekday: i + 1,
-      title: byDay.get(i + 1) ?? null,
-    }));
+    const lastDay = shiftDay(today, 13);
+    const [{ data: allW }, { data: adjs }] = await Promise.all([
+      supabase
+        .from("coaching_plan_workouts")
+        .select("weekday, title")
+        .eq("plan_id", plan.id),
+      supabase
+        .from("coaching_workout_adjustments")
+        .select("day, title")
+        .eq("relationship_id", rel.id)
+        .gte("day", today)
+        .lte("day", lastDay),
+    ]);
+    const templateByWd = new Map<number, string>();
+    for (const w of allW ?? []) templateByWd.set(w.weekday as number, w.title as string);
+    const adjByDay = new Map<string, string | null>();
+    for (const a of adjs ?? []) adjByDay.set(a.day as string, (a.title as string) ?? null);
+    fortnight = Array.from({ length: 14 }, (_, i) => {
+      const date = shiftDay(today, i);
+      const wdShort2 = new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(
+        new Date(date + "T12:00:00"),
+      );
+      const wd = WD[wdShort2] ?? 1;
+      const title = adjByDay.has(date)
+        ? adjByDay.get(date) ?? null
+        : templateByWd.get(wd) ?? null;
+      return { date, title };
+    });
   }
 
   // Has this day's workout been logged? (drives the "✓ Completed" state)
@@ -318,6 +337,23 @@ export default async function CoachingPage({
         detail: (tw.detail as string) ?? null,
         exercises: (tw.exercises as never) ?? null,
       };
+
+    // A per-date override (e.g. a swap) wins over the template for tomorrow.
+    const tISO = tomorrow.toISOString().slice(0, 10);
+    const { data: tAdj } = await supabase
+      .from("coaching_workout_adjustments")
+      .select("title, detail, exercises")
+      .eq("relationship_id", rel.id)
+      .eq("day", tISO)
+      .maybeSingle();
+    if (tAdj) {
+      tomorrowWorkout = {
+        label: tLabel,
+        title: (tAdj.title as string) ?? "Rest",
+        detail: (tAdj.detail as string) ?? null,
+        exercises: (tAdj.exercises as never) ?? null,
+      };
+    }
   }
 
   // When you run your own plan you're both sides — send yourself to the
@@ -378,7 +414,7 @@ export default async function CoachingPage({
       nextHref={isToday ? null : `/coaching?d=${nextDay}`}
       buildBanner={buildBanner}
       manageHref={plan ? manageHref : null}
-      week={week}
+      fortnight={fortnight}
       autoOpenTrackerId={
         typeof sp.log === "string" && isToday ? sp.log : null
       }

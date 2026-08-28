@@ -146,7 +146,7 @@ export default function CoachingLog({
   nextHref,
   buildBanner,
   manageHref,
-  week,
+  fortnight,
   autoOpenTrackerId,
 }: {
   relationshipId: string;
@@ -191,7 +191,7 @@ export default function CoachingLog({
   nextHref?: string | null;
   buildBanner?: { text: string; href: string | null } | null;
   manageHref?: string | null;
-  week?: { weekday: number; title: string | null }[];
+  fortnight?: { date: string; title: string | null }[];
   autoOpenTrackerId?: string | null;
 }) {
   const router = useRouter();
@@ -890,8 +890,8 @@ export default function CoachingLog({
         </nav>
       )}
 
-      {week && week.some((d) => d.title) && (
-        <WeekBoard week={week} today={today ?? selectedDay ?? ""} />
+      {fortnight && fortnight.length > 0 && (
+        <WeekBoard fortnight={fortnight} today={today ?? selectedDay ?? ""} />
       )}
 
       {!isToday && (

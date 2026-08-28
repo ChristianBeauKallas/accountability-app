@@ -4,23 +4,43 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
-// Swap two weekdays in the plan: the workouts on dayA and dayB trade places,
-// and any weekday-specific habits move with them (a Tuesday habit follows
-// Tuesday's session). Lets you rearrange the week — e.g. swap tempo & long run,
-// or move a rest day — without touching the rest of the schedule.
+type Session = {
+  title: string | null;
+  detail: string | null;
+  exercises: unknown;
+  planWorkoutId: string | null;
+};
+
+const REST: Session = {
+  title: "Rest",
+  detail: "Rest / recovery day.",
+  exercises: [],
+  planWorkoutId: null,
+};
+
+const isoWeekday = (day: string) => {
+  const wd = new Date(day + "T12:00:00").getDay();
+  return wd === 0 ? 7 : wd;
+};
+
+// Swap the sessions on two specific DATES over the next couple of weeks. Each
+// date gets a per-date override (coaching_workout_adjustments) so the two weeks
+// can be arranged independently of the recurring template — swap tempo & long
+// run, move a rest day, etc., for just those dates. Habits stay on their weekly
+// schedule.
 export async function POST(req: Request) {
   const user = await verifyBearer(req);
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const body = (await req.json().catch(() => null)) as { dayA?: number; dayB?: number } | null;
+  const body = (await req.json().catch(() => null)) as { dayA?: string; dayB?: string } | null;
   const a = body?.dayA;
   const b = body?.dayB;
-  if (!a || !b || a === b || a < 1 || a > 7 || b < 1 || b > 7)
+  const re = /^\d{4}-\d{2}-\d{2}$/;
+  if (!a || !b || a === b || !re.test(a) || !re.test(b))
     return NextResponse.json({ error: "bad days" }, { status: 400 });
 
   const admin = createAdminClient();
 
-  // The relationship where this user is the client (their own plan).
   const { data: rel } = await admin
     .from("coaching_relationships")
     .select("id")
@@ -39,34 +59,60 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (!plan) return NextResponse.json({ error: "no active plan" }, { status: 404 });
 
-  // Swap the two weekdays on the plan's workouts.
-  const { data: workouts } = await admin
-    .from("coaching_plan_workouts")
-    .select("id, weekday")
-    .eq("plan_id", plan.id)
-    .in("weekday", [a, b]);
-  await Promise.all(
-    (workouts ?? []).map((w) =>
-      admin
-        .from("coaching_plan_workouts")
-        .update({ weekday: (w.weekday as number) === a ? b : a })
-        .eq("id", w.id),
-    ),
-  );
+  // Current session on a date = its override if any, else the template for that
+  // weekday, else Rest.
+  async function resolve(day: string): Promise<Session> {
+    const { data: adj } = await admin
+      .from("coaching_workout_adjustments")
+      .select("title, detail, exercises, plan_workout_id")
+      .eq("relationship_id", rel!.id)
+      .eq("day", day)
+      .maybeSingle();
+    if (adj)
+      return {
+        title: (adj.title as string) ?? null,
+        detail: (adj.detail as string) ?? null,
+        exercises: adj.exercises ?? [],
+        planWorkoutId: (adj.plan_workout_id as string) ?? null,
+      };
+    const { data: w } = await admin
+      .from("coaching_plan_workouts")
+      .select("id, title, detail, exercises")
+      .eq("plan_id", plan!.id)
+      .eq("weekday", isoWeekday(day))
+      .maybeSingle();
+    if (w)
+      return {
+        title: w.title as string,
+        detail: (w.detail as string) ?? null,
+        exercises: w.exercises ?? [],
+        planWorkoutId: (w.id as string) ?? null,
+      };
+    return REST;
+  }
 
-  // Move weekday-specific habits with their day.
-  const { data: trackers } = await admin
-    .from("coaching_trackers")
-    .select("id, days")
-    .eq("relationship_id", rel.id);
-  await Promise.all(
-    (trackers ?? [])
-      .filter((t) => Array.isArray(t.days) && (t.days as number[]).length > 0)
-      .map((t) => {
-        const days = (t.days as number[]).map((d) => (d === a ? b : d === b ? a : d));
-        return admin.from("coaching_trackers").update({ days }).eq("id", t.id);
-      }),
-  );
+  const [sa, sb] = await Promise.all([resolve(a), resolve(b)]);
+
+  // Write each date's override to the OTHER date's session.
+  const rows = [
+    { day: a, s: sb },
+    { day: b, s: sa },
+  ].map(({ day, s }) => ({
+    relationship_id: rel.id,
+    client_id: user.id,
+    plan_workout_id: s.planWorkoutId,
+    day,
+    title: s.title,
+    detail: s.detail,
+    exercises: s.exercises,
+    note: "Moved",
+    reason: "Rearranged the week",
+  }));
+
+  const { error } = await admin
+    .from("coaching_workout_adjustments")
+    .upsert(rows, { onConflict: "relationship_id,day" });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ ok: true });
 }

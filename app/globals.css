@@ -5067,6 +5067,9 @@ button.coaching-open {
   grid-template-columns: repeat(7, 1fr);
   gap: 0.3rem;
 }
+.wk-grid + .wk-grid {
+  margin-top: 0.35rem;
+}
 .wk-day {
   display: flex;
   flex-direction: column;
