@@ -389,6 +389,27 @@ export default function CoachingLog({
     );
   }
 
+  // Search your whole saved-meal library (not just the recent chips).
+  const [mealSearch, setMealSearch] = useState("");
+  const [mealHits, setMealHits] = useState<SavedMeal[]>([]);
+  async function searchMeals(q: string) {
+    setMealSearch(q);
+    const term = q.trim();
+    if (!term) {
+      setMealHits([]);
+      return;
+    }
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("coaching_saved_meals")
+      .select("id, name, detail, calories, protein_g, carbs_g, fat_g")
+      .eq("relationship_id", relationshipId)
+      .ilike("name", `%${term}%`)
+      .order("created_at", { ascending: false })
+      .limit(25);
+    setMealHits((data ?? []) as SavedMeal[]);
+  }
+
   function pickMeal(m: SavedMeal) {
     setDraft((d) =>
       d
@@ -428,6 +449,7 @@ export default function CoachingLog({
     if (!error) {
       setMealSaved(true);
       setTimeout(() => setMealSaved(false), 2000);
+      router.refresh(); // so it shows up in the saved list right away
     }
   }
 
@@ -1323,46 +1345,76 @@ export default function CoachingLog({
                 {draft.tracker.emoji} {draft.tracker.label}
               </h2>
 
-              {draft.tracker.wants_macros &&
-                !draft.entry &&
-                (savedMeals.length > 0 || recentMeals.length > 0) && (
-                  <div className="meal-quick">
-                    <label className="cf-label">Quick add a repeat</label>
-                    <div className="meal-chips">
-                      {savedMeals.map((m) => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          className="meal-chip saved"
-                          onClick={() => pickMeal(m)}
-                        >
-                          ⭐{" "}
-                          {m.name.length > 26
-                            ? m.name.slice(0, 26) + "…"
-                            : m.name}
-                          {m.calories != null && (
-                            <span className="meal-chip-cal">{m.calories}</span>
-                          )}
-                        </button>
-                      ))}
-                      {recentMeals.map((m) => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          className="meal-chip"
-                          onClick={() => pickMeal(m)}
-                        >
-                          {m.name.length > 26
-                            ? m.name.slice(0, 26) + "…"
-                            : m.name}
-                          {m.calories != null && (
-                            <span className="meal-chip-cal">{m.calories}</span>
-                          )}
-                        </button>
-                      ))}
+              {draft.tracker.wants_macros && !draft.entry && (
+                <div className="meal-quick">
+                  <label className="cf-label">Saved &amp; recent meals</label>
+                  <input
+                    className="cf-input"
+                    value={mealSearch}
+                    placeholder="🔍 Search your saved meals…"
+                    onChange={(e) => searchMeals(e.target.value)}
+                  />
+                  {mealSearch.trim() ? (
+                    <div className="meal-hits">
+                      {mealHits.length === 0 ? (
+                        <p className="settings-hint dim">
+                          No saved meals match “{mealSearch.trim()}”.
+                        </p>
+                      ) : (
+                        mealHits.map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            className="meal-hit"
+                            onClick={() => {
+                              pickMeal(m);
+                              setMealSearch("");
+                              setMealHits([]);
+                            }}
+                          >
+                            <span className="meal-hit-name">⭐ {m.name}</span>
+                            {m.calories != null && (
+                              <span className="meal-hit-cal">{m.calories} cal</span>
+                            )}
+                          </button>
+                        ))
+                      )}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    (savedMeals.length > 0 || recentMeals.length > 0) && (
+                      <div className="meal-chips">
+                        {savedMeals.map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            className="meal-chip saved"
+                            onClick={() => pickMeal(m)}
+                          >
+                            ⭐{" "}
+                            {m.name.length > 26 ? m.name.slice(0, 26) + "…" : m.name}
+                            {m.calories != null && (
+                              <span className="meal-chip-cal">{m.calories}</span>
+                            )}
+                          </button>
+                        ))}
+                        {recentMeals.map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            className="meal-chip"
+                            onClick={() => pickMeal(m)}
+                          >
+                            {m.name.length > 26 ? m.name.slice(0, 26) + "…" : m.name}
+                            {m.calories != null && (
+                              <span className="meal-chip-cal">{m.calories}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
 
               <label className="cf-label">When</label>
               <input

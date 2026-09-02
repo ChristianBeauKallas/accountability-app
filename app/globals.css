@@ -4388,6 +4388,42 @@ button.coaching-open {
 .meal-chip.saved {
   border-color: var(--accent);
 }
+.meal-quick .cf-input {
+  margin: 0.35rem 0 0.4rem;
+}
+.meal-hits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 42vh;
+  overflow-y: auto;
+}
+.meal-hit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.meal-hit-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.meal-hit-cal {
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
 .meal-chip-cal {
   font-size: 0.72rem;
   font-weight: 800;
