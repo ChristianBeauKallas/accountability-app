@@ -157,16 +157,24 @@ export default async function ProfilePage({
   const thisMonth = [...dates].filter((d) => d.slice(0, 7) === monthPrefix).length;
   const dayOfMonth = Number(nowLocal.slice(8, 10));
 
-  // How many days they've had the account (for the "logged / days" ratio).
-  const accountDays = Math.max(
+  // Measure adherence from when they actually STARTED (their first logged day),
+  // not account creation — otherwise idle days before they began logging count
+  // against them and the ratio looks unfairly low. This also guarantees the
+  // "logged" count can never exceed the day count.
+  const startDay = dates.size > 0 ? [...dates].sort()[0] : nowLocal;
+  const daysBetween = (from: string, to: string) =>
+    Math.round(
+      (new Date(to + "T12:00:00").getTime() - new Date(from + "T12:00:00").getTime()) /
+        86400000,
+    );
+  const accountDays = Math.max(1, daysBetween(startDay, nowLocal) + 1);
+  // "Possible" days this month = days elapsed this month since they started.
+  const monthStart = `${monthPrefix}-01`;
+  const activeMonthStart = startDay > monthStart ? startDay : monthStart;
+  const possibleThisMonth = Math.max(
     1,
-    Math.floor(
-      (Date.now() - new Date(profile.created_at).getTime()) / 86400000,
-    ) + 1,
+    Math.min(dayOfMonth, daysBetween(activeMonthStart, nowLocal) + 1),
   );
-  // Don't penalize days before they joined: "possible" days this month are
-  // capped at how long they've had the account.
-  const possibleThisMonth = Math.min(dayOfMonth, accountDays);
 
   // ---- Media / transcripts / reactions / comments (mirror the feed) ----
   const allPaths = posts.flatMap((p) => p.media.map((m) => m.storage_path));
