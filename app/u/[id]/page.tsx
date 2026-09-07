@@ -10,6 +10,7 @@ import {
 import type { Activity } from "@/lib/types";
 import ProfileEditor from "./profile-editor";
 import PostCard from "@/app/post-card";
+import PlanRecapCard, { type PlanItems } from "@/app/plan-recap-card";
 import ProfileTour from "@/app/profile-tour";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,10 @@ type PostRow = {
   id: string;
   caption: string | null;
   created_at: string;
+  updated_at: string | null;
+  source: string | null;
+  day: string | null;
+  plan_items: PlanItems | null;
   post_activities: { activity_id: string }[];
   media: { id: string; type: string; storage_path: string }[];
 };
@@ -78,7 +83,7 @@ export default async function ProfilePage({
       ? supabase
           .from("group_posts")
           .select(
-            "id, caption, created_at, post_activities(activity_id), media(id, type, storage_path)",
+            "id, caption, created_at, updated_at, source, day, plan_items, post_activities(activity_id), media(id, type, storage_path)",
           )
           .eq("group_id", groupId)
           .eq("author_id", id)
@@ -116,6 +121,11 @@ export default async function ProfilePage({
   }
   const startDays = activities.map((a) => localDate(a.created_at, tz));
   const dates = fullCompletionDays(actsByDay, startDays);
+  // Plan-based: a day with a plan recap counts as a completed day too (mirrors
+  // the feed's streak logic), so coached folks aren't logging twice.
+  for (const p of posts) {
+    if (p.source === "plan" && p.day) dates.add(p.day);
+  }
 
   // Running cumulative up to and including each post (chronological), so a
   // post's pill shows where they were when they posted it.
@@ -330,10 +340,32 @@ export default async function ProfilePage({
         <h2>{isMe ? "Your updates" : "Updates"}</h2>
         {posts.length === 0 && <p className="empty">No updates yet.</p>}
         {posts.map((p) => {
-          const photos = p.media
+          const photoChoices = p.media
             .filter((m) => m.type === "image")
-            .map((m) => signedByPath.get(m.storage_path))
-            .filter((s): s is string => !!s);
+            .map((m) => ({ id: m.id, url: signedByPath.get(m.storage_path) }))
+            .filter((c): c is { id: string; url: string } => !!c.url);
+          const photos = photoChoices.map((c) => c.url);
+
+          if (p.source === "plan") {
+            return (
+              <PlanRecapCard
+                key={p.id}
+                postId={p.id}
+                authorId={id}
+                authorName={profile.display_name}
+                authorAvatar={profile.avatar_url}
+                createdAt={p.created_at}
+                updatedAt={p.updated_at ?? null}
+                photos={photos}
+                photoChoices={photoChoices}
+                planItems={p.plan_items ?? null}
+                reactions={reactionsByPost.get(p.id) ?? {}}
+                comments={commentsByPost.get(p.id) ?? []}
+                viewerId={user.id}
+              />
+            );
+          }
+
           const audios = p.media
             .filter((m) => m.type === "audio")
             .map((m) => ({
