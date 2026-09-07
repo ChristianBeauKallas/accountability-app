@@ -315,43 +315,49 @@ export default async function CoachingPage({
   // Tomorrow's session — so you can dial it in the night before (today only).
   let tomorrowWorkout: {
     label: string;
+    date: string;
     title: string;
     detail: string | null;
     exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
+    planWorkoutId: string | null;
   } | null = null;
   if (plan && isToday) {
     const tomorrow = new Date(selectedDay + "T12:00:00");
     tomorrow.setDate(tomorrow.getDate() + 1);
+    const tISO = shiftDay(selectedDay, 1);
     const tWd = WD[new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(tomorrow)] ?? 1;
     const tLabel = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(tomorrow);
     const { data: tw } = await supabase
       .from("coaching_plan_workouts")
-      .select("title, detail, exercises")
+      .select("id, title, detail, exercises")
       .eq("plan_id", plan.id)
       .eq("weekday", tWd)
       .maybeSingle();
     if (tw)
       tomorrowWorkout = {
         label: tLabel,
+        date: tISO,
         title: tw.title as string,
         detail: (tw.detail as string) ?? null,
         exercises: (tw.exercises as never) ?? null,
+        planWorkoutId: (tw.id as string) ?? null,
       };
 
-    // A per-date override (e.g. a swap) wins over the template for tomorrow.
-    const tISO = tomorrow.toISOString().slice(0, 10);
+    // A per-date override (e.g. a swap or a prior edit) wins over the template.
     const { data: tAdj } = await supabase
       .from("coaching_workout_adjustments")
-      .select("title, detail, exercises")
+      .select("title, detail, exercises, plan_workout_id")
       .eq("relationship_id", rel.id)
       .eq("day", tISO)
       .maybeSingle();
     if (tAdj) {
       tomorrowWorkout = {
         label: tLabel,
+        date: tISO,
         title: (tAdj.title as string) ?? "Rest",
         detail: (tAdj.detail as string) ?? null,
         exercises: (tAdj.exercises as never) ?? null,
+        planWorkoutId: (tAdj.plan_workout_id as string) ?? tomorrowWorkout?.planWorkoutId ?? null,
       };
     }
   }

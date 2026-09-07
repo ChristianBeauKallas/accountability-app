@@ -178,9 +178,11 @@ export default function CoachingLog({
   workoutLogged?: boolean;
   tomorrowWorkout?: {
     label: string;
+    date: string;
     title: string;
     detail: string | null;
     exercises: { name: string; sets?: number; reps?: string; cue?: string }[] | null;
+    planWorkoutId: string | null;
   } | null;
   equipment?: string | null;
   displayName?: string;
@@ -207,7 +209,44 @@ export default function CoachingLog({
   const [tomorrowOpen, setTomorrowOpen] = useState(false);
   const [pushing, setPushing] = useState(false);
   const [confirmShift, setConfirmShift] = useState<null | "push" | "skip">(null);
+  // Inline edit of tomorrow's preview.
+  const [tmrwEditing, setTmrwEditing] = useState(false);
+  const [tmrwTitle, setTmrwTitle] = useState("");
+  const [tmrwText, setTmrwText] = useState("");
+  const [tmrwBusy, setTmrwBusy] = useState(false);
   const firstName = displayName.split(" ")[0];
+
+  function startTomorrowEdit() {
+    if (!tomorrowWorkout) return;
+    setTmrwTitle(tomorrowWorkout.title);
+    setTmrwText(exercisesToText(tomorrowWorkout.exercises));
+    setTmrwEditing(true);
+  }
+  async function saveTomorrowEdit() {
+    if (!tomorrowWorkout) return;
+    setTmrwBusy(true);
+    const supabase = createClient();
+    const exercises = textToExercises(tmrwText);
+    const { error } = await supabase.from("coaching_workout_adjustments").upsert(
+      {
+        relationship_id: relationshipId,
+        client_id: userId,
+        plan_workout_id: tomorrowWorkout.planWorkoutId,
+        day: tomorrowWorkout.date,
+        title: tmrwTitle.trim() || tomorrowWorkout.title,
+        detail: tomorrowWorkout.detail,
+        exercises,
+        note: null,
+        reason: "Edited the night before",
+      },
+      { onConflict: "relationship_id,day" },
+    );
+    setTmrwBusy(false);
+    if (!error) {
+      setTmrwEditing(false);
+      router.refresh();
+    }
+  }
   const possessive = /s$/i.test(firstName) ? `${firstName}'` : `${firstName}'s`;
   const fileInput = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -1230,20 +1269,71 @@ export default function CoachingLog({
           </button>
           {tomorrowOpen && (
             <div className="zone-card tomorrow-detail">
-              {tomorrowWorkout.detail && (
-                <p className="wc-detail">{tomorrowWorkout.detail}</p>
-              )}
-              {tomorrowWorkout.exercises && tomorrowWorkout.exercises.length > 0 ? (
-                <ul className="wc-ex">
-                  {tomorrowWorkout.exercises.map((e, i) => (
-                    <li key={i}>
-                      <span className="wc-ex-name">{exLine(e.name, e.sets, e.reps)}</span>
-                      {e.cue && <span className="wc-cue">{e.cue}</span>}
-                    </li>
-                  ))}
-                </ul>
+              {tmrwEditing ? (
+                <>
+                  <label className="cf-label">Workout name</label>
+                  <input
+                    className="cf-input"
+                    value={tmrwTitle}
+                    onChange={(e) => setTmrwTitle(e.target.value)}
+                    placeholder="e.g. Tempo run"
+                  />
+                  <label className="cf-label">
+                    Exercises — one per line, e.g. “Squat — 3x8 — controlled”
+                  </label>
+                  <textarea
+                    className="pm-textarea"
+                    rows={Math.min(10, Math.max(3, tmrwText.split("\n").length + 1))}
+                    value={tmrwText}
+                    onChange={(e) => setTmrwText(e.target.value)}
+                    placeholder="Leave blank for a rest / easy day"
+                  />
+                  <div className="wc-push-btns">
+                    <button
+                      type="button"
+                      className="tour-back"
+                      onClick={() => setTmrwEditing(false)}
+                      disabled={tmrwBusy}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="tour-next"
+                      onClick={saveTomorrowEdit}
+                      disabled={tmrwBusy}
+                    >
+                      {tmrwBusy ? "Saving…" : "Save for tomorrow"}
+                    </button>
+                  </div>
+                </>
               ) : (
-                <p className="settings-hint">Rest / recovery day.</p>
+                <>
+                  {tomorrowWorkout.detail && (
+                    <p className="wc-detail">{tomorrowWorkout.detail}</p>
+                  )}
+                  {tomorrowWorkout.exercises && tomorrowWorkout.exercises.length > 0 ? (
+                    <ul className="wc-ex">
+                      {tomorrowWorkout.exercises.map((e, i) => (
+                        <li key={i}>
+                          <span className="wc-ex-name">{exLine(e.name, e.sets, e.reps)}</span>
+                          {e.cue && <span className="wc-cue">{e.cue}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="settings-hint">Rest / recovery day.</p>
+                  )}
+                  {isToday && (
+                    <button
+                      type="button"
+                      className="wc-adjust-btn tomorrow-edit"
+                      onClick={startTomorrowEdit}
+                    >
+                      ✏️ Edit tomorrow&apos;s workout
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}

@@ -4833,6 +4833,10 @@ button.coaching-open {
   width: 100%;
   margin-top: 0.6rem;
 }
+.wc-adjust-btn.tomorrow-edit {
+  width: 100%;
+  margin-top: 0.6rem;
+}
 .wc-push-confirm {
   margin-top: 0.6rem;
   padding: 0.7rem 0.8rem;
