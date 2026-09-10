@@ -4424,41 +4424,53 @@ button.coaching-open {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
-.meal-qty {
-  margin: 0.7rem 0 0.2rem;
+.meal-basket {
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--accent-dim);
 }
-.qty-stepper {
+.meal-basket-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 0.88rem;
+  margin-bottom: 0.4rem;
+}
+.meal-basket-cal {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.basket-row {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin-top: 0.35rem;
+  padding: 0.35rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
-.qty-btn {
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 1.4rem;
-  line-height: 1;
-  font-family: inherit;
-  cursor: pointer;
+.basket-name {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
-.qty-btn:disabled {
-  opacity: 0.4;
-}
-.qty-num {
-  min-width: 1.6rem;
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: 800;
+.basket-cal {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
-.qty-hint {
-  font-size: 0.78rem;
-  color: var(--accent);
-  font-weight: 600;
+.basket-rm {
+  flex: none;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.8rem;
 }
 .meal-chip-cal {
   font-size: 0.72rem;

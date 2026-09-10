@@ -118,7 +118,6 @@ type Draft = {
   files: File[];
   previews: string[];
   macros: Macros | null;
-  qty: number; // log this many of the same meal at once
 };
 
 export default function CoachingLog({
@@ -312,8 +311,8 @@ export default function CoachingLog({
       files: [],
       previews: [],
       macros: null,
-      qty: 1,
     });
+    setBasket([]);
   }
   // Deep-link from the feed's quick-logger: open a tracker's sheet on load.
   const autoOpened = useRef(false);
@@ -351,8 +350,8 @@ export default function CoachingLog({
               source: entry.macros_source === "edited" ? "edited" : "ai",
             }
           : null,
-      qty: 1,
     });
+    setBasket([]);
   }
   function close() {
     setDraft(null);
@@ -434,6 +433,15 @@ export default function CoachingLog({
   // Search your whole saved-meal library (not just the recent chips).
   const [mealSearch, setMealSearch] = useState("");
   const [mealHits, setMealHits] = useState<SavedMeal[]>([]);
+  // Basket: tap several saved meals to log them all in one save.
+  const [basket, setBasket] = useState<SavedMeal[]>([]);
+  function addToBasket(m: SavedMeal) {
+    setBasket((b) => [...b, m]);
+  }
+  function removeFromBasket(i: number) {
+    setBasket((b) => b.filter((_, idx) => idx !== i));
+  }
+  const basketCals = basket.reduce((s, m) => s + (m.calories ?? 0), 0);
   async function searchMeals(q: string) {
     setMealSearch(q);
     const term = q.trim();
@@ -553,8 +561,40 @@ export default function CoachingLog({
     if (fileInput.current) fileInput.current.value = "";
   }
 
+  // Log every meal in the basket at once (each with its saved macros).
+  async function saveBasket() {
+    if (!draft || basket.length === 0) return;
+    setBusy(true);
+    setErr(null);
+    const supabase = createClient();
+    const happened_at = new Date(draft.when).toISOString();
+    const rows = basket.map((m) => ({
+      relationship_id: relationshipId,
+      client_id: userId,
+      tracker_id: draft.tracker.id,
+      happened_at,
+      detail: m.detail ?? m.name,
+      calories: m.calories,
+      protein_g: m.protein_g,
+      carbs_g: m.carbs_g,
+      fat_g: m.fat_g,
+      macros_source: "ai",
+    }));
+    const { error } = await supabase.from("coaching_entries").insert(rows);
+    setBusy(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    close();
+    void syncPlanRecap(draft.when.slice(0, 10));
+    router.refresh();
+  }
+
   async function save() {
     if (!draft) return;
+    // If they've tapped saved meals into the basket, log those.
+    if (basket.length > 0) return saveBasket();
     // A photo is encouraged (better macro estimate) but not required — just make
     // sure there's *something* to log: a description, a photo, or macros.
     if (
@@ -582,12 +622,6 @@ export default function CoachingLog({
         }
       : {};
 
-    // Log this many of the same meal at once (meals only, when adding new).
-    const n =
-      !draft.entry && draft.tracker.wants_macros
-        ? Math.max(1, Math.min(12, draft.qty ?? 1))
-        : 1;
-
     let entryId = draft.entry?.id ?? null;
     if (entryId) {
       const { error } = await supabase
@@ -596,23 +630,21 @@ export default function CoachingLog({
         .eq("id", entryId);
       if (error) return fail(error.message);
     } else {
-      const row = {
-        relationship_id: relationshipId,
-        client_id: userId,
-        tracker_id: draft.tracker.id,
-        happened_at,
-        detail,
-        amount,
-        ...macroFields,
-      };
       const { data, error } = await supabase
         .from("coaching_entries")
-        .insert(Array.from({ length: n }, () => row))
-        .select("id");
-      if (error || !data || data.length === 0)
-        return fail(error?.message ?? "Couldn't save.");
-      // Photo (if any) attaches to the first entry.
-      entryId = data[0].id as string;
+        .insert({
+          relationship_id: relationshipId,
+          client_id: userId,
+          tracker_id: draft.tracker.id,
+          happened_at,
+          detail,
+          amount,
+          ...macroFields,
+        })
+        .select("id")
+        .single();
+      if (error || !data) return fail(error?.message ?? "Couldn't save.");
+      entryId = data.id as string;
     }
 
     // Upload any new photos.
@@ -1448,7 +1480,9 @@ export default function CoachingLog({
 
               {draft.tracker.wants_macros && !draft.entry && (
                 <div className="meal-quick">
-                  <label className="cf-label">Saved &amp; recent meals</label>
+                  <label className="cf-label">
+                    Saved &amp; recent meals — tap to add
+                  </label>
                   <input
                     className="cf-input"
                     value={mealSearch}
@@ -1468,12 +1502,12 @@ export default function CoachingLog({
                             type="button"
                             className="meal-hit"
                             onClick={() => {
-                              pickMeal(m);
+                              addToBasket(m);
                               setMealSearch("");
                               setMealHits([]);
                             }}
                           >
-                            <span className="meal-hit-name">⭐ {m.name}</span>
+                            <span className="meal-hit-name">＋ {m.name}</span>
                             {m.calories != null && (
                               <span className="meal-hit-cal">{m.calories} cal</span>
                             )}
@@ -1489,10 +1523,10 @@ export default function CoachingLog({
                             key={m.id}
                             type="button"
                             className="meal-chip saved"
-                            onClick={() => pickMeal(m)}
+                            onClick={() => addToBasket(m)}
                           >
-                            ⭐{" "}
-                            {m.name.length > 26 ? m.name.slice(0, 26) + "…" : m.name}
+                            ＋{" "}
+                            {m.name.length > 24 ? m.name.slice(0, 24) + "…" : m.name}
                             {m.calories != null && (
                               <span className="meal-chip-cal">{m.calories}</span>
                             )}
@@ -1503,9 +1537,10 @@ export default function CoachingLog({
                             key={m.id}
                             type="button"
                             className="meal-chip"
-                            onClick={() => pickMeal(m)}
+                            onClick={() => addToBasket(m)}
                           >
-                            {m.name.length > 26 ? m.name.slice(0, 26) + "…" : m.name}
+                            ＋{" "}
+                            {m.name.length > 24 ? m.name.slice(0, 24) + "…" : m.name}
                             {m.calories != null && (
                               <span className="meal-chip-cal">{m.calories}</span>
                             )}
@@ -1513,6 +1548,35 @@ export default function CoachingLog({
                         ))}
                       </div>
                     )
+                  )}
+
+                  {basket.length > 0 && (
+                    <div className="meal-basket">
+                      <div className="meal-basket-head">
+                        <span>
+                          Logging {basket.length} meal{basket.length === 1 ? "" : "s"}
+                        </span>
+                        {basketCals > 0 && (
+                          <span className="meal-basket-cal">{basketCals} cal</span>
+                        )}
+                      </div>
+                      {basket.map((m, i) => (
+                        <div key={`${m.id}-${i}`} className="basket-row">
+                          <span className="basket-name">{m.name}</span>
+                          {m.calories != null && (
+                            <span className="basket-cal">{m.calories}</span>
+                          )}
+                          <button
+                            type="button"
+                            className="basket-rm"
+                            aria-label="Remove"
+                            onClick={() => removeFromBasket(i)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
@@ -1543,7 +1607,7 @@ export default function CoachingLog({
                 </>
               )}
 
-              {draft.tracker.wants_note && (
+              {draft.tracker.wants_note && basket.length === 0 && (
                 <>
                   <label className="cf-label">
                     {draft.tracker.prompt ?? "Notes"}
@@ -1582,7 +1646,7 @@ export default function CoachingLog({
                 </>
               )}
 
-              {draft.tracker.wants_photo && (
+              {draft.tracker.wants_photo && basket.length === 0 && (
                 <>
                   <input
                     ref={fileInput}
@@ -1617,7 +1681,7 @@ export default function CoachingLog({
                 </>
               )}
 
-              {draft.tracker.wants_macros && (
+              {draft.tracker.wants_macros && basket.length === 0 && (
                 <>
                   <button
                     type="button"
@@ -1691,39 +1755,6 @@ export default function CoachingLog({
                 </>
               )}
 
-              {draft.tracker.wants_macros && !draft.entry && (
-                <div className="meal-qty">
-                  <span className="cf-label">How many?</span>
-                  <div className="qty-stepper">
-                    <button
-                      type="button"
-                      className="qty-btn"
-                      aria-label="One fewer"
-                      onClick={() =>
-                        setDraft({ ...draft, qty: Math.max(1, (draft.qty ?? 1) - 1) })
-                      }
-                      disabled={(draft.qty ?? 1) <= 1}
-                    >
-                      −
-                    </button>
-                    <span className="qty-num">{draft.qty ?? 1}</span>
-                    <button
-                      type="button"
-                      className="qty-btn"
-                      aria-label="One more"
-                      onClick={() =>
-                        setDraft({ ...draft, qty: Math.min(12, (draft.qty ?? 1) + 1) })
-                      }
-                      disabled={(draft.qty ?? 1) >= 12}
-                    >
-                      +
-                    </button>
-                    {(draft.qty ?? 1) > 1 && (
-                      <span className="qty-hint">logs {draft.qty} of this meal</span>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/weight|scale|weigh|selfie|progress|photo/i.test(
                 draft.tracker.label,
@@ -1742,7 +1773,10 @@ export default function CoachingLog({
 
               <div
                 className={`tour-nav${
-                  draft.tracker.wants_macros && !draft.macros && !draft.entry
+                  draft.tracker.wants_macros &&
+                  !draft.macros &&
+                  !draft.entry &&
+                  basket.length === 0
                     ? " single"
                     : ""
                 }`}
@@ -1766,7 +1800,7 @@ export default function CoachingLog({
                     Cancel
                   </button>
                 )}
-                {(!draft.tracker.wants_macros || draft.macros) && (
+                {(!draft.tracker.wants_macros || draft.macros || basket.length > 0) && (
                   <button
                     type="button"
                     className="tour-next"
@@ -1775,8 +1809,8 @@ export default function CoachingLog({
                   >
                     {busy
                       ? "Saving…"
-                      : draft.tracker.wants_macros && !draft.entry && (draft.qty ?? 1) > 1
-                        ? `Save ×${draft.qty}`
+                      : basket.length > 0
+                        ? `Log ${basket.length} meal${basket.length === 1 ? "" : "s"}`
                         : "Save"}
                   </button>
                 )}
