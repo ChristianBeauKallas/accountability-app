@@ -118,6 +118,7 @@ type Draft = {
   files: File[];
   previews: string[];
   macros: Macros | null;
+  qty: number; // log this many of the same meal at once
 };
 
 export default function CoachingLog({
@@ -311,6 +312,7 @@ export default function CoachingLog({
       files: [],
       previews: [],
       macros: null,
+      qty: 1,
     });
   }
   // Deep-link from the feed's quick-logger: open a tracker's sheet on load.
@@ -349,6 +351,7 @@ export default function CoachingLog({
               source: entry.macros_source === "edited" ? "edited" : "ai",
             }
           : null,
+      qty: 1,
     });
   }
   function close() {
@@ -579,6 +582,12 @@ export default function CoachingLog({
         }
       : {};
 
+    // Log this many of the same meal at once (meals only, when adding new).
+    const n =
+      !draft.entry && draft.tracker.wants_macros
+        ? Math.max(1, Math.min(12, draft.qty ?? 1))
+        : 1;
+
     let entryId = draft.entry?.id ?? null;
     if (entryId) {
       const { error } = await supabase
@@ -587,21 +596,23 @@ export default function CoachingLog({
         .eq("id", entryId);
       if (error) return fail(error.message);
     } else {
+      const row = {
+        relationship_id: relationshipId,
+        client_id: userId,
+        tracker_id: draft.tracker.id,
+        happened_at,
+        detail,
+        amount,
+        ...macroFields,
+      };
       const { data, error } = await supabase
         .from("coaching_entries")
-        .insert({
-          relationship_id: relationshipId,
-          client_id: userId,
-          tracker_id: draft.tracker.id,
-          happened_at,
-          detail,
-          amount,
-          ...macroFields,
-        })
-        .select("id")
-        .single();
-      if (error || !data) return fail(error?.message ?? "Couldn't save.");
-      entryId = data.id as string;
+        .insert(Array.from({ length: n }, () => row))
+        .select("id");
+      if (error || !data || data.length === 0)
+        return fail(error?.message ?? "Couldn't save.");
+      // Photo (if any) attaches to the first entry.
+      entryId = data[0].id as string;
     }
 
     // Upload any new photos.
@@ -1680,6 +1691,40 @@ export default function CoachingLog({
                 </>
               )}
 
+              {draft.tracker.wants_macros && !draft.entry && (
+                <div className="meal-qty">
+                  <span className="cf-label">How many?</span>
+                  <div className="qty-stepper">
+                    <button
+                      type="button"
+                      className="qty-btn"
+                      aria-label="One fewer"
+                      onClick={() =>
+                        setDraft({ ...draft, qty: Math.max(1, (draft.qty ?? 1) - 1) })
+                      }
+                      disabled={(draft.qty ?? 1) <= 1}
+                    >
+                      −
+                    </button>
+                    <span className="qty-num">{draft.qty ?? 1}</span>
+                    <button
+                      type="button"
+                      className="qty-btn"
+                      aria-label="One more"
+                      onClick={() =>
+                        setDraft({ ...draft, qty: Math.min(12, (draft.qty ?? 1) + 1) })
+                      }
+                      disabled={(draft.qty ?? 1) >= 12}
+                    >
+                      +
+                    </button>
+                    {(draft.qty ?? 1) > 1 && (
+                      <span className="qty-hint">logs {draft.qty} of this meal</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/weight|scale|weigh|selfie|progress|photo/i.test(
                 draft.tracker.label,
               ) && (
@@ -1728,7 +1773,11 @@ export default function CoachingLog({
                     onClick={save}
                     disabled={busy}
                   >
-                    {busy ? "Saving…" : "Save"}
+                    {busy
+                      ? "Saving…"
+                      : draft.tracker.wants_macros && !draft.entry && (draft.qty ?? 1) > 1
+                        ? `Save ×${draft.qty}`
+                        : "Save"}
                   </button>
                 )}
               </div>

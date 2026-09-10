@@ -4424,6 +4424,42 @@ button.coaching-open {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
+.meal-qty {
+  margin: 0.7rem 0 0.2rem;
+}
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.35rem;
+}
+.qty-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1.4rem;
+  line-height: 1;
+  font-family: inherit;
+  cursor: pointer;
+}
+.qty-btn:disabled {
+  opacity: 0.4;
+}
+.qty-num {
+  min-width: 1.6rem;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.qty-hint {
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 600;
+}
 .meal-chip-cal {
   font-size: 0.72rem;
   font-weight: 800;
