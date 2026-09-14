@@ -9,6 +9,7 @@ import { transcribe, polish, estimateMacros } from "@/lib/ai";
 import { syncPlanRecap } from "@/lib/plan-recap";
 import HabitManager from "./habit-manager";
 import WeekBoard from "./week-board";
+import RevisePlan from "./revise-plan";
 import type { CoachingTracker, CoachingEntry, SavedMeal } from "@/lib/types";
 
 function pickAudioMime(): string {
@@ -148,6 +149,8 @@ export default function CoachingLog({
   manageHref,
   fortnight,
   autoOpenTrackerId,
+  planWeek,
+  planStarted,
 }: {
   relationshipId: string;
   userId: string;
@@ -195,6 +198,8 @@ export default function CoachingLog({
   manageHref?: string | null;
   fortnight?: { date: string; title: string | null }[];
   autoOpenTrackerId?: string | null;
+  planWeek?: number | null;
+  planStarted?: string | null;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -954,13 +959,15 @@ export default function CoachingLog({
             <h1>{displayName === "Your" ? "Your plan" : `${possessive} plan`}</h1>
             <p className="subtitle">
               <Link href="/">‹ Feed</Link>
+              {planWeek && planWeek > 1 && (
+                <span className="block-tag">
+                  Block {planWeek}
+                  {planStarted ? ` · since ${fmtDay(planStarted.slice(0, 10))}` : ""}
+                </span>
+              )}
             </p>
           </div>
-          {manageHref && (
-            <Link href={manageHref} className="head-icon" aria-label="Adjust plan">
-              ⚙
-            </Link>
-          )}
+          {manageHref && <RevisePlan editHref={manageHref} />}
         </div>
       </header>
 

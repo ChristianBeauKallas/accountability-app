@@ -81,6 +81,7 @@ export async function POST(req: Request) {
         days: cleanDays(body.days),
         active: true,
         sort_order,
+        source: "user",
       })
       .select("id")
       .single();

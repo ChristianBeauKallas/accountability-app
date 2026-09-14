@@ -150,11 +150,29 @@ export default function CoachPlanEditor({
     }
     const supabase = createClient();
     const { error } = await supabase.rpc("activate_plan", { p_plan: plan.id });
-    setBusy(false);
     if (error) {
+      setBusy(false);
       setErr(error.message);
       return;
     }
+    // New block is live — clear upcoming per-date overrides and keep the
+    // client's own custom habits (best-effort; never blocks the switch).
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      await fetch("/api/plan-activated", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ relationshipId: plan.relationship_id }),
+      });
+    } catch {
+      /* non-fatal */
+    }
+    setBusy(false);
     router.push(`/coach/${clientId}`);
     router.refresh();
   }

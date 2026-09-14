@@ -421,6 +421,8 @@ export default async function CoachingPage({
       buildBanner={buildBanner}
       manageHref={plan ? manageHref : null}
       fortnight={fortnight}
+      planWeek={plan?.week_number ?? null}
+      planStarted={plan?.activated_at ?? null}
       autoOpenTrackerId={
         typeof sp.log === "string" && isToday ? sp.log : null
       }

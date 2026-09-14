@@ -5125,6 +5125,48 @@ button.coaching-open {
   text-align: right;
   flex: none;
 }
+.block-tag {
+  margin-left: 0.6rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* ---- Revise plan chooser ------------------------------------------------- */
+.revise-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.85rem 0.9rem;
+  margin-top: 0.6rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: inherit;
+  text-decoration: none;
+}
+.revise-opt:active {
+  border-color: var(--accent);
+}
+.revise-opt-ic {
+  font-size: 1.5rem;
+  flex: none;
+}
+.revise-opt-title {
+  display: block;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.revise-opt-sub {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.1rem;
+}
+
 /* ---- Week board (day swapper) -------------------------------------------- */
 .wk {
   margin: 0 0 1rem;
