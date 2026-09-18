@@ -23,6 +23,17 @@ export default function PromptStudio({
   const [difficulty, setDifficulty] = useState<"normal" | "hard">("normal");
   const [busy, setBusy] = useState<null | "generate" | "seed">(null);
   const [err, setErr] = useState<string | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  async function startFresh() {
+    setResetting(true);
+    const supabase = createClient();
+    await supabase.from("video_prompts").delete().eq("owner_id", userId);
+    setList([]);
+    setResetting(false);
+    setConfirmReset(false);
+  }
 
   const current = list[0] ?? null;
   const history = list.slice(1);
@@ -121,6 +132,38 @@ export default function PromptStudio({
           {busy === "generate" ? "Thinking…" : "🎥 New prompt"}
         </button>
         {err && <p className="auth-error">{err}</p>}
+        {list.length > 0 &&
+          (confirmReset ? (
+            <div className="vp-reset-confirm">
+              <span>Delete all prompts &amp; ratings and start fresh?</span>
+              <div className="vp-reset-btns">
+                <button
+                  type="button"
+                  className="vp-seed-link"
+                  onClick={() => setConfirmReset(false)}
+                  disabled={resetting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="vp-reset-go"
+                  onClick={startFresh}
+                  disabled={resetting}
+                >
+                  {resetting ? "Clearing…" : "Delete all"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="vp-reset-link"
+              onClick={() => setConfirmReset(true)}
+            >
+              ↺ Start fresh
+            </button>
+          ))}
       </section>
 
       {current ? (
