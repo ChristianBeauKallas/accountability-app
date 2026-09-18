@@ -5135,6 +5135,70 @@ button.coaching-open {
   font-weight: 700;
 }
 
+/* ---- Auto-progress nudge ------------------------------------------------- */
+.prog-nudge {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  text-align: left;
+  margin: 0 0 1rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--accent);
+  background: linear-gradient(180deg, var(--accent-dim), var(--surface) 80%);
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+.prog-nudge.build {
+  cursor: default;
+}
+.prog-ic {
+  font-size: 1.4rem;
+  flex: none;
+}
+.prog-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.prog-title {
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+.prog-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.prog-err {
+  font-size: 0.75rem;
+  color: var(--danger);
+  margin-top: 0.2rem;
+}
+.prog-go {
+  font-size: 1.3rem;
+  color: var(--accent);
+  flex: none;
+}
+.prog-btn {
+  flex: none;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  font-weight: 800;
+  font-size: 0.86rem;
+  padding: 0.55rem 1.2rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.prog-btn:disabled {
+  opacity: 0.6;
+}
+
 /* ---- Post-workout prompt studio ------------------------------------------ */
 .vp-controls {
   display: flex;

@@ -10,6 +10,7 @@ import { syncPlanRecap } from "@/lib/plan-recap";
 import HabitManager from "./habit-manager";
 import WeekBoard from "./week-board";
 import RevisePlan from "./revise-plan";
+import ProgressNudge from "./progress-nudge";
 import type { CoachingTracker, CoachingEntry, SavedMeal } from "@/lib/types";
 
 function pickAudioMime(): string {
@@ -151,6 +152,7 @@ export default function CoachingLog({
   autoOpenTrackerId,
   planWeek,
   planStarted,
+  progressNudge,
 }: {
   relationshipId: string;
   userId: string;
@@ -200,6 +202,7 @@ export default function CoachingLog({
   autoOpenTrackerId?: string | null;
   planWeek?: number | null;
   planStarted?: string | null;
+  progressNudge?: { state: "build" | "review"; planId: string; href: string } | null;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -1003,6 +1006,14 @@ export default function CoachingLog({
 
       {fortnight && fortnight.length > 0 && (
         <WeekBoard fortnight={fortnight} today={today ?? selectedDay ?? ""} />
+      )}
+
+      {progressNudge && (
+        <ProgressNudge
+          state={progressNudge.state}
+          planId={progressNudge.planId}
+          href={progressNudge.href}
+        />
       )}
 
       {!isToday && (

@@ -367,6 +367,38 @@ export default async function CoachingPage({
   const selfCoached = rel.coach_id === user.id;
   const manageHref = selfCoached ? `/coach/${user.id}/plan` : null;
 
+  // Auto-progress nudge: after a full week on the active plan, prompt to build
+  // next week from the logged numbers (or review it if it's already drafted).
+  // Only actionable when you run your own plan.
+  let progressNudge:
+    | { state: "build" | "review"; planId: string; href: string }
+    | null = null;
+  if (plan && selfCoached && manageHref && plan.activated_at) {
+    const daysSince = Math.floor(
+      (Date.now() - new Date(plan.activated_at).getTime()) / 86400000,
+    );
+    const [{ data: nextDraft }, { count: woCount }] = await Promise.all([
+      supabase
+        .from("coaching_plans")
+        .select("id")
+        .eq("relationship_id", rel.id)
+        .eq("status", "draft")
+        .gt("week_number", plan.week_number)
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("coaching_workout_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("relationship_id", rel.id)
+        .gte("day", String(plan.activated_at).slice(0, 10)),
+    ]);
+    if (nextDraft) {
+      progressNudge = { state: "review", planId: plan.id, href: manageHref };
+    } else if (daysSince >= 7 && (woCount ?? 0) >= 2) {
+      progressNudge = { state: "build", planId: plan.id, href: manageHref };
+    }
+  }
+
   // Build/waiting banner when there's no active plan.
   let buildBanner: { text: string; href: string | null } | null = null;
   if (!plan) {
@@ -423,6 +455,7 @@ export default async function CoachingPage({
       fortnight={fortnight}
       planWeek={plan?.week_number ?? null}
       planStarted={plan?.activated_at ?? null}
+      progressNudge={progressNudge}
       autoOpenTrackerId={
         typeof sp.log === "string" && isToday ? sp.log : null
       }
