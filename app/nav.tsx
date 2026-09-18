@@ -9,10 +9,12 @@ export default function BottomNav({
   userId,
   hasPlan,
   hasTeam,
+  isOwner,
 }: {
   userId?: string | null;
   hasPlan?: boolean;
   hasTeam?: boolean;
+  isOwner?: boolean;
 }) {
   const pathname = usePathname();
   const [pending, setPending] = useState<string | null>(null);
@@ -24,6 +26,7 @@ export default function BottomNav({
   const [uid, setUid] = useState<string | null>(userId ?? null);
   const [plan, setPlan] = useState<boolean>(!!hasPlan);
   const [team, setTeam] = useState<boolean>(!!hasTeam);
+  const [owner, setOwner] = useState<boolean>(!!isOwner);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,10 +39,14 @@ export default function BottomNav({
         const id = userId ?? user?.id ?? null;
         if (!id || cancelled) return;
         if (!userId) setUid(id);
-        const { data, error } = await supabase
-          .from("coaching_relationships")
-          .select("coach_id, client_id")
-          .or(`coach_id.eq.${id},client_id.eq.${id}`);
+        const [{ data, error }, { data: owned }] = await Promise.all([
+          supabase
+            .from("coaching_relationships")
+            .select("coach_id, client_id")
+            .or(`coach_id.eq.${id},client_id.eq.${id}`),
+          supabase.from("groups").select("id").eq("owner_id", id).limit(1).maybeSingle(),
+        ]);
+        if (!cancelled) setOwner(!!owned);
         if (error || cancelled) return;
         let p = false;
         let t = false;
@@ -94,6 +101,16 @@ export default function BottomNav({
             label: "My Team",
             icon: "👥",
             match: (p: string) => p.startsWith("/coach"),
+          },
+        ]
+      : []),
+    ...(owner
+      ? [
+          {
+            href: "/prompt",
+            label: "Prompt",
+            icon: "🎥",
+            match: (p: string) => p.startsWith("/prompt"),
           },
         ]
       : []),

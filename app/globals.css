@@ -5135,6 +5135,160 @@ button.coaching-open {
   font-weight: 700;
 }
 
+/* ---- Post-workout prompt studio ------------------------------------------ */
+.vp-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+.vp-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.vp-diff-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vp-seg {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.vp-seg button {
+  border: none;
+  background: var(--bg-2);
+  color: var(--muted);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+.vp-seg button.on {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.vp-gen {
+  margin-left: auto;
+}
+.vp-current {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1.6rem 1.3rem 1.2rem;
+  margin-bottom: 1.1rem;
+}
+.vp-current.empty {
+  text-align: center;
+}
+.vp-prompt {
+  font-size: 1.5rem;
+  line-height: 1.32;
+  font-weight: 700;
+  margin: 0 0 1.2rem;
+}
+.vp-empty {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0 0 1rem;
+}
+.vp-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.vp-rate,
+.vp-rec {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.86rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.vp-rate.good {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.vp-rate.bad {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.vp-rec.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.vp-hist-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.vp-seed-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+.vp-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0 0 0.7rem;
+}
+.vp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--border);
+}
+.vp-row.good {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.6rem;
+}
+.vp-row.bad {
+  opacity: 0.55;
+}
+.vp-row-text {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+.vp-row-actions {
+  display: flex;
+  gap: 0.3rem;
+  flex: none;
+}
+.vp-mini {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  cursor: pointer;
+  font-size: 0.85rem;
+  opacity: 0.55;
+}
+.vp-mini.good,
+.vp-mini.bad,
+.vp-mini.on {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
 /* ---- Revise plan chooser ------------------------------------------------- */
 .revise-opt {
   display: flex;

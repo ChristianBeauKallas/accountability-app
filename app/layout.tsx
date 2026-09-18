@@ -48,6 +48,7 @@ export default async function RootLayout({
   // else accountable.
   let hasPlan = false;
   let hasTeam = false;
+  let isOwner = false;
   if (user) {
     const { data: relFlags } = await supabase
       .from("coaching_relationships")
@@ -57,13 +58,26 @@ export default async function RootLayout({
       if (r.client_id === user.id) hasPlan = true;
       if (r.coach_id === user.id && r.client_id !== user.id) hasTeam = true;
     }
+    // Owner-only "Prompt" tab: you own a group.
+    const { data: owned } = await supabase
+      .from("groups")
+      .select("id")
+      .eq("owner_id", user.id)
+      .limit(1)
+      .maybeSingle();
+    isOwner = !!owned;
   }
 
   return (
     <html lang="en">
       <body>
         {children}
-        <BottomNav userId={user?.id ?? null} hasPlan={hasPlan} hasTeam={hasTeam} />
+        <BottomNav
+          userId={user?.id ?? null}
+          hasPlan={hasPlan}
+          hasTeam={hasTeam}
+          isOwner={isOwner}
+        />
         {/* Only nudge to install once they're signed in — it must never sit on
             top of the login / signup / invite flow. */}
         {user && <InstallPrompt />}
