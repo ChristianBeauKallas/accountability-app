@@ -45,10 +45,10 @@ export function FitsFeed({
     setAppliedIds((prev) => new Set(prev).add(item.need.id));
   }
 
-  const visible = items
-    .filter((i) => !appliedIds.has(i.need.id))
-    .filter((i) => (filter === "top" ? i.fit >= 75 : true));
+  const unapplied = items.filter((i) => !appliedIds.has(i.need.id));
+  const visible = unapplied.filter((i) => (filter === "top" ? i.fit >= 75 : true));
 
+  const allCount = unapplied.length;
   const appliedCount = appliedIds.size;
 
   return (
@@ -58,7 +58,7 @@ export function FitsFeed({
           value={filter}
           onChange={setFilter}
           segments={[
-            { value: "all", label: "All fits" },
+            { value: "all", label: `All fits (${allCount})` },
             { value: "top", label: "Best Fits (75%+)" },
           ]}
         />
