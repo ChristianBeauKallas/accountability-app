@@ -27,3 +27,18 @@ export function stateClimate(state: string | null | undefined): Climate | null {
 export function climateLabelFor(value: string | null | undefined): string | null {
   return CLIMATES.find((c) => c.value === value)?.label ?? null;
 }
+
+// Some states straddle two climate zones — show a range for display.
+const TRANSITIONAL: Record<string, string> = {
+  NC: "Mild–Warm", TN: "Mild–Warm", AR: "Mild–Warm", OK: "Mild–Warm",
+  NM: "Warm–Mild", VA: "Mild–Cold", KY: "Mild–Cold", MO: "Mild–Cold",
+  KS: "Mild–Cold", MD: "Mild–Cold", OR: "Mild–Cold", WA: "Mild–Cold",
+};
+
+// A nuanced weather label for a school page (ranges for border states).
+export function climateDisplay(state: string | null | undefined): string | null {
+  if (!state) return null;
+  const s = state.toUpperCase();
+  if (TRANSITIONAL[s]) return TRANSITIONAL[s];
+  return climateLabelFor(stateClimate(s));
+}

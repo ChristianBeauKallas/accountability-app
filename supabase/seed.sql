@@ -272,6 +272,42 @@ from public.players
 where (abs(hashtext(id::text)) % 2) = 0;
 
 -- ---------------------------------------------------------------------------
+-- 6.6 Verified programs, demo follows, and program posts
+--     (only runs cleanly once 0008 is applied; harmless otherwise)
+-- ---------------------------------------------------------------------------
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+             where table_schema='public' and table_name='programs' and column_name='verified') then
+    update public.programs set verified = true
+      where name in ('Cowley College', 'Washburn University', 'Emporia State University');
+  end if;
+
+  if to_regclass('public.program_followers') is not null then
+    insert into public.program_followers (player_id, program_id)
+    select pl.id, (select id from public.programs where name = 'Cowley College')
+    from public.players pl
+    where (abs(hashtext(pl.id::text)) % 3) = 0
+    on conflict do nothing;
+  end if;
+
+  if to_regclass('public.program_posts') is not null then
+    insert into public.program_posts (program_id, kind, body, created_by)
+    select p.id, 'update', 'Fall camp dates are set — come compete.', ps.profile_id
+    from public.programs p
+    join public.program_staff ps on ps.program_id = p.id
+    where p.name in ('Cowley College', 'Washburn University');
+
+    insert into public.program_posts (program_id, kind, body, media_url, media_type, created_by)
+    select p.id, 'facility', 'Our turf infield',
+           'https://picsum.photos/seed/athletx-field/1000/700', 'image', ps.profile_id
+    from public.programs p
+    join public.program_staff ps on ps.program_id = p.id
+    where p.name in ('Cowley College', 'Washburn University');
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- 7. Mark seeded accounts as onboarded (skip the onboarding flow)
 -- ---------------------------------------------------------------------------
 update public.profiles set onboarded = true where email like '%@seed.athletx';

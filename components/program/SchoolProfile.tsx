@@ -12,6 +12,9 @@ import {
   GraduationCap,
   Trophy,
   CloudSun,
+  BadgeCheck,
+  Bookmark,
+  BookmarkCheck,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -19,12 +22,13 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ProgramFeed } from "@/components/program/ProgramFeed";
 import { DIVISIONS, STATES } from "@/lib/constants";
-import { stateClimate, climateLabelFor } from "@/lib/climate";
+import { climateDisplay } from "@/lib/climate";
 import type { Program, StaffRole } from "@/lib/types";
 
 export type StaffMember = {
@@ -53,6 +57,7 @@ export function SchoolProfile({
   editable,
   viewerId,
   showBack = false,
+  isFollowing = false,
 }: {
   program: Program;
   stats: ProgramStats;
@@ -60,10 +65,32 @@ export function SchoolProfile({
   editable: boolean;
   viewerId: string;
   showBack?: boolean;
+  isFollowing?: boolean;
 }) {
   const router = useRouter();
+  const supabase = createClient();
   const [tab, setTab] = useState<Tab>("about");
   const [editing, setEditing] = useState(false);
+  const [following, setFollowing] = useState(isFollowing);
+  const [followBusy, setFollowBusy] = useState(false);
+
+  async function toggleFollow() {
+    setFollowBusy(true);
+    const next = !following;
+    setFollowing(next);
+    if (next) {
+      await supabase
+        .from("program_followers")
+        .insert({ player_id: viewerId, program_id: program.id });
+    } else {
+      await supabase
+        .from("program_followers")
+        .delete()
+        .eq("player_id", viewerId)
+        .eq("program_id", program.id);
+    }
+    setFollowBusy(false);
+  }
 
   if (editing) {
     return <EditForm program={program} onDone={() => setEditing(false)} />;
@@ -97,8 +124,16 @@ export function SchoolProfile({
       <div className="mt-3 flex items-center gap-4">
         <Avatar name={program.name} src={program.logo_url} size={64} />
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-display font-bold leading-tight">
-            {program.name}
+          <h1 className="flex items-center gap-1.5 text-2xl font-display font-bold leading-tight">
+            <span className="truncate">{program.name}</span>
+            {program.verified && (
+              <BadgeCheck
+                size={18}
+                strokeWidth={2}
+                className="shrink-0 text-accent"
+                aria-label="Verified program"
+              />
+            )}
           </h1>
           <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
             <MapPin size={13} strokeWidth={2} aria-hidden />
@@ -111,6 +146,28 @@ export function SchoolProfile({
         <Chip tone="accent">{program.division}</Chip>
         {program.conference && <Chip>{program.conference}</Chip>}
       </div>
+
+      {!editable && (
+        <Button
+          variant={following ? "secondary" : "primary"}
+          full
+          className="mt-4"
+          onClick={toggleFollow}
+          disabled={followBusy}
+        >
+          {following ? (
+            <>
+              <BookmarkCheck size={18} strokeWidth={2} aria-hidden />
+              Following
+            </>
+          ) : (
+            <>
+              <Bookmark size={18} strokeWidth={2} aria-hidden />
+              Follow school
+            </>
+          )}
+        </Button>
+      )}
 
       <SegmentedControl
         className="mt-5"
@@ -161,11 +218,25 @@ function AboutTab({
   staff: StaffMember[];
   editable: boolean;
 }) {
-  const climate = climateLabelFor(stateClimate(program.state));
+  const climate = climateDisplay(program.state);
   const minGpa = program.min_gpa ?? stats.minGpa;
+  const pct = programCompleteness(program);
 
   return (
     <div>
+      {editable && pct < 100 && (
+        <Card className="mb-6 space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold text-ink">Page strength</span>
+            <span className="tabular-nums text-muted">{pct}%</span>
+          </div>
+          <ProgressBar value={pct} />
+          <p className="text-xs text-body-2">
+            A complete page gives recruits confidence. Add what&rsquo;s missing.
+          </p>
+        </Card>
+      )}
+
       <div>
         <h2 className="eyebrow mb-2">About</h2>
         {program.about ? (
@@ -174,6 +245,14 @@ function AboutTab({
           <p className="text-sm text-muted-2">No summary yet.</p>
         )}
       </div>
+
+      {program.recruiting_pitch && (
+        <Section title="What we recruit">
+          <p className="text-[15px] leading-relaxed text-body-2">
+            {program.recruiting_pitch}
+          </p>
+        </Section>
+      )}
 
       <Section title="At a glance">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -251,6 +330,20 @@ function AboutTab({
   );
 }
 
+function programCompleteness(p: Program): number {
+  const checks = [
+    !!p.about,
+    !!p.conference,
+    !!p.website,
+    !!p.record_last_season,
+    p.enrollment != null,
+    p.min_gpa != null,
+    !!p.recruiting_pitch,
+    !!p.logo_url,
+  ];
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-6">
@@ -303,6 +396,7 @@ function EditForm({
     program.enrollment?.toString() ?? ""
   );
   const [minGpa, setMinGpa] = useState(program.min_gpa?.toString() ?? "");
+  const [pitch, setPitch] = useState(program.recruiting_pitch ?? "");
   const [about, setAbout] = useState(program.about ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -326,6 +420,7 @@ function EditForm({
         record_last_season: record.trim() || null,
         enrollment: enrollment === "" ? null : Number(enrollment),
         min_gpa: minGpa === "" ? null : Number(minGpa),
+        recruiting_pitch: pitch.trim() || null,
         about: about.trim() || null,
       })
       .eq("id", program.id);
@@ -431,6 +526,20 @@ function EditForm({
             placeholder="https://…"
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
+          />
+        </Field>
+
+        <Field
+          label="What we recruit"
+          hint="A line or two on the type of player you want."
+          htmlFor="pitch"
+        >
+          <Textarea
+            id="pitch"
+            value={pitch}
+            onChange={(e) => setPitch(e.target.value)}
+            placeholder="We target athletic, high-motor players who can hit…"
+            maxLength={300}
           />
         </Field>
 
