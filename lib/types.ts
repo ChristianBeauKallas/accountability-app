@@ -8,6 +8,13 @@ export type ApplicationStatus = "new" | "viewed" | "interested" | "closed";
 export type Bats = "L" | "R" | "S";
 export type Throws = "L" | "R";
 
+export type ContactInfo = {
+  user_id: string;
+  email: string | null;
+  phone: string | null;
+  updated_at: string;
+};
+
 export type Profile = {
   id: string;
   role: UserRole;
