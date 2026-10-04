@@ -490,7 +490,7 @@ function PlayerProfile({
           type="checkbox"
           checked={isTransfer}
           onChange={(e) => setIsTransfer(e.target.checked)}
-          className="h-5 w-5 accent-[#1F5C3D]"
+          className="h-5 w-5 accent-accent"
         />
         <span className="text-[15px] text-ink">
           I&rsquo;m a transfer (currently in college)

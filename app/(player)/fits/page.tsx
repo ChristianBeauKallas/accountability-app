@@ -2,7 +2,6 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isEligible, computeFit, passesPlayerPrefs } from "@/lib/fit";
 import { FitsFeed } from "@/components/player/FitsFeed";
-import { NotificationsBell } from "@/components/NotificationsBell";
 import type { FeedItem } from "@/components/player/FitCard";
 import type { Need, Player, Program } from "@/lib/types";
 
@@ -44,10 +43,7 @@ export default async function FitsPage() {
 
   return (
     <main className="px-5 pt-12">
-      <div className="flex items-start justify-between">
-        <p className="eyebrow">Hey {first}</p>
-        <NotificationsBell />
-      </div>
+      <p className="eyebrow">Hey {first}</p>
       <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
         Your fits
       </h1>

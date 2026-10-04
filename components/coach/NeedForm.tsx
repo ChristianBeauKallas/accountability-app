@@ -170,7 +170,7 @@ export function NeedForm({
             type="checkbox"
             checked={acceptsTransfer}
             onChange={(e) => setAcceptsTransfer(e.target.checked)}
-            className="h-5 w-5 accent-[#1F5C3D]"
+            className="h-5 w-5 accent-accent"
           />
           <span className="text-[15px] text-ink">Open to transfers</span>
         </label>

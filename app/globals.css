@@ -3,9 +3,57 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* Theme tokens as "R G B" channels. Dark is the default; [data-theme]
+     overrides apply to any subtree (so auth pages can force dark). */
+  :root,
+  [data-theme="dark"] {
     color-scheme: dark;
+    --c-ink: 244 245 242;
+    --c-ground: 15 18 16;
+    --c-surface: 25 28 26;
+    --c-accent: 79 176 122;
+    --c-accent-dark: 62 154 102;
+    --c-accent-soft: 23 39 31;
+    --c-gold: 242 180 107;
+    --c-ink-2: 230 232 228;
+    --c-muted: 155 164 158;
+    --c-muted-2: 118 127 121;
+    --c-muted-on-dark: 169 180 173;
+    --c-soft-on-dark: 201 209 203;
+    --c-body-2: 196 204 198;
+    --c-chip: 32 35 31;
+    --c-track: 39 43 40;
+    --c-border: 43 48 44;
+    --c-divider: 36 40 37;
+    --c-warm-soft: 243 227 207;
+    --c-warm-text: 122 62 12;
+    --c-danger: 240 138 107;
   }
+
+  [data-theme="light"] {
+    color-scheme: light;
+    --c-ink: 19 32 26;
+    --c-ground: 245 244 239;
+    --c-surface: 255 255 255;
+    --c-accent: 31 92 61;
+    --c-accent-dark: 18 59 39;
+    --c-accent-soft: 220 229 223;
+    --c-gold: 242 180 107;
+    --c-ink-2: 42 58 49;
+    --c-muted: 91 102 95;
+    --c-muted-2: 122 132 126;
+    --c-muted-on-dark: 169 180 173;
+    --c-soft-on-dark: 201 209 203;
+    --c-body-2: 62 73 67;
+    --c-chip: 240 239 232;
+    --c-track: 233 232 225;
+    --c-border: 213 216 210;
+    --c-divider: 228 229 223;
+    --c-warm-soft: 243 227 207;
+    --c-warm-text: 122 62 12;
+    --c-danger: 194 65 12;
+  }
+
   html,
   body {
     height: 100%;
