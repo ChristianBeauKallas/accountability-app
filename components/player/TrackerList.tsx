@@ -49,7 +49,7 @@ export function TrackerList({ rows }: { rows: TrackerRow[] }) {
           <p className="mt-1 text-sm text-body-2">
             {filter === "interested"
               ? "When a coach marks interest, it'll show up here."
-              : "Head to Fits and apply to a few roster needs."}
+              : "Head to Fits and put your name in on a few spots."}
           </p>
         </div>
       ) : (
@@ -98,7 +98,7 @@ function TrackerCard({ row }: { row: TrackerRow }) {
               {STATUS_LABEL[row.status]}
             </Chip>
             <span className="text-xs text-muted-2">
-              Applied {timeAgo(row.created_at)}
+              In · {timeAgo(row.created_at)}
             </span>
           </div>
         </div>
@@ -118,7 +118,7 @@ function TrackerCard({ row }: { row: TrackerRow }) {
       </div>
       {interested && (
         <p className="mt-3 rounded-input bg-warm-soft px-3 py-2 text-sm font-medium text-warm-text">
-          This coach marked interest — keep your profile sharp.
+          This coach is interested — you&rsquo;re on their radar.
         </p>
       )}
     </Card>

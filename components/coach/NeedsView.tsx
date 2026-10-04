@@ -30,7 +30,7 @@ export function NeedsView({ needs: initial }: { needs: NeedWithCount[] }) {
   async function remove(need: NeedWithCount) {
     if (
       !confirm(
-        `Delete "${need.title}"? This removes the need and its applications.`
+        `Delete "${need.title}"? This removes the need and everyone who's in for it.`
       )
     )
       return;
@@ -55,7 +55,7 @@ export function NeedsView({ needs: initial }: { needs: NeedWithCount[] }) {
             No needs posted yet
           </p>
           <p className="mt-1 text-sm text-body-2">
-            Post your first roster need to start getting matched applicants.
+            Post your first need to start hearing from players who fit.
           </p>
         </div>
       ) : (
@@ -100,8 +100,7 @@ export function NeedsView({ needs: initial }: { needs: NeedWithCount[] }) {
                 <div className="flex items-center justify-between border-t border-divider pt-3">
                   <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink">
                     <Users size={16} strokeWidth={2} className="text-muted" aria-hidden />
-                    {need.applicant_count}{" "}
-                    {need.applicant_count === 1 ? "applicant" : "applicants"}
+                    {need.applicant_count} in
                   </span>
                   <div className="flex items-center gap-4">
                     <button

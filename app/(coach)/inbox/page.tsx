@@ -28,8 +28,8 @@ export default async function InboxPage() {
       </h1>
       <p className="mt-1 mb-5 text-[15px] text-body-2">
         {rows.length > 0
-          ? `${rows.length} ${rows.length === 1 ? "applicant" : "applicants"}${newCount ? ` · ${newCount} new` : ""}, ranked by fit.`
-          : "Applicants to your needs show up here, ranked by fit."}
+          ? `${rows.length} ${rows.length === 1 ? "player wants" : "players want"} in${newCount ? ` · ${newCount} new` : ""} — best fit first.`
+          : "Players who want your spots show up here, best fit first."}
       </p>
       <InboxView rows={rows} />
     </main>
