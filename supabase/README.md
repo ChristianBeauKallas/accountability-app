@@ -29,7 +29,10 @@ Run these in the Supabase SQL editor (or `psql`) **in order**:
    (levels / states / climate) that filter the Fits feed.
 7. `migrations/0007_program_profile.sql` — program profile fields (record,
    enrollment, min GPA) + `program_posts` (Updates / Facilities).
-8. `seed.sql` — demo programs, needs, players, applications, and posts.
+8. `migrations/0008_social.sql` — follows, verified/recruiting-pitch fields,
+   and notification triggers (program update → followers/applicants; coach
+   interest → player).
+9. `seed.sql` — demo programs, needs, players, applications, posts, follows.
 
 The seed is safe to re-run; it clears its own rows first.
 

@@ -33,6 +33,13 @@ export default async function SchoolPage({
 
   const stats = await getProgramStats(params.id);
 
+  const { data: follow } = await supabase
+    .from("program_followers")
+    .select("program_id")
+    .eq("player_id", userId)
+    .eq("program_id", params.id)
+    .maybeSingle();
+
   return (
     <SchoolProfile
       program={program as Program}
@@ -41,6 +48,7 @@ export default async function SchoolPage({
       editable={false}
       viewerId={userId}
       showBack
+      isFollowing={!!follow}
     />
   );
 }
