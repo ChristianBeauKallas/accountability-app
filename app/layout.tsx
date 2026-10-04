@@ -1,0 +1,57 @@
+import type { Metadata, Viewport } from "next";
+import { Barlow_Condensed, Manrope } from "next/font/google";
+import "./globals.css";
+
+const barlow = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  applicationName: "Athletx",
+  title: "Athletx — real roster spots, real fits",
+  description:
+    "Coaches post open roster spots. Players see where they actually fit. No spam, no ghosting.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Athletx",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#13201A",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en" className={`${barlow.variable} ${manrope.variable}`}>
+      <body>
+        <div className="app-frame">{children}</div>
+      </body>
+    </html>
+  );
+}

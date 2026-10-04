@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    @apply bg-ground text-ink font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Big, condensed display type used for titles, stats and fit scores. */
+  .font-display {
+    font-family: var(--font-barlow), sans-serif;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  /* Eyebrow label — uppercase, tracked, muted. */
+  .eyebrow {
+    @apply font-sans font-semibold uppercase tracking-eyebrow text-muted;
+    font-size: 12px;
+  }
+  /* App is mobile-first; center it in a 480px frame on larger screens. */
+  .app-frame {
+    @apply mx-auto w-full max-w-app min-h-dvh bg-ground relative;
+  }
+}
