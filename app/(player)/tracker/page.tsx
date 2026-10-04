@@ -36,7 +36,7 @@ export default async function TrackerPage() {
       </div>
       <div className="mt-1 flex items-center gap-1.5">
         <h1 className="text-3xl font-display font-bold tracking-tight">
-          Matches
+          My Spots
         </h1>
         <MatchesInfo />
       </div>
