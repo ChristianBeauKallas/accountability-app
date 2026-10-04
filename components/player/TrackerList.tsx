@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Avatar } from "@/components/ui/Avatar";
 import { SaveButton } from "@/components/SaveButton";
+import { ProgramContactCard } from "@/components/ContactReveal";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { STATUS_LABEL, STATUS_TONE, timeAgo } from "@/lib/format";
 import type { Application, Need, Program } from "@/lib/types";
@@ -154,10 +155,10 @@ function TrackerCard({
           )}
         </div>
       </div>
-      {interested && (
-        <p className="mt-3 rounded-input bg-warm-soft px-3 py-2 text-sm font-medium text-warm-text">
-          This coach is interested — you&rsquo;re on their radar.
-        </p>
+      {interested && program && (
+        <div className="mt-3">
+          <ProgramContactCard programId={program.id} />
+        </div>
       )}
     </Card>
   );
