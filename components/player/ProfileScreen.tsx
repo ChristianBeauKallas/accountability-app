@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { GraduationCap, MapPin, X, Camera } from "lucide-react";
+import { MapPin, X, Camera } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Card } from "@/components/ui/Card";
@@ -15,7 +15,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { HeaderActions } from "@/components/HeaderActions";
 import { PlayerFeed } from "@/components/player/PlayerFeed";
 import { profileCompleteness } from "@/lib/fit";
-import { formatHeight, metricChips } from "@/lib/format";
+import { formatHeight } from "@/lib/format";
 import {
   POSITIONS,
   DIVISIONS,
@@ -136,7 +136,6 @@ function Header({
 
 function DataTab({ player }: { player: Player }) {
   const pct = Math.round(profileCompleteness(player) * 100);
-  const metrics = metricChips(player);
   const height = formatHeight(player.height_in);
 
   const prefStates = player.pref_states ?? [];
@@ -147,9 +146,31 @@ function DataTab({ player }: { player: Player }) {
       ? `${climateLabel(player.pref_climate)} climate`
       : "Anywhere";
 
+  // Headline numbers — position-aware top metrics + GPA.
+  const metricTiles: { value: string; label: string }[] = [];
+  const add = (v: number | null, label: string) => {
+    if (v != null) metricTiles.push({ value: String(v), label });
+  };
+  add(player.fastball_velo, "FB velo");
+  add(player.pop_time, "Pop time");
+  add(player.exit_velo, "Exit velo");
+  add(player.sixty_yd, "60 yard");
+  add(player.inf_velo, "INF velo");
+  add(player.of_velo, "OF velo");
+  const tiles = metricTiles.slice(0, 3);
+  if (player.gpa != null) tiles.push({ value: player.gpa.toFixed(2), label: "GPA" });
+  const cols = tiles.length >= 4 ? 2 : Math.max(tiles.length, 1);
+
+  const vitals = [
+    height,
+    player.weight_lb ? `${player.weight_lb} lb` : null,
+    player.bats ? `Bats ${player.bats}` : null,
+    player.throws ? `Throws ${player.throws}` : null,
+  ].filter(Boolean) as string[];
+
   return (
     <div>
-      {/* About — first thing under the Bio tab */}
+      {/* About */}
       <div>
         <h2 className="eyebrow mb-2">About</h2>
         {player.bio ? (
@@ -161,6 +182,41 @@ function DataTab({ player }: { player: Player }) {
         )}
       </div>
 
+      {/* Headline stat tiles */}
+      {tiles.length > 0 && (
+        <div
+          className="mt-5 grid gap-2.5"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
+          {tiles.map((t) => (
+            <div
+              key={t.label}
+              className="rounded-btn border border-border bg-surface px-3 py-3.5 text-center shadow-card"
+            >
+              <div className="font-display text-[26px] font-bold leading-none text-ink tabular-nums">
+                {t.value}
+              </div>
+              <div className="mt-1.5 text-[10px] uppercase tracking-eyebrow text-muted-2">
+                {t.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Vitals strip */}
+      {vitals.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm font-medium text-body-2">
+          {vitals.map((v, i) => (
+            <span key={i} className="flex items-center gap-2.5">
+              {i > 0 && <span className="text-muted-2">·</span>}
+              {v}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Positions */}
       <Section title="Positions">
         <div className="flex flex-wrap gap-2">
           {(player.positions ?? []).map((p) => (
@@ -174,29 +230,7 @@ function DataTab({ player }: { player: Player }) {
         </div>
       </Section>
 
-      <Section title="Measurables">
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-          <Stat label="Bats / Throws" value={bt(player)} />
-          <Stat label="Height / Weight" value={hw(height, player.weight_lb)} />
-        </dl>
-        {metrics.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {metrics.map((m) => (
-              <Chip key={m} tone="metric">
-                {m}
-              </Chip>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      <Section title="Academics">
-        <p className="flex items-center gap-2 text-[15px]">
-          <GraduationCap size={18} strokeWidth={2} className="text-muted" aria-hidden />
-          {player.gpa != null ? `${player.gpa.toFixed(2)} GPA` : "Add your GPA"}
-        </p>
-      </Section>
-
+      {/* Interested in */}
       <Section title="Interested in">
         <div className="space-y-3">
           <div>
@@ -249,23 +283,6 @@ function Section({
       {children}
     </section>
   );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-2">{label}</dt>
-      <dd className="font-medium text-ink">{value}</dd>
-    </div>
-  );
-}
-
-function bt(p: Player): string {
-  if (!p.bats && !p.throws) return "—";
-  return `${p.bats ?? "—"} / ${p.throws ?? "—"}`;
-}
-function hw(height: string | null, weight: number | null): string {
-  return [height, weight ? `${weight} lb` : null].filter(Boolean).join(" · ") || "—";
 }
 
 /* ------------------------------- Edit ----------------------------------- */
