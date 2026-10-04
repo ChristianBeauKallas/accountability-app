@@ -23,3 +23,7 @@ export function stateClimate(state: string | null | undefined): Climate | null {
   if (!state) return null;
   return STATE_CLIMATE[state.toUpperCase()] ?? null;
 }
+
+export function climateLabelFor(value: string | null | undefined): string | null {
+  return CLIMATES.find((c) => c.value === value)?.label ?? null;
+}

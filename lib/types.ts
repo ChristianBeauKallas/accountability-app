@@ -61,6 +61,9 @@ export type Program = {
   website: string | null;
   logo_url: string | null;
   about: string | null;
+  record_last_season: string | null;
+  enrollment: number | null;
+  min_gpa: number | null;
   created_at: string;
 };
 
@@ -133,6 +136,19 @@ export type PlayerPost = {
   body: string | null;
   media_url: string | null;
   media_type: MediaType | null;
+  created_at: string;
+};
+
+export type ProgramPostKind = "update" | "facility";
+
+export type ProgramPost = {
+  id: string;
+  program_id: string;
+  kind: ProgramPostKind;
+  body: string | null;
+  media_url: string | null;
+  media_type: MediaType | null;
+  created_by: string | null;
   created_at: string;
 };
 
