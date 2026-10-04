@@ -3,20 +3,30 @@
 import { useState } from "react";
 import { Info, X } from "lucide-react";
 
-const STAGES: { label: string; body: string }[] = [
-  {
-    label: "Interested",
-    body: "Spots you've tapped I'm Interested on. The coach has it in their inbox but hasn't responded yet — the ball's in their court.",
-  },
-  {
-    label: "Mutual",
-    body: "The coach marked interest back in you. These are your strongest leads — worth following up on.",
-  },
-  {
-    label: "Closed",
-    body: "The coach passed on this one for now. It happens to everyone — keep showing interest in new spots.",
-  },
-];
+const STAGES: { label: string; body: string; tone: "accent" | "gold" | "muted" }[] =
+  [
+    {
+      label: "Interested",
+      tone: "accent",
+      body: "Programs you've shown interest in. The coach has it in their inbox but hasn't responded yet.",
+    },
+    {
+      label: "Mutual",
+      tone: "gold",
+      body: "The coach marked interest back in you. These are your strongest leads — worth following up on.",
+    },
+    {
+      label: "Closed",
+      tone: "muted",
+      body: "The coach passed on this one for now. It happens to everyone — keep showing interest in new spots.",
+    },
+  ];
+
+const TONE: Record<"accent" | "gold" | "muted", string> = {
+  accent: "bg-accent-soft text-accent",
+  gold: "bg-warm-soft text-warm-text",
+  muted: "bg-chip text-muted",
+};
 
 export function MatchesInfo() {
   const [open, setOpen] = useState(false);
@@ -50,13 +60,15 @@ export function MatchesInfo() {
                 <X size={22} strokeWidth={2} />
               </button>
             </div>
-            <div className="space-y-4 px-5 pb-[calc(28px+env(safe-area-inset-bottom))] pt-5">
+            <div className="space-y-5 px-5 pb-[calc(28px+env(safe-area-inset-bottom))] pt-5">
               {STAGES.map((s) => (
-                <div key={s.label} className="flex gap-3">
-                  <span className="mt-0.5 shrink-0 rounded-pill bg-accent-soft px-2.5 py-1 text-xs font-bold text-accent">
+                <div key={s.label}>
+                  <span
+                    className={`inline-block rounded-pill px-3 py-1 text-xs font-bold uppercase tracking-eyebrow ${TONE[s.tone]}`}
+                  >
                     {s.label}
                   </span>
-                  <p className="text-[15px] leading-relaxed text-body-2">
+                  <p className="mt-2 text-[15px] leading-relaxed text-body-2">
                     {s.body}
                   </p>
                 </div>
