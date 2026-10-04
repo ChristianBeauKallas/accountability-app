@@ -1,6 +1,6 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { isEligible, computeFit } from "@/lib/fit";
+import { isEligible, computeFit, passesPlayerPrefs } from "@/lib/fit";
 import { FitsFeed } from "@/components/player/FitsFeed";
 import type { FeedItem } from "@/components/player/FitCard";
 import type { Need, Player, Program } from "@/lib/types";
@@ -34,6 +34,7 @@ export default async function FitsPage() {
     items = ((needs ?? []) as unknown as (Need & { program: Program })[])
       .filter((n) => n.program && !appliedIds.has(n.id))
       .filter((n) => isEligible(typedPlayer, n))
+      .filter((n) => passesPlayerPrefs(typedPlayer, n.program))
       .map((n) => ({ need: n, fit: computeFit(typedPlayer, n, n.program) }))
       .sort((a, b) => b.fit - a.fit);
   }
