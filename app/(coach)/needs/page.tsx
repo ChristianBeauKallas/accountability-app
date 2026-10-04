@@ -2,6 +2,7 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getCoachPrograms } from "@/lib/coach";
 import { NeedsView, type NeedWithCount } from "@/components/coach/NeedsView";
+import { HeaderActions } from "@/components/HeaderActions";
 import type { Need } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +39,10 @@ export default async function NeedsPage() {
 
   return (
     <main className="px-5 pt-12">
-      <p className="eyebrow">Open spots</p>
+      <div className="flex items-start justify-between">
+        <p className="eyebrow">Open spots</p>
+        <HeaderActions />
+      </div>
       <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
         Needs
       </h1>

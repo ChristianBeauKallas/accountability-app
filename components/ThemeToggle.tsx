@@ -30,7 +30,7 @@ export function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-      className="flex h-9 w-9 items-center justify-center rounded-pill bg-surface/80 text-ink backdrop-blur border border-border hover:bg-chip"
+      className="flex h-9 w-9 items-center justify-center rounded-pill text-ink hover:bg-chip"
     >
       {theme === "dark" ? (
         <Sun size={17} strokeWidth={2} aria-hidden />
