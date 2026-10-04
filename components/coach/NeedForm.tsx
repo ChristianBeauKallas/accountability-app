@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { HeaderActions } from "@/components/HeaderActions";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
@@ -94,13 +95,16 @@ export function NeedForm({
 
   return (
     <main className="px-5 pt-12 pb-6">
-      <Link
-        href="/needs"
-        className="inline-flex items-center gap-1 text-sm font-semibold text-muted"
-      >
-        <ArrowLeft size={16} strokeWidth={2} aria-hidden />
-        Needs
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          href="/needs"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-muted"
+        >
+          <ArrowLeft size={16} strokeWidth={2} aria-hidden />
+          Needs
+        </Link>
+        <HeaderActions />
+      </div>
 
       <h1 className="mt-4 text-3xl font-display font-bold tracking-tight">
         {editing ? "Edit need" : "Post a need"}
