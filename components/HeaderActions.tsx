@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sun, Moon, Pencil, LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { OverflowMenu, MenuItem } from "@/components/OverflowMenu";
 
@@ -38,6 +39,12 @@ export function HeaderActions({
     }
   }
 
+  async function signOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = "/welcome";
+  }
+
   return (
     <div className="-mr-1.5 flex items-center gap-0.5">
       {showBell && <NotificationsBell />}
@@ -50,15 +57,9 @@ export function HeaderActions({
             {editLabel}
           </MenuItem>
         )}
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-danger hover:bg-chip"
-          >
-            <LogOut size={16} strokeWidth={2} />
-            Sign out
-          </button>
-        </form>
+        <MenuItem icon={LogOut} onClick={signOut} danger>
+          Sign out
+        </MenuItem>
       </OverflowMenu>
     </div>
   );
