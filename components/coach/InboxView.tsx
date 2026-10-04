@@ -32,7 +32,13 @@ export type InboxRow = Application & {
 
 type Filter = "all" | "new" | "interested";
 
-export function InboxView({ rows: initialRows }: { rows: InboxRow[] }) {
+export function InboxView({
+  rows: initialRows,
+  hideFilter = false,
+}: {
+  rows: InboxRow[];
+  hideFilter?: boolean;
+}) {
   const supabase = createClient();
   const [rows, setRows] = useState(initialRows);
   const [filter, setFilter] = useState<Filter>("all");
@@ -76,18 +82,20 @@ export function InboxView({ rows: initialRows }: { rows: InboxRow[] }) {
 
   return (
     <div className="space-y-4">
-      <SegmentedControl
-        value={filter}
-        onChange={setFilter}
-        segments={[
-          { value: "all", label: "All" },
-          { value: "new", label: newCount ? `New ${newCount}` : "New" },
-          {
-            value: "interested",
-            label: interestedCount ? `★ ${interestedCount}` : "Interested",
-          },
-        ]}
-      />
+      {!hideFilter && (
+        <SegmentedControl
+          value={filter}
+          onChange={setFilter}
+          segments={[
+            { value: "all", label: "All" },
+            { value: "new", label: newCount ? `New ${newCount}` : "New" },
+            {
+              value: "interested",
+              label: interestedCount ? `★ ${interestedCount}` : "Interested",
+            },
+          ]}
+        />
+      )}
 
       {visible.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border bg-surface px-6 py-12 text-center">
