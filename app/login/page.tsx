@@ -145,7 +145,7 @@ function LoginInner() {
           </Field>
 
           {status === "error" && (
-            <p className="text-sm text-warm-text">{message}</p>
+            <p className="text-sm text-danger">{message}</p>
           )}
 
           <Button type="submit" size="lg" full disabled={status === "sending"}>
@@ -192,7 +192,7 @@ function LoginInner() {
           </Field>
 
           {status === "error" && (
-            <p className="text-sm text-warm-text">{message}</p>
+            <p className="text-sm text-danger">{message}</p>
           )}
 
           <Button type="submit" size="lg" full disabled={status === "sending"}>

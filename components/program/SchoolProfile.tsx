@@ -552,7 +552,7 @@ function EditForm({
           />
         </Field>
 
-        {error && <p className="text-sm text-warm-text">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
 
         <div className="flex gap-3">
           <Button variant="secondary" full onClick={onDone} disabled={saving}>

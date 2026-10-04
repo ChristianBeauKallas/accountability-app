@@ -516,7 +516,7 @@ function PlayerProfile({
         />
       </Field>
 
-      {error && <p className="text-sm text-warm-text">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <Button size="lg" full onClick={finish} disabled={saving}>
         {saving ? "Saving…" : "Finish & see my fits"}
@@ -694,7 +694,7 @@ function CoachProfile({
         />
       </Field>
 
-      {error && <p className="text-sm text-warm-text">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <Button size="lg" full onClick={finish} disabled={saving}>
         {saving ? "Saving…" : "Finish & open my inbox"}

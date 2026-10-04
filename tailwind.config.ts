@@ -5,29 +5,36 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#13201A",
-        ground: "#F5F4EF",
-        surface: "#FFFFFF",
+        // Dark theme. Token NAMES are kept so components flip in one place:
+        //   ink   = primary text (now light)
+        //   ground= app background (near-black)
+        //   surface = elevated card/input background
+        ink: "#F4F5F2",
+        ground: "#0F1210",
+        surface: "#191C1A",
         accent: {
-          DEFAULT: "#1F5C3D",
-          dark: "#123B27",
-          soft: "#DCE5DF",
+          DEFAULT: "#4FB07A",
+          dark: "#3E9A66",
+          soft: "#17271F",
         },
         gold: "#F2B46B",
-        "ink-2": "#2A3A31",
+        "ink-2": "#E6E8E4",
         muted: {
-          DEFAULT: "#5B665F",
-          2: "#7A847E",
+          DEFAULT: "#9BA49E",
+          2: "#767F79",
         },
         "muted-on-dark": "#A9B4AD",
         "soft-on-dark": "#C9D1CB",
-        "body-2": "#3E4943",
-        chip: "#F0EFE8",
-        track: "#E9E8E1",
-        border: "#D5D8D2",
-        divider: "#E4E5DF",
+        "body-2": "#C4CCC6",
+        chip: "#20231F",
+        track: "#272B28",
+        border: "#2B302C",
+        divider: "#242825",
+        // Light accent chips/banners stay light (they sit on dark cards and pop)
         "warm-soft": "#F3E3CF",
         "warm-text": "#7A3E0C",
+        // Standalone warning/error/danger text on dark backgrounds
+        danger: "#F08A6B",
       },
       fontFamily: {
         // display / headings / big numbers

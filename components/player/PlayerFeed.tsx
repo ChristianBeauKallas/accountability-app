@@ -104,7 +104,7 @@ function PostCard({
   return (
     <Card padded={false} className="overflow-hidden">
       {post.media_url && (
-        <div className="bg-ink/5">
+        <div className="bg-white/5">
           {post.media_type === "video" ? (
             <video
               src={post.media_url}
@@ -133,7 +133,7 @@ function PostCard({
           {editable && (
             <button
               onClick={onDelete}
-              className="text-muted-2 hover:text-warm-text"
+              className="text-muted-2 hover:text-danger"
               aria-label="Delete post"
             >
               <Trash2 size={16} strokeWidth={2} />
@@ -247,7 +247,7 @@ function Composer({
       )}
 
       {preview && (
-        <div className="relative overflow-hidden rounded-input bg-ink/5">
+        <div className="relative overflow-hidden rounded-input bg-white/5">
           {file?.type.startsWith("video") ? (
             <video src={preview} className="max-h-60 w-full bg-black" controls playsInline />
           ) : (
@@ -255,7 +255,7 @@ function Composer({
           )}
           <button
             onClick={() => pick(null)}
-            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-pill bg-ink/70 text-surface"
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-pill bg-black/70 text-surface"
             aria-label="Remove attachment"
           >
             <X size={15} strokeWidth={2.5} />
@@ -263,7 +263,7 @@ function Composer({
         </div>
       )}
 
-      {error && <p className="text-sm text-warm-text">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="flex items-center justify-between">
         <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-accent">
