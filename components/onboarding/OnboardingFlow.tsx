@@ -718,7 +718,7 @@ function AppTour({ role }: { role: UserRole; userId: string }) {
         ]
       : [
           { icon: Compass, label: "Fits", body: "Spots you fit, strongest matches first." },
-          { icon: ListChecks, label: "Matches", body: "Every spot you're in for." },
+          { icon: ListChecks, label: "My Spots", body: "Spots you're interested in, and where each stands." },
           { icon: User, label: "Profile", body: "Your profile, updates and highlights." },
         ];
 
