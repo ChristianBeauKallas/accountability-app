@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   applicationName: "Athletx",
   title: "Athletx — find your spot",
   description:
-    "Coaches post the spots they're recruiting for. Players see where they line up and put their name in — and always hear back.",
+    "Coaches post the spots they're recruiting for. Players see where they line up and show their interest — and always hear back.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

@@ -65,7 +65,7 @@ export default function PreviewPage() {
       <section className="space-y-3">
         <p className="eyebrow">Buttons</p>
         <Button size="lg" full>
-          Put me in
+          I&rsquo;m Interested
         </Button>
         <div className="flex gap-2">
           <Button variant="secondary">Secondary</Button>
@@ -145,7 +145,7 @@ export default function PreviewPage() {
             <Chip>2026</Chip>
             <Chip tone="metric">Needs GPA 2.5+</Chip>
           </div>
-          <Button full>Put me in</Button>
+          <Button full>I&rsquo;m Interested</Button>
         </Card>
       </section>
     </main>
