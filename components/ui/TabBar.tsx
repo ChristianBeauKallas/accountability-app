@@ -8,6 +8,7 @@ import {
   Inbox,
   ClipboardList,
   Building2,
+  Bookmark,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -27,11 +28,13 @@ const TABS: Record<Role, Tab[]> = {
   player: [
     { href: "/fits", label: "Fits", icon: FitsIcon },
     { href: "/tracker", label: "Matches", icon: ListChecks },
+    { href: "/following", label: "Following", icon: Bookmark },
     { href: "/profile", label: "Profile", icon: User },
   ],
   coach: [
     { href: "/inbox", label: "Inbox", icon: Inbox },
     { href: "/needs", label: "Needs", icon: ClipboardList },
+    { href: "/following", label: "Following", icon: Bookmark },
     { href: "/program", label: "Program", icon: Building2 },
   ],
 };
@@ -45,7 +48,7 @@ export function TabBar({ role }: { role: Role }) {
       className="fixed bottom-0 inset-x-0 z-40 mx-auto w-full max-w-app border-t border-border bg-surface shadow-nav"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <ul className="grid grid-cols-3 h-[84px]">
+      <ul className="grid grid-cols-4 h-[84px]">
         {tabs.map((tab) => {
           const active =
             pathname === tab.href || pathname.startsWith(tab.href + "/");

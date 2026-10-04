@@ -10,11 +10,13 @@ export function SaveButton({
   playerId,
   initial,
   size = 18,
+  onToggle,
 }: {
   programId: string;
   playerId: string;
   initial: boolean;
   size?: number;
+  onToggle?: (saved: boolean) => void;
 }) {
   const [saved, setSaved] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -27,6 +29,7 @@ export function SaveButton({
     setBusy(true);
     const next = !saved;
     setSaved(next);
+    onToggle?.(next);
     if (next) {
       await supabase
         .from("program_followers")

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MapPin, BadgeCheck } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Avatar } from "@/components/ui/Avatar";
@@ -15,7 +15,7 @@ export type TrackerRow = Application & {
   need: (Need & { program: Program }) | null;
 };
 
-type Filter = "all" | "active" | "interested" | "following";
+type Filter = "all" | "active" | "interested";
 
 export function TrackerList({
   rows,
@@ -47,32 +47,12 @@ export function TrackerList({
           { value: "active", label: "Active" },
           {
             value: "interested",
-            label: interestedCount ? `★ ${interestedCount}` : "★",
+            label: interestedCount ? `★ ${interestedCount}` : "Interested",
           },
-          { value: "following", label: "Saved" },
         ]}
       />
 
-      {filter === "following" ? (
-        followed.length === 0 ? (
-          <div className="rounded-card border border-dashed border-border bg-surface px-6 py-12 text-center">
-            <p className="font-display text-lg font-semibold text-ink">
-              No saved schools
-            </p>
-            <p className="mt-1 text-sm text-body-2">
-              Open a school and tap <strong>Follow</strong> to save it here.
-            </p>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {followed.map((program) => (
-              <li key={program.id}>
-                <FollowedCard program={program} />
-              </li>
-            ))}
-          </ul>
-        )
-      ) : visible.length === 0 ? (
+      {visible.length === 0 ? (
         <div className="rounded-card border border-dashed border-border bg-surface px-6 py-12 text-center">
           <p className="font-display text-lg font-semibold text-ink">
             Nothing here yet
@@ -104,32 +84,6 @@ export function TrackerList({
   );
 }
 
-function FollowedCard({ program }: { program: Program }) {
-  return (
-    <Link href={`/programs/${program.id}`} className="block">
-      <Card padded interactive>
-        <div className="flex items-center gap-3">
-          <Avatar name={program.name} src={program.logo_url} size={42} />
-          <div className="min-w-0 flex-1">
-            <h3 className="flex items-center gap-1 truncate font-display text-base font-semibold leading-tight">
-              <span className="truncate">{program.name}</span>
-              {program.verified && (
-                <BadgeCheck size={15} strokeWidth={2} className="shrink-0 text-accent" aria-label="Verified" />
-              )}
-            </h3>
-            <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
-              <MapPin size={13} strokeWidth={2} aria-hidden />
-              <span className="truncate">
-                {[program.city, program.state].filter(Boolean).join(", ")}
-                {program.division ? ` · ${program.division}` : ""}
-              </span>
-            </p>
-          </div>
-        </div>
-      </Card>
-    </Link>
-  );
-}
 
 function TrackerCard({
   row,
