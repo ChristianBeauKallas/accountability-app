@@ -1,6 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { InboxView, type InboxRow } from "@/components/coach/InboxView";
+import { HeaderActions } from "@/components/HeaderActions";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,10 @@ export default async function InboxPage() {
 
   return (
     <main className="px-5 pt-12">
-      <p className="eyebrow">Hey {first}</p>
+      <div className="flex items-start justify-between">
+        <p className="eyebrow">Hey {first}</p>
+        <HeaderActions />
+      </div>
       <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
         Inbox
       </h1>

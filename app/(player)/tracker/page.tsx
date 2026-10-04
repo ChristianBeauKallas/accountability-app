@@ -1,6 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { TrackerList, type TrackerRow } from "@/components/player/TrackerList";
+import { HeaderActions } from "@/components/HeaderActions";
 import type { Program } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,10 @@ export default async function TrackerPage() {
 
   return (
     <main className="px-5 pt-12">
-      <p className="eyebrow">In the mix</p>
+      <div className="flex items-start justify-between">
+        <p className="eyebrow">In the mix</p>
+        <HeaderActions showBell />
+      </div>
       <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
         Matches
       </h1>
