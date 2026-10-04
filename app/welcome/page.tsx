@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ClipboardList, type LucideIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { BaseballIcon } from "@/components/ui/BaseballIcon";
 
 export default async function WelcomePage() {
-  // If already signed in, bounce to the router.
   const supabase = createClient();
   const {
     data: { user },
@@ -12,32 +12,45 @@ export default async function WelcomePage() {
   if (user) redirect("/");
 
   return (
-    <main className="min-h-dvh flex flex-col px-6 pt-16 pb-10">
-      {/* Brand */}
-      <p className="eyebrow">Athletx</p>
-      <h1 className="mt-3 text-[40px] leading-[1.05] font-display font-bold tracking-tight text-ink">
-        Helping ball players
-        <br />
-        find the right fit.
-      </h1>
-      <p className="mt-4 text-base text-body-2 max-w-[22rem]">
-        Build your recruiting profile and let our algorithm do the matching.
-      </p>
+    <main className="min-h-dvh bg-ink text-ground flex flex-col px-6 pt-14 pb-10">
+      {/* Wordmark */}
+      <div className="font-display text-2xl font-bold tracking-tight text-ground">
+        athletx<span className="text-gold">.</span>
+      </div>
+
+      {/* Hero */}
+      <div className="flex flex-1 flex-col justify-center py-10">
+        <p className="font-sans text-[12px] font-semibold uppercase tracking-wordmark text-muted-on-dark">
+          College baseball recruiting
+        </p>
+        <h1 className="mt-3 text-[44px] leading-[1.02] font-display font-bold tracking-tight text-ground">
+          Helping ball players find the right fit.
+        </h1>
+        <p className="mt-5 max-w-[22rem] text-[17px] leading-relaxed text-soft-on-dark">
+          Build your recruiting profile and let our algorithm do the matching.
+        </p>
+      </div>
 
       {/* Role picker */}
-      <div className="mt-10 space-y-3">
-        <p className="text-center text-sm text-muted">I&rsquo;m a&hellip;</p>
+      <div className="space-y-4">
+        <p className="text-center text-sm text-muted-on-dark">I&rsquo;m a&hellip;</p>
         <div className="grid grid-cols-2 gap-3">
           <RoleCard
             href="/login?role=player"
             title="Player"
             sub="HS or transfer"
+            icon={BaseballIcon as unknown as LucideIcon}
           />
-          <RoleCard href="/login?role=coach" title="Coach" sub="D2/D3/NAIA/JUCO" />
+          <RoleCard
+            href="/login?role=coach"
+            title="Coach"
+            sub="D2/D3/NAIA/JUCO"
+            icon={ClipboardList}
+          />
         </div>
-        <p className="pt-2 text-center text-sm text-muted">
+        <p className="pt-1 text-center text-sm text-soft-on-dark">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-accent">
+          <Link href="/login" className="font-semibold text-gold">
             Sign in
           </Link>
         </p>
@@ -50,21 +63,24 @@ function RoleCard({
   href,
   title,
   sub,
+  icon: Icon,
 }: {
   href: string;
   title: string;
   sub: string;
+  icon: LucideIcon;
 }) {
   return (
     <Link
       href={href}
-      className="group flex flex-col justify-between rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent"
+      className="group flex flex-col rounded-card bg-surface p-5 shadow-card transition-transform active:scale-[0.99]"
     >
-      <div>
-        <h2 className="text-2xl font-display font-bold text-ink">{title}</h2>
-        <p className="text-sm text-muted">{sub}</p>
-      </div>
-      <span className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-accent">
+      <span className="flex h-11 w-11 items-center justify-center rounded-pill bg-accent-soft text-accent">
+        <Icon size={22} strokeWidth={2} aria-hidden />
+      </span>
+      <h2 className="mt-4 font-display text-2xl font-bold text-ink">{title}</h2>
+      <p className="text-sm text-muted">{sub}</p>
+      <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent">
         Continue
         <ArrowRight
           size={16}
