@@ -88,7 +88,10 @@ function LoginInner() {
 
   if (status === "sent") {
     return (
-      <main className="min-h-dvh flex flex-col items-center justify-center px-6 text-center">
+      <main
+        data-theme="dark"
+        className="min-h-dvh bg-ground text-ink flex flex-col items-center justify-center px-6 text-center"
+      >
         <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-accent-soft text-accent">
           <CheckCircle2 size={28} strokeWidth={2} aria-hidden />
         </span>
@@ -108,7 +111,10 @@ function LoginInner() {
   }
 
   return (
-    <main className="min-h-dvh flex flex-col px-6 pt-14 pb-10">
+    <main
+      data-theme="dark"
+      className="min-h-dvh bg-ground text-ink flex flex-col px-6 pt-14 pb-10"
+    >
       <Link
         href="/welcome"
         className="inline-flex items-center gap-1 text-sm font-semibold text-muted"

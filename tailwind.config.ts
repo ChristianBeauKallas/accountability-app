@@ -1,40 +1,38 @@
 import type { Config } from "tailwindcss";
 
+// Colors resolve from CSS variables (set per-theme in globals.css), so the
+// same token names drive both the light and dark themes at runtime.
+const t = (name: string) => `rgb(var(${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        // Dark theme. Token NAMES are kept so components flip in one place:
-        //   ink   = primary text (now light)
-        //   ground= app background (near-black)
-        //   surface = elevated card/input background
-        ink: "#F4F5F2",
-        ground: "#0F1210",
-        surface: "#191C1A",
+        ink: t("--c-ink"),
+        ground: t("--c-ground"),
+        surface: t("--c-surface"),
         accent: {
-          DEFAULT: "#4FB07A",
-          dark: "#3E9A66",
-          soft: "#17271F",
+          DEFAULT: t("--c-accent"),
+          dark: t("--c-accent-dark"),
+          soft: t("--c-accent-soft"),
         },
-        gold: "#F2B46B",
-        "ink-2": "#E6E8E4",
+        gold: t("--c-gold"),
+        "ink-2": t("--c-ink-2"),
         muted: {
-          DEFAULT: "#9BA49E",
-          2: "#767F79",
+          DEFAULT: t("--c-muted"),
+          2: t("--c-muted-2"),
         },
-        "muted-on-dark": "#A9B4AD",
-        "soft-on-dark": "#C9D1CB",
-        "body-2": "#C4CCC6",
-        chip: "#20231F",
-        track: "#272B28",
-        border: "#2B302C",
-        divider: "#242825",
-        // Light accent chips/banners stay light (they sit on dark cards and pop)
-        "warm-soft": "#F3E3CF",
-        "warm-text": "#7A3E0C",
-        // Standalone warning/error/danger text on dark backgrounds
-        danger: "#F08A6B",
+        "muted-on-dark": t("--c-muted-on-dark"),
+        "soft-on-dark": t("--c-soft-on-dark"),
+        "body-2": t("--c-body-2"),
+        chip: t("--c-chip"),
+        track: t("--c-track"),
+        border: t("--c-border"),
+        divider: t("--c-divider"),
+        "warm-soft": t("--c-warm-soft"),
+        "warm-text": t("--c-warm-text"),
+        danger: t("--c-danger"),
       },
       fontFamily: {
         // display / headings / big numbers

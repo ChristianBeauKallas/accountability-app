@@ -43,11 +43,20 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+const themeInit = `(function(){try{var t=localStorage.getItem('athletx-theme');if(t!=='light'&&t!=='dark')t='dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${barlow.variable} ${manrope.variable}`}>
+    <html
+      lang="en"
+      className={`${barlow.variable} ${manrope.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
       <body>
         <div className="app-frame">{children}</div>
       </body>

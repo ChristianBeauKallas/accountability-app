@@ -11,7 +11,10 @@ export default async function WelcomePage() {
   if (user) redirect("/");
 
   return (
-    <main className="min-h-dvh bg-ground text-ink flex flex-col px-6 pt-14 pb-10">
+    <main
+      data-theme="dark"
+      className="min-h-dvh bg-ground text-ink flex flex-col px-6 pt-14 pb-10"
+    >
       {/* Wordmark */}
       <div className="font-display text-2xl font-bold tracking-tight text-ink">
         athletx<span className="text-gold">.</span>

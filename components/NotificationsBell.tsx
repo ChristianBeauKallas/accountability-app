@@ -22,7 +22,7 @@ export async function NotificationsBell() {
     <Link
       href="/notifications"
       aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
-      className="relative -mr-1 flex h-9 w-9 items-center justify-center rounded-pill text-ink hover:bg-chip"
+      className="relative flex h-9 w-9 items-center justify-center rounded-pill border border-border bg-surface/80 text-ink backdrop-blur hover:bg-chip"
     >
       <Bell size={20} strokeWidth={2} aria-hidden />
       {unread > 0 && (
