@@ -31,7 +31,7 @@ export default async function FitsPage() {
   let items: FeedItem[] = [];
   if (player) {
     const typedPlayer = player as Player;
-    items = ((needs ?? []) as (Need & { program: Program })[])
+    items = ((needs ?? []) as unknown as (Need & { program: Program })[])
       .filter((n) => n.program && !appliedIds.has(n.id))
       .filter((n) => isEligible(typedPlayer, n))
       .map((n) => ({ need: n, fit: computeFit(typedPlayer, n, n.program) }))
