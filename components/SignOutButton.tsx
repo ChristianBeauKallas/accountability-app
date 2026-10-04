@@ -6,7 +6,7 @@ export function SignOutButton() {
     <form action="/auth/signout" method="post" className="mt-6">
       <button
         type="submit"
-        className="inline-flex items-center gap-2 text-sm font-semibold text-warm-text"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-danger"
       >
         <LogOut size={16} strokeWidth={2} aria-hidden />
         Sign out

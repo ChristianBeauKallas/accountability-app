@@ -18,7 +18,7 @@ type ChipProps = React.HTMLAttributes<HTMLSpanElement> & {
 
 const tones: Record<Tone, string> = {
   neutral: "bg-chip text-body-2",
-  accent: "bg-accent-soft text-accent-dark",
+  accent: "bg-accent-soft text-accent",
   metric: "bg-chip text-ink font-semibold tabular-nums",
   selected: "bg-accent text-surface",
   "status-new": "bg-accent text-surface",

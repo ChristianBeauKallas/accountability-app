@@ -20,7 +20,7 @@ export function Avatar({ name, src, size = 44, className }: AvatarProps) {
     <span
       className={cn(
         "inline-flex items-center justify-center shrink-0 rounded-pill overflow-hidden",
-        "bg-accent-soft text-accent-dark font-display font-semibold",
+        "bg-accent-soft text-accent font-display font-semibold",
         className
       )}
       style={{ width: size, height: size, fontSize: Math.round(size * 0.38) }}

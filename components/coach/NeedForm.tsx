@@ -260,7 +260,7 @@ export function NeedForm({
           />
         </Field>
 
-        {error && <p className="text-sm text-warm-text">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
 
         <Button size="lg" full onClick={submit} disabled={saving}>
           {saving ? "Saving…" : editing ? "Save changes" : "Post need"}

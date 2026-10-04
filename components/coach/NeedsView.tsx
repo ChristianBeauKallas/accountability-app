@@ -120,7 +120,7 @@ export function NeedsView({ needs: initial }: { needs: NeedWithCount[] }) {
                     <button
                       onClick={() => remove(need)}
                       disabled={busyId === need.id}
-                      className="text-warm-text disabled:opacity-50"
+                      className="text-danger disabled:opacity-50"
                       aria-label="Delete need"
                     >
                       <Trash2 size={17} strokeWidth={2} />
