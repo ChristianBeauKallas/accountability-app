@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sun, Moon, Pencil, LogOut } from "lucide-react";
+import { Sun, Moon, Pencil, LogOut, Bell, BellOff, BellRing } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { OverflowMenu, MenuItem } from "@/components/OverflowMenu";
+import {
+  pushSupported,
+  isSubscribed,
+  permission,
+  enablePush,
+  disablePush,
+} from "@/lib/push/client";
 
 // Top-right header cluster: optional notifications bell (players) + a ⋮ menu
 // with the theme switch, an optional Edit item, and Sign out.
@@ -18,6 +25,9 @@ export function HeaderActions({
   editLabel?: string;
 }) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [pushState, setPushState] = useState<
+    "unsupported" | "off" | "on" | "blocked" | "busy"
+  >("unsupported");
 
   useEffect(() => {
     const current =
@@ -27,6 +37,35 @@ export function HeaderActions({
         | null) ?? "dark";
     setTheme(current);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!pushSupported()) return;
+      if (permission() === "denied") {
+        if (active) setPushState("blocked");
+        return;
+      }
+      const sub = await isSubscribed();
+      if (active) setPushState(sub ? "on" : "off");
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function togglePush() {
+    if (pushState === "busy" || pushState === "blocked") return;
+    if (pushState === "on") {
+      setPushState("busy");
+      await disablePush();
+      setPushState("off");
+    } else {
+      setPushState("busy");
+      const ok = await enablePush();
+      setPushState(ok ? "on" : permission() === "denied" ? "blocked" : "off");
+    }
+  }
 
   function toggleTheme() {
     const next = theme === "dark" ? "light" : "dark";
@@ -52,6 +91,27 @@ export function HeaderActions({
         <MenuItem icon={theme === "dark" ? Sun : Moon} onClick={toggleTheme}>
           {theme === "dark" ? "Light mode" : "Dark mode"}
         </MenuItem>
+        {pushState !== "unsupported" && (
+          <MenuItem
+            icon={
+              pushState === "on"
+                ? BellRing
+                : pushState === "blocked"
+                  ? BellOff
+                  : Bell
+            }
+            onClick={togglePush}
+            disabled={pushState === "blocked" || pushState === "busy"}
+          >
+            {pushState === "on"
+              ? "Turn off notifications"
+              : pushState === "blocked"
+                ? "Notifications blocked"
+                : pushState === "busy"
+                  ? "Working…"
+                  : "Turn on notifications"}
+          </MenuItem>
+        )}
         {onEdit && (
           <MenuItem icon={Pencil} onClick={onEdit}>
             {editLabel}
