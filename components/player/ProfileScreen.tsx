@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, GraduationCap, MapPin, X } from "lucide-react";
+import { Pencil, GraduationCap, MapPin, X, Camera } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Card } from "@/components/ui/Card";
@@ -18,6 +18,7 @@ import { profileCompleteness } from "@/lib/fit";
 import { formatHeight, metricChips } from "@/lib/format";
 import {
   POSITIONS,
+  DIVISIONS,
   STATES,
   BATS,
   THROWS,
@@ -25,7 +26,12 @@ import {
   isCatcher,
   isOutfielder,
 } from "@/lib/constants";
+import { CLIMATES } from "@/lib/climate";
 import type { Player, Profile } from "@/lib/types";
+
+function climateLabel(value: string | null): string | null {
+  return CLIMATES.find((c) => c.value === value)?.label ?? null;
+}
 
 type Tab = "data" | "updates" | "highlights";
 
@@ -58,7 +64,7 @@ export function ProfileScreen({
         value={tab}
         onChange={setTab}
         segments={[
-          { value: "data", label: "Data" },
+          { value: "data", label: "Bio" },
           { value: "updates", label: "Updates" },
           { value: "highlights", label: "Highlights" },
         ]}
@@ -139,22 +145,29 @@ function DataTab({ player }: { player: Player }) {
   const metrics = metricChips(player);
   const height = formatHeight(player.height_in);
 
+  const prefStates = player.pref_states ?? [];
+  const prefDivisions = player.pref_divisions ?? [];
+  const location = prefStates.length
+    ? prefStates.join(", ")
+    : player.pref_climate && player.pref_climate !== "any"
+      ? `${climateLabel(player.pref_climate)} climate`
+      : "Anywhere";
+
   return (
     <div>
-      {pct < 100 && (
-        <Card className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-ink">Profile strength</span>
-            <span className="tabular-nums text-muted">{pct}%</span>
-          </div>
-          <ProgressBar value={pct} />
-          <p className="text-xs text-body-2">
-            A complete profile ranks higher in coaches&rsquo; inboxes.
+      {/* About — first thing under the Bio tab */}
+      <div>
+        <h2 className="eyebrow mb-2">About</h2>
+        {player.bio ? (
+          <p className="text-[15px] leading-relaxed text-body-2">{player.bio}</p>
+        ) : (
+          <p className="text-sm text-muted-2">
+            Add a short bio in Edit — coaches read this first.
           </p>
-        </Card>
-      )}
+        )}
+      </div>
 
-      <Section title="Athletics">
+      <Section title="Positions">
         <div className="flex flex-wrap gap-2">
           {(player.positions ?? []).map((p) => (
             <Chip key={p} tone={p === player.primary_position ? "accent" : "neutral"}>
@@ -165,7 +178,10 @@ function DataTab({ player }: { player: Player }) {
             <span className="text-sm text-muted-2">No positions yet</span>
           )}
         </div>
-        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+      </Section>
+
+      <Section title="Measurables">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <Stat label="Bats / Throws" value={bt(player)} />
           <Stat label="Height / Weight" value={hw(height, player.weight_lb)} />
         </dl>
@@ -187,10 +203,40 @@ function DataTab({ player }: { player: Player }) {
         </p>
       </Section>
 
-      {player.bio && (
-        <Section title="About">
-          <p className="text-[15px] leading-relaxed text-body-2">{player.bio}</p>
-        </Section>
+      <Section title="Interested in">
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-muted-2">Levels</p>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {prefDivisions.length ? (
+                prefDivisions.map((d) => (
+                  <Chip key={d} tone="accent">
+                    {d}
+                  </Chip>
+                ))
+              ) : (
+                <span className="text-sm text-muted-2">Any level</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-muted-2">Location</p>
+            <p className="mt-1 text-[15px] text-ink">{location}</p>
+          </div>
+        </div>
+      </Section>
+
+      {pct < 100 && (
+        <Card className="mt-6 space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold text-ink">Profile strength</span>
+            <span className="tabular-nums text-muted">{pct}%</span>
+          </div>
+          <ProgressBar value={pct} />
+          <p className="text-xs text-body-2">
+            A complete profile ranks higher in coaches&rsquo; inboxes.
+          </p>
+        </Card>
       )}
 
       <SignOutButton />
@@ -276,8 +322,52 @@ function EditForm({
   const [isTransfer, setIsTransfer] = useState(player.is_transfer);
   const [currentSchool, setCurrentSchool] = useState(player.current_school ?? "");
   const [bio, setBio] = useState(player.bio ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [prefDivisions, setPrefDivisions] = useState<string[]>(
+    player.pref_divisions ?? []
+  );
+  const [prefStates, setPrefStates] = useState<string[]>(
+    player.pref_states ?? []
+  );
+  const [prefClimate, setPrefClimate] = useState(player.pref_climate ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  async function onAvatarPick(file: File | null) {
+    if (!file) return;
+    setError("");
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Photo is over 10MB — try a smaller image.");
+      return;
+    }
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${profile.id}/avatar/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("player-media")
+      .upload(path, file, { upsert: true });
+    if (upErr) {
+      setUploadingAvatar(false);
+      setError(upErr.message);
+      return;
+    }
+    const url = supabase.storage.from("player-media").getPublicUrl(path).data
+      .publicUrl;
+    setAvatarUrl(url);
+    setUploadingAvatar(false);
+  }
+
+  function toggleDivision(d: string) {
+    setPrefDivisions((cur) =>
+      cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]
+    );
+  }
+  function toggleState(s: string) {
+    setPrefStates((cur) =>
+      cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]
+    );
+  }
 
   const primary = picked[0] ?? null;
   const num = (v: string) => (v === "" ? null : Number(v));
@@ -298,7 +388,7 @@ function EditForm({
 
     const { error: pErr } = await supabase
       .from("profiles")
-      .update({ full_name: name.trim() })
+      .update({ full_name: name.trim(), avatar_url: avatarUrl || null })
       .eq("id", profile.id);
 
     const { error: plErr } = await supabase
@@ -326,6 +416,9 @@ function EditForm({
         fastball_velo: isPitcher(primary) ? num(fastball) : null,
         pop_time: isCatcher(primary) ? num(popTime) : null,
         bio: bio.trim() || null,
+        pref_divisions: prefDivisions,
+        pref_states: prefStates,
+        pref_climate: prefClimate || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", profile.id);
@@ -356,6 +449,36 @@ function EditForm({
       </div>
 
       <div className="mt-6 space-y-5">
+        {/* Profile photo */}
+        <div className="flex items-center gap-4">
+          <Avatar name={name || "You"} src={avatarUrl || null} size={72} />
+          <div>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink">
+              <Camera size={16} strokeWidth={2} aria-hidden />
+              {uploadingAvatar
+                ? "Uploading…"
+                : avatarUrl
+                  ? "Change photo"
+                  : "Add photo"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => onAvatarPick(e.target.files?.[0] ?? null)}
+              />
+            </label>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={() => setAvatarUrl("")}
+                className="ml-3 text-sm font-semibold text-warm-text"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+
         <Field label="Full name" htmlFor="pn">
           <Input id="pn" value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
@@ -559,6 +682,76 @@ function EditForm({
             />
           </Field>
         )}
+
+        {/* Recruiting preferences — filter the Fits feed */}
+        <div className="rounded-input border border-border bg-surface p-4 space-y-4">
+          <p className="eyebrow">Interested in</p>
+
+          <Field label="Levels" hint="Only show spots at these levels. None = all.">
+            <div className="flex flex-wrap gap-2">
+              {DIVISIONS.map((d) => {
+                const active = prefDivisions.includes(d);
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => toggleDivision(d)}
+                    className={cn(
+                      "h-9 rounded-pill px-4 text-sm font-semibold transition-colors",
+                      active
+                        ? "bg-accent text-surface"
+                        : "bg-chip text-body-2 hover:bg-accent-soft"
+                    )}
+                  >
+                    {d}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+
+          <Field
+            label="Climate"
+            hint="Prefer a region's weather. Ignored if you pick states below."
+            htmlFor="clim"
+          >
+            <Select
+              id="clim"
+              value={prefClimate}
+              onChange={(e) => setPrefClimate(e.target.value)}
+            >
+              <option value="">Anywhere</option>
+              {CLIMATES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="States" hint="Tap the states you'd go to. None = anywhere.">
+            <div className="flex flex-wrap gap-1.5">
+              {STATES.map((s) => {
+                const active = prefStates.includes(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => toggleState(s)}
+                    className={cn(
+                      "h-8 rounded-pill px-2.5 text-xs font-semibold transition-colors",
+                      active
+                        ? "bg-accent text-surface"
+                        : "bg-chip text-body-2 hover:bg-accent-soft"
+                    )}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+        </div>
 
         <Field label="About you">
           <Textarea
