@@ -1,0 +1,45 @@
+# Athletx — Supabase setup
+
+## Apply the schema
+
+Run these in the Supabase SQL editor (or `psql`) **in order**:
+
+1. `migrations/0001_schema.sql` — tables, enums, triggers (incl. auto-profile
+   on signup).
+2. `migrations/0002_rls.sql` — Row Level Security policies.
+3. `seed.sql` — demo programs, needs, players, and applications.
+
+The seed is safe to re-run; it clears its own rows first.
+
+## The anti-spam guarantee (enforced in RLS)
+
+- **Nobody browses players.** A player row/profile is readable only by the
+  player themselves and by a coach **after** that player has applied to one of
+  the coach's program needs.
+- Players can read **open** needs, program pages, and their **own**
+  applications — nothing about other players.
+- Coaches read applications to **their** program's needs, and only the
+  profiles of players who applied.
+
+## Demo accounts
+
+All seeded accounts use the password **`athletxdemo`** (and email magic-link
+once SMTP/OAuth is configured in Phase 3):
+
+| Email | Role | Notes |
+|---|---|---|
+| `coach@seed.athletx` | coach | staffs **Cowley College** — populated inbox |
+| `coach2@seed.athletx` | coach | staffs **Washburn University** |
+| `player1@seed.athletx` … `player40@seed.athletx` | player | various positions / states |
+
+## Environment variables
+
+The app reads (added in Phase 3):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+Set them in `.env.local` for development and in Vercel project settings for
+deploys. Never commit real keys.
