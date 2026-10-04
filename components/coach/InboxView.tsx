@@ -16,7 +16,8 @@ import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { PlayerFeed } from "@/components/player/PlayerFeed";
-import { STATUS_LABEL, STATUS_TONE, timeAgo, metricChips, formatHeight } from "@/lib/format";
+import { StatBlock } from "@/components/player/StatBlock";
+import { STATUS_LABEL, STATUS_TONE, timeAgo } from "@/lib/format";
 import type {
   Application,
   ApplicationStatus,
@@ -198,8 +199,6 @@ function ApplicantSheet({
 }) {
   const p = row.player;
   const name = p?.profile.full_name || "Player";
-  const metrics = p ? metricChips(p) : [];
-  const height = formatHeight(p?.height_in ?? null);
   const [tab, setTab] = useState<"profile" | "updates" | "highlights">(
     "profile"
   );
@@ -279,32 +278,12 @@ function ApplicantSheet({
                   </div>
                 </Section>
 
-                <Section title="Measurables">
-                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    <Stat
-                      label="Bats / Throws"
-                      value={`${p?.bats ?? "—"} / ${p?.throws ?? "—"}`}
-                    />
-                    <Stat
-                      label="Height / Weight"
-                      value={
-                        [height, p?.weight_lb ? `${p.weight_lb} lb` : null]
-                          .filter(Boolean)
-                          .join(" · ") || "—"
-                      }
-                    />
-                    <Stat label="GPA" value={p?.gpa != null ? p.gpa.toFixed(2) : "—"} />
-                  </dl>
-                  {metrics.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {metrics.map((m) => (
-                        <Chip key={m} tone="metric">
-                          {m}
-                        </Chip>
-                      ))}
-                    </div>
-                  )}
-                </Section>
+                {p && (
+                  <section className="mt-5">
+                    <h3 className="eyebrow mb-2">Measurables</h3>
+                    <StatBlock player={p} />
+                  </section>
+                )}
 
                 {p?.bio && (
                   <Section title="About">
@@ -364,11 +343,3 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-muted-2">{label}</dt>
-      <dd className="font-medium text-ink">{value}</dd>
-    </div>
-  );
-}
