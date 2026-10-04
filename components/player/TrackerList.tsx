@@ -15,7 +15,7 @@ export type TrackerRow = Application & {
   need: (Need & { program: Program }) | null;
 };
 
-type Filter = "all" | "active" | "interested";
+type Filter = "mine" | "mutual" | "closed";
 
 export function TrackerList({
   rows,
@@ -26,16 +26,23 @@ export function TrackerList({
   followed: Program[];
   userId: string;
 }) {
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("mine");
   const followedSet = new Set(followed.map((p) => p.id));
 
   const visible = rows.filter((r) => {
-    if (filter === "active") return r.status === "new" || r.status === "viewed";
-    if (filter === "interested") return r.status === "interested";
-    return true;
+    if (filter === "mine") return r.status === "new" || r.status === "viewed";
+    if (filter === "mutual") return r.status === "interested";
+    return r.status === "closed";
   });
 
-  const interestedCount = rows.filter((r) => r.status === "interested").length;
+  const mutualCount = rows.filter((r) => r.status === "interested").length;
+
+  const emptyCopy =
+    filter === "mutual"
+      ? "When a coach marks interest back, it'll show up here."
+      : filter === "closed"
+        ? "Spots a coach passed on land here. It happens — keep going."
+        : "Head to Recommended Fits and show interest in a few spots.";
 
   return (
     <div className="space-y-4">
@@ -43,12 +50,12 @@ export function TrackerList({
         value={filter}
         onChange={setFilter}
         segments={[
-          { value: "all", label: "All" },
-          { value: "active", label: "Active" },
+          { value: "mine", label: "Interested" },
           {
-            value: "interested",
-            label: interestedCount ? `★ ${interestedCount}` : "Interested",
+            value: "mutual",
+            label: mutualCount ? `Mutual (${mutualCount})` : "Mutual",
           },
+          { value: "closed", label: "Closed" },
         ]}
       />
 
@@ -57,11 +64,7 @@ export function TrackerList({
           <p className="font-display text-lg font-semibold text-ink">
             Nothing here yet
           </p>
-          <p className="mt-1 text-sm text-body-2">
-            {filter === "interested"
-              ? "When a coach marks interest, it'll show up here."
-              : "Head to Recommended Fits and show interest in a few spots."}
-          </p>
+          <p className="mt-1 text-sm text-body-2">{emptyCopy}</p>
         </div>
       ) : (
         <ul className="space-y-3">
