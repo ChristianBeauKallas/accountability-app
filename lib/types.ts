@@ -64,6 +64,8 @@ export type Program = {
   record_last_season: string | null;
   enrollment: number | null;
   min_gpa: number | null;
+  recruiting_pitch: string | null;
+  verified: boolean;
   created_at: string;
 };
 
