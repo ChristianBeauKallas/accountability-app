@@ -1,4 +1,5 @@
 import type { Player, Need, Program } from "@/lib/types";
+import { stateClimate } from "@/lib/climate";
 
 // ===========================================================================
 // Fit scoring
@@ -46,6 +47,28 @@ export function isEligible(player: Player, need: Need): boolean {
     inPool(player, need) &&
     meetsGpa(player, need)
   );
+}
+
+// Player-side preferences: levels (divisions) and location (states or climate).
+// Empty / unset preferences mean "no filter".
+export function passesPlayerPrefs(
+  player: Player,
+  program: Pick<Program, "division" | "state">
+): boolean {
+  if (
+    player.pref_divisions?.length &&
+    !player.pref_divisions.includes(program.division)
+  ) {
+    return false;
+  }
+  if (player.pref_states?.length) {
+    if (!program.state || !player.pref_states.includes(program.state)) {
+      return false;
+    }
+  } else if (player.pref_climate && player.pref_climate !== "any") {
+    if (stateClimate(program.state) !== player.pref_climate) return false;
+  }
+  return true;
 }
 
 // --------------------------------------------------------------------------

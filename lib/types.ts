@@ -43,6 +43,9 @@ export type Player = {
   pop_time: number | null;
   highlight_url: string | null;
   bio: string | null;
+  pref_divisions: string[];
+  pref_states: string[];
+  pref_climate: string | null;
   updated_at: string;
 };
 

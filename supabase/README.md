@@ -25,7 +25,9 @@ Run these in the Supabase SQL editor (or `psql`) **in order**:
    they've applied to (keeps closed needs visible in the Tracker).
 5. `migrations/0005_posts.sql` — player Updates/Highlights posts + the
    `player-media` Storage bucket.
-6. `seed.sql` — demo programs, needs, players, applications, and posts.
+6. `migrations/0006_player_prefs.sql` — player recruiting preferences
+   (levels / states / climate) that filter the Fits feed.
+7. `seed.sql` — demo programs, needs, players, applications, and posts.
 
 The seed is safe to re-run; it clears its own rows first.
 
