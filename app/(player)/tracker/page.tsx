@@ -38,8 +38,8 @@ export default async function TrackerPage() {
       </h1>
       <p className="mt-1 mb-5 text-[15px] text-body-2">
         {rows.length > 0
-          ? `${rows.length} ${rows.length === 1 ? "spot" : "spots"} you're in for — you'll always know where you stand.`
-          : "Every spot you put your name in shows up here."}
+          ? `${rows.length} ${rows.length === 1 ? "spot" : "spots"} you're interested in — you'll always know where you stand.`
+          : "Every spot you show interest in shows up here."}
       </p>
       <TrackerList rows={rows} followed={followed} userId={userId} />
     </main>

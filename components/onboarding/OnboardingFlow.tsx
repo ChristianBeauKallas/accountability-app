@@ -103,7 +103,7 @@ function HowItWorks({ role }: { role: UserRole }) {
           {
             icon: ShieldCheck,
             title: "Reach out on your terms",
-            body: "You see a player once they put their name in. Mark interest and reach out.",
+            body: "You see a player once they show interest. Mark interest back and reach out.",
           },
         ]
       : [
@@ -114,8 +114,8 @@ function HowItWorks({ role }: { role: UserRole }) {
           },
           {
             icon: Zap,
-            title: "Put your name in",
-            body: "One tap. Your profile does the talking, and the coach sees you.",
+            title: "Show your interest",
+            body: "One tap on I'm Interested. Your profile does the talking, and the coach sees you.",
           },
           {
             icon: ShieldCheck,
