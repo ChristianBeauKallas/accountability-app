@@ -14,6 +14,7 @@ export type Profile = {
   full_name: string;
   email: string | null;
   avatar_url: string | null;
+  onboarded: boolean;
   created_at: string;
   updated_at: string;
 };

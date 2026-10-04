@@ -244,6 +244,11 @@ where r.pick <= 3
   and (abs(hashtext(r.player_id::text)) % 10) < 7;   -- ~70% of players apply
 
 -- ---------------------------------------------------------------------------
--- 7. Cleanup helper
+-- 7. Mark seeded accounts as onboarded (skip the onboarding flow)
+-- ---------------------------------------------------------------------------
+update public.profiles set onboarded = true where email like '%@seed.athletx';
+
+-- ---------------------------------------------------------------------------
+-- 8. Cleanup helper
 -- ---------------------------------------------------------------------------
 drop function if exists public._seed_user(text, text, text, text);
