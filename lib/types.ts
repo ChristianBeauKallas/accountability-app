@@ -120,6 +120,19 @@ export type Notification = {
   created_at: string;
 };
 
+export type PostKind = "update" | "highlight";
+export type MediaType = "image" | "video";
+
+export type PlayerPost = {
+  id: string;
+  player_id: string;
+  kind: PostKind;
+  body: string | null;
+  media_url: string | null;
+  media_type: MediaType | null;
+  created_at: string;
+};
+
 // Convenience join shapes used across the UI.
 export type NeedWithProgram = Need & { program: Program };
 export type ApplicationWithNeed = Application & { need: NeedWithProgram };

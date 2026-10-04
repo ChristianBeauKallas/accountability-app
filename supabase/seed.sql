@@ -244,6 +244,34 @@ where r.pick <= 3
   and (abs(hashtext(r.player_id::text)) % 10) < 7;   -- ~70% of players apply
 
 -- ---------------------------------------------------------------------------
+-- 6.5 Demo posts (Updates feed + Highlights feed)
+--     Every player gets an update; half get a sample highlight video.
+-- ---------------------------------------------------------------------------
+insert into public.player_posts (player_id, kind, body, created_at)
+select
+  id, 'update',
+  (array[
+    'Hit a new PR in the weight room today. Grind continues.',
+    'Great showcase this weekend — felt locked in at the plate.',
+    'Added velo this fall. Work is paying off.',
+    'Team captain this year. Ready to lead.',
+    'Visited a campus I loved — facilities were unreal.',
+    'Locked in on grades and reps. Open to the right fit.'
+  ])[1 + (abs(hashtext(id::text)) % 6)],
+  now() - (random() * interval '14 days')
+from public.players;
+
+insert into public.player_posts (player_id, kind, body, media_url, media_type, created_at)
+select
+  id, 'highlight',
+  (array['BP round — oppo pop', 'Bullpen: FB / breaking ball', 'Infield actions', '60 time + throws across'])[1 + (abs(hashtext(id::text)) % 4)],
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+  'video',
+  now() - (random() * interval '14 days')
+from public.players
+where (abs(hashtext(id::text)) % 2) = 0;
+
+-- ---------------------------------------------------------------------------
 -- 7. Mark seeded accounts as onboarded (skip the onboarding flow)
 -- ---------------------------------------------------------------------------
 update public.profiles set onboarded = true where email like '%@seed.athletx';

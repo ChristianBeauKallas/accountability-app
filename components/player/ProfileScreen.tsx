@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Pencil,
-  GraduationCap,
-  MapPin,
-  Film,
-  X,
-} from "lucide-react";
+import { Pencil, GraduationCap, MapPin, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Card } from "@/components/ui/Card";
@@ -16,8 +10,10 @@ import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { SignOutButton } from "@/components/SignOutButton";
+import { PlayerFeed } from "@/components/player/PlayerFeed";
 import { profileCompleteness } from "@/lib/fit";
 import { formatHeight, metricChips } from "@/lib/format";
 import {
@@ -31,6 +27,8 @@ import {
 } from "@/lib/constants";
 import type { Player, Profile } from "@/lib/types";
 
+type Tab = "data" | "updates" | "highlights";
+
 export function ProfileScreen({
   profile,
   player,
@@ -39,6 +37,7 @@ export function ProfileScreen({
   player: Player;
 }) {
   const [editing, setEditing] = useState(false);
+  const [tab, setTab] = useState<Tab>("data");
 
   if (editing) {
     return (
@@ -49,12 +48,38 @@ export function ProfileScreen({
       />
     );
   }
-  return <ViewMode profile={profile} player={player} onEdit={() => setEditing(true)} />;
+
+  return (
+    <main className="px-5 pt-12">
+      <Header profile={profile} player={player} onEdit={() => setEditing(true)} />
+
+      <SegmentedControl
+        className="mt-5"
+        value={tab}
+        onChange={setTab}
+        segments={[
+          { value: "data", label: "Data" },
+          { value: "updates", label: "Updates" },
+          { value: "highlights", label: "Highlights" },
+        ]}
+      />
+
+      <div className="mt-5">
+        {tab === "data" && <DataTab player={player} />}
+        {tab === "updates" && (
+          <PlayerFeed playerId={profile.id} kind="update" editable />
+        )}
+        {tab === "highlights" && (
+          <PlayerFeed playerId={profile.id} kind="highlight" editable />
+        )}
+      </div>
+    </main>
+  );
 }
 
-/* ------------------------------- View ---------------------------------- */
+/* ------------------------------ Header --------------------------------- */
 
-function ViewMode({
+function Header({
   profile,
   player,
   onEdit,
@@ -63,12 +88,8 @@ function ViewMode({
   player: Player;
   onEdit: () => void;
 }) {
-  const pct = Math.round(profileCompleteness(player) * 100);
-  const metrics = metricChips(player);
-  const height = formatHeight(player.height_in);
-
   return (
-    <main className="px-5 pt-12">
+    <>
       <div className="flex items-start justify-between">
         <p className="eyebrow">Profile</p>
         <button
@@ -107,9 +128,21 @@ function ViewMode({
           </Chip>
         </div>
       )}
+    </>
+  );
+}
 
+/* ------------------------------ Data tab -------------------------------- */
+
+function DataTab({ player }: { player: Player }) {
+  const pct = Math.round(profileCompleteness(player) * 100);
+  const metrics = metricChips(player);
+  const height = formatHeight(player.height_in);
+
+  return (
+    <div>
       {pct < 100 && (
-        <Card className="mt-5 space-y-2">
+        <Card className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-semibold text-ink">Profile strength</span>
             <span className="tabular-nums text-muted">{pct}%</span>
@@ -160,20 +193,8 @@ function ViewMode({
         </Section>
       )}
 
-      {player.highlight_url && (
-        <a
-          href={player.highlight_url}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-accent"
-        >
-          <Film size={16} strokeWidth={2} aria-hidden />
-          Watch highlights
-        </a>
-      )}
-
       <SignOutButton />
-    </main>
+    </div>
   );
 }
 
@@ -254,7 +275,6 @@ function EditForm({
   const [popTime, setPopTime] = useState(player.pop_time?.toString() ?? "");
   const [isTransfer, setIsTransfer] = useState(player.is_transfer);
   const [currentSchool, setCurrentSchool] = useState(player.current_school ?? "");
-  const [highlight, setHighlight] = useState(player.highlight_url ?? "");
   const [bio, setBio] = useState(player.bio ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -305,7 +325,6 @@ function EditForm({
         of_velo: isOutfielder(primary) ? num(throwVelo) : null,
         fastball_velo: isPitcher(primary) ? num(fastball) : null,
         pop_time: isCatcher(primary) ? num(popTime) : null,
-        highlight_url: highlight.trim() || null,
         bio: bio.trim() || null,
         updated_at: new Date().toISOString(),
       })
@@ -326,7 +345,7 @@ function EditForm({
   })();
 
   return (
-    <main className="px-5 pt-12 pb-4">
+    <main className="px-5 pt-12 pb-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-display font-bold tracking-tight">
           Edit profile
@@ -540,17 +559,6 @@ function EditForm({
             />
           </Field>
         )}
-
-        <Field label="Highlight video URL" htmlFor="hl">
-          <Input
-            id="hl"
-            type="url"
-            inputMode="url"
-            placeholder="https://…"
-            value={highlight}
-            onChange={(e) => setHighlight(e.target.value)}
-          />
-        </Field>
 
         <Field label="About you">
           <Textarea
