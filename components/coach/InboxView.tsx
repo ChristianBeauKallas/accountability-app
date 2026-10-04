@@ -3,11 +3,9 @@
 import { useMemo, useState } from "react";
 import {
   MapPin,
-  GraduationCap,
   Star,
   X,
   Check,
-  Film,
   Inbox as InboxIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -17,6 +15,7 @@ import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { PlayerFeed } from "@/components/player/PlayerFeed";
 import { STATUS_LABEL, STATUS_TONE, timeAgo, metricChips, formatHeight } from "@/lib/format";
 import type {
   Application,
@@ -193,6 +192,9 @@ function ApplicantSheet({
   const name = p?.profile.full_name || "Player";
   const metrics = p ? metricChips(p) : [];
   const height = formatHeight(p?.height_in ?? null);
+  const [tab, setTab] = useState<"profile" | "updates" | "highlights">(
+    "profile"
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-ink/40">
@@ -236,61 +238,83 @@ function ApplicantSheet({
             {p?.is_transfer && <Chip tone="status-interested">Transfer</Chip>}
           </div>
 
-          <Section title="Applying to">
-            <p className="text-[15px] font-semibold text-ink">
-              {row.need?.title ?? "Roster need"}
-            </p>
-          </Section>
+          <SegmentedControl
+            className="mt-4"
+            value={tab}
+            onChange={setTab}
+            segments={[
+              { value: "profile", label: "Profile" },
+              { value: "updates", label: "Updates" },
+              { value: "highlights", label: "Highlights" },
+            ]}
+          />
 
-          <Section title="Positions">
-            <div className="flex flex-wrap gap-2">
-              {(p?.positions ?? []).map((pos) => (
-                <Chip key={pos} tone={pos === p?.primary_position ? "accent" : "neutral"}>
-                  {pos === p?.primary_position ? `★ ${pos}` : pos}
-                </Chip>
-              ))}
-            </div>
-          </Section>
+          <div className="mt-5">
+            {tab === "profile" && (
+              <>
+                <Section title="Applying to">
+                  <p className="text-[15px] font-semibold text-ink">
+                    {row.need?.title ?? "Roster need"}
+                  </p>
+                </Section>
 
-          <Section title="Measurables">
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <Stat label="Bats / Throws" value={`${p?.bats ?? "—"} / ${p?.throws ?? "—"}`} />
-              <Stat
-                label="Height / Weight"
-                value={[height, p?.weight_lb ? `${p.weight_lb} lb` : null]
-                  .filter(Boolean)
-                  .join(" · ") || "—"}
-              />
-              <Stat label="GPA" value={p?.gpa != null ? p.gpa.toFixed(2) : "—"} />
-            </dl>
-            {metrics.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {metrics.map((m) => (
-                  <Chip key={m} tone="metric">
-                    {m}
-                  </Chip>
-                ))}
-              </div>
+                <Section title="Positions">
+                  <div className="flex flex-wrap gap-2">
+                    {(p?.positions ?? []).map((pos) => (
+                      <Chip
+                        key={pos}
+                        tone={pos === p?.primary_position ? "accent" : "neutral"}
+                      >
+                        {pos === p?.primary_position ? `★ ${pos}` : pos}
+                      </Chip>
+                    ))}
+                  </div>
+                </Section>
+
+                <Section title="Measurables">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    <Stat
+                      label="Bats / Throws"
+                      value={`${p?.bats ?? "—"} / ${p?.throws ?? "—"}`}
+                    />
+                    <Stat
+                      label="Height / Weight"
+                      value={
+                        [height, p?.weight_lb ? `${p.weight_lb} lb` : null]
+                          .filter(Boolean)
+                          .join(" · ") || "—"
+                      }
+                    />
+                    <Stat label="GPA" value={p?.gpa != null ? p.gpa.toFixed(2) : "—"} />
+                  </dl>
+                  {metrics.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {metrics.map((m) => (
+                        <Chip key={m} tone="metric">
+                          {m}
+                        </Chip>
+                      ))}
+                    </div>
+                  )}
+                </Section>
+
+                {p?.bio && (
+                  <Section title="About">
+                    <p className="text-[15px] leading-relaxed text-body-2">
+                      {p.bio}
+                    </p>
+                  </Section>
+                )}
+              </>
             )}
-          </Section>
 
-          {p?.bio && (
-            <Section title="About">
-              <p className="text-[15px] leading-relaxed text-body-2">{p.bio}</p>
-            </Section>
-          )}
-
-          {p?.highlight_url && (
-            <a
-              href={p.highlight_url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-accent"
-            >
-              <Film size={16} strokeWidth={2} aria-hidden />
-              Watch highlights
-            </a>
-          )}
+            {tab === "updates" && p && (
+              <PlayerFeed playerId={p.id} kind="update" editable={false} />
+            )}
+            {tab === "highlights" && p && (
+              <PlayerFeed playerId={p.id} kind="highlight" editable={false} />
+            )}
+          </div>
         </div>
 
         {/* Action bar */}
