@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, GraduationCap, MapPin, X, Camera, LogOut } from "lucide-react";
+import { GraduationCap, MapPin, X, Camera } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Card } from "@/components/ui/Card";
@@ -13,7 +13,6 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { HeaderActions } from "@/components/HeaderActions";
-import { OverflowMenu, MenuItem } from "@/components/OverflowMenu";
 import { PlayerFeed } from "@/components/player/PlayerFeed";
 import { profileCompleteness } from "@/lib/fit";
 import { formatHeight, metricChips } from "@/lib/format";
@@ -99,22 +98,7 @@ function Header({
     <>
       <div className="flex items-start justify-between">
         <p className="eyebrow">Profile</p>
-        <HeaderActions showBell>
-          <OverflowMenu>
-            <MenuItem icon={Pencil} onClick={onEdit}>
-              Edit profile
-            </MenuItem>
-            <form action="/auth/signout" method="post">
-              <button
-                type="submit"
-                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-danger hover:bg-chip"
-              >
-                <LogOut size={16} strokeWidth={2} />
-                Sign out
-              </button>
-            </form>
-          </OverflowMenu>
-        </HeaderActions>
+        <HeaderActions showBell onEdit={onEdit} editLabel="Edit profile" />
       </div>
 
       <div className="mt-3 flex items-center gap-4">

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Pencil,
   MapPin,
   Globe,
   X,
@@ -15,7 +14,6 @@ import {
   BadgeCheck,
   Bookmark,
   BookmarkCheck,
-  LogOut,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -27,7 +25,6 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { HeaderActions } from "@/components/HeaderActions";
-import { OverflowMenu, MenuItem } from "@/components/OverflowMenu";
 import { ProgramFeed } from "@/components/program/ProgramFeed";
 import { DIVISIONS, STATES } from "@/lib/constants";
 import { climateDisplay } from "@/lib/climate";
@@ -112,24 +109,11 @@ export function SchoolProfile({
         ) : (
           <p className="eyebrow">Program</p>
         )}
-        <HeaderActions showBell={!editable}>
-          {editable && (
-            <OverflowMenu>
-              <MenuItem icon={Pencil} onClick={() => setEditing(true)}>
-                Edit program
-              </MenuItem>
-              <form action="/auth/signout" method="post">
-                <button
-                  type="submit"
-                  className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-danger hover:bg-chip"
-                >
-                  <LogOut size={16} strokeWidth={2} />
-                  Sign out
-                </button>
-              </form>
-            </OverflowMenu>
-          )}
-        </HeaderActions>
+        <HeaderActions
+          showBell={!editable}
+          onEdit={editable ? () => setEditing(true) : undefined}
+          editLabel="Edit program"
+        />
       </div>
 
       <div className="mt-3 flex items-center gap-4">
