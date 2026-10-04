@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Target, Zap, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function WelcomePage() {
@@ -14,41 +14,15 @@ export default async function WelcomePage() {
   return (
     <main className="min-h-dvh flex flex-col px-6 pt-16 pb-10">
       {/* Brand */}
-      <div className="flex-1">
-        <p className="eyebrow">Athletx</p>
-        <h1 className="mt-3 text-[40px] leading-[1.05] font-display font-bold tracking-tight text-ink">
-          The spots
-          <br />
-          that fit you.
-        </h1>
-        <p className="mt-4 text-base text-body-2 max-w-[22rem]">
-          Coaches post the roster spots they&rsquo;re recruiting for. You see
-          where you line up and put your name in. They reach out — you&rsquo;re
-          never left guessing.
-        </p>
-
-        {/* How it works teaser */}
-        <ul className="mt-8 space-y-4">
-          {[
-            {
-              icon: Target,
-              text: "See the spots you actually line up for.",
-            },
-            { icon: Zap, text: "Put your name in with one tap." },
-            {
-              icon: ShieldCheck,
-              text: "Coaches find you when you go to them — not before.",
-            },
-          ].map(({ icon: Icon, text }, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-pill bg-accent-soft text-accent">
-                <Icon size={18} strokeWidth={2} aria-hidden />
-              </span>
-              <span className="text-[15px] text-body-2">{text}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <p className="eyebrow">Athletx</p>
+      <h1 className="mt-3 text-[40px] leading-[1.05] font-display font-bold tracking-tight text-ink">
+        Helping ball players
+        <br />
+        find the right fit.
+      </h1>
+      <p className="mt-4 text-base text-body-2 max-w-[22rem]">
+        Build your recruiting profile and let our algorithm do the matching.
+      </p>
 
       {/* Role picker */}
       <div className="mt-10 space-y-3">
