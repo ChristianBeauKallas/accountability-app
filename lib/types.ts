@@ -1,216 +1,162 @@
-// Hand-written types for the app's tables. Once the schema settles you can
-// replace these with generated types via:
-//   supabase gen types typescript --project-id <ref> > lib/database.types.ts
+// Athletx — database types (hand-maintained to match supabase/migrations).
 
-export type MemberRole = "owner" | "member";
-export type MediaType = "image" | "audio" | "video";
+export type UserRole = "player" | "coach";
+export type Division = "D2" | "D3" | "NAIA" | "JUCO";
+export type StaffRole = "head" | "assistant" | "recruiting_coordinator";
+export type NeedStatus = "open" | "closed";
+export type ApplicationStatus = "new" | "viewed" | "interested" | "closed";
+export type Bats = "L" | "R" | "S";
+export type Throws = "L" | "R";
 
 export type Profile = {
   id: string;
-  display_name: string;
+  role: UserRole;
+  full_name: string;
+  email: string | null;
   avatar_url: string | null;
+  onboarded: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Player = {
+  id: string;
+  grad_year: number | null;
+  primary_position: string | null;
+  positions: string[];
+  bats: Bats | null;
+  throws: Throws | null;
+  height_in: number | null;
+  weight_lb: number | null;
+  gpa: number | null;
+  city: string | null;
+  state: string | null;
+  lat: number | null;
+  lng: number | null;
+  is_transfer: boolean;
+  current_school: string | null;
+  sixty_yd: number | null;
+  exit_velo: number | null;
+  inf_velo: number | null;
+  of_velo: number | null;
+  fastball_velo: number | null;
+  pop_time: number | null;
+  highlight_url: string | null;
   bio: string | null;
-  timezone: string;
-  created_at: string;
+  pref_divisions: string[];
+  pref_states: string[];
+  pref_climate: string | null;
+  updated_at: string;
 };
 
-export type Group = {
+export type Program = {
   id: string;
   name: string;
-  owner_id: string;
-  invite_code: string;
+  division: Division;
+  city: string | null;
+  state: string | null;
+  lat: number | null;
+  lng: number | null;
+  conference: string | null;
+  website: string | null;
+  logo_url: string | null;
+  about: string | null;
+  record_last_season: string | null;
+  enrollment: number | null;
+  min_gpa: number | null;
+  recruiting_pitch: string | null;
+  verified: boolean;
   created_at: string;
 };
 
-export type GroupMember = {
-  group_id: string;
-  user_id: string;
-  role: MemberRole;
-  joined_at: string;
-};
-
-export type Activity = {
+export type ProgramStaff = {
   id: string;
-  group_id: string;
-  name: string;
-  emoji: string | null;
-  description: string | null;
-  prompt: string | null;
-  sort_order: number;
-  active: boolean;
+  program_id: string;
+  profile_id: string;
+  staff_role: StaffRole;
   created_at: string;
 };
 
-export type GroupPost = {
+export type Need = {
   id: string;
-  group_id: string;
-  author_id: string;
-  caption: string | null;
-  created_at: string;
-};
-
-export type Comment = {
-  id: string;
-  post_id: string;
-  author_id: string;
-  body: string;
-  created_at: string;
-};
-
-export type CoachingRelationship = {
-  id: string;
-  coach_id: string;
-  client_id: string;
-  created_at: string;
-};
-
-export type Checkin = {
-  id: string;
-  relationship_id: string;
-  client_id: string;
-  weight: number | null;
-  sleep_hours: number | null;
-  energy: number | null;
-  moved: boolean | null;
-  notes: string | null;
-  created_at: string;
-};
-
-export type CoachingTracker = {
-  id: string;
-  relationship_id: string;
-  label: string;
-  emoji: string | null;
-  prompt: string | null;
-  sort_order: number;
-  repeatable: boolean;
-  wants_photo: boolean;
-  wants_note: boolean;
-  wants_amount: boolean;
-  wants_macros: boolean;
-  unit: string | null;
-  target: number | null;
-  active: boolean;
-  days: number[] | null;
-};
-
-export type CoachingEntry = {
-  id: string;
-  relationship_id: string;
-  client_id: string;
-  tracker_id: string;
-  happened_at: string;
-  detail: string | null;
-  amount: number | null;
-  calories: number | null;
-  protein_g: number | null;
-  carbs_g: number | null;
-  fat_g: number | null;
-  macros_source: string | null;
-  logged_at: string;
-  photos?: string[];
-};
-
-export type SavedMeal = {
-  id: string;
-  name: string;
-  detail: string | null;
-  calories: number | null;
-  protein_g: number | null;
-  carbs_g: number | null;
-  fat_g: number | null;
-};
-
-export type IntakeHabit = { name: string; cadence: string };
-
-export type CoachingIntake = {
-  id: string;
-  relationship_id: string;
-  client_id: string;
-  goals: string | null;
-  current_weight: number | null;
-  goal_weight: number | null;
-  build: string | null;
-  height: string | null;
-  age: number | null;
-  activity_level: number | null;
-  diet_level: number | null;
-  diet_type: string | null;
-  maintenance_calories: number | null;
-  train_days: number[] | null;
-  workout_types: string[] | null;
-  habits: IntakeHabit[] | null;
-  status: string;
-  submitted_at: string;
-};
-
-export type PlanExercise = {
-  name: string;
-  sets?: number;
-  reps?: string;
-  cue?: string;
-};
-
-export type LoggedSet = {
-  exercise_name: string;
-  set_index: number;
-  weight: number | null;
-  reps: number | null;
-};
-
-export type PlanWorkout = {
-  id: string;
-  plan_id: string;
-  weekday: number;
+  program_id: string;
   title: string;
-  kind: string;
-  detail: string | null;
-  exercises: PlanExercise[] | null;
-  sort_order: number;
-};
-
-export type ExampleMeal = {
-  meal: string;
-  detail: string;
-  calories?: number;
-  protein_g?: number;
-};
-
-export type CoachingPlan = {
-  id: string;
-  relationship_id: string;
-  client_id: string;
-  week_number: number;
-  status: string;
-  summary: string | null;
-  diet_notes: string | null;
-  calorie_target: number | null;
-  protein_target: number | null;
-  carbs_target: number | null;
-  fat_target: number | null;
-  water_target: number | null;
-  example_day: ExampleMeal[] | null;
+  positions: string[];
+  grad_year_min: number | null;
+  grad_year_max: number | null;
+  accepts_transfer: boolean;
+  min_gpa: number;
+  must_have: string[];
+  min_exit_velo: number | null;
+  min_sixty: number | null;
+  min_fastball_velo: number | null;
+  min_pop_time: number | null;
+  description: string | null;
+  status: NeedStatus;
+  created_by: string | null;
   created_at: string;
-  activated_at: string | null;
+  updated_at: string;
+};
+
+export type Application = {
+  id: string;
+  need_id: string;
+  player_id: string;
+  status: ApplicationStatus;
+  fit_score: number | null;
+  message: string | null;
+  created_at: string;
+  viewed_at: string | null;
 };
 
 export type Message = {
   id: string;
-  group_id: string;
-  author_id: string;
+  application_id: string;
+  sender_id: string;
   body: string;
-  image_path: string | null;
-  audio_path: string | null;
   created_at: string;
 };
 
-export type Media = {
+export type Notification = {
   id: string;
-  owner_id: string;
-  type: MediaType;
-  storage_path: string;
-  transcript: string | null;
-  post_id: string | null;
-  checkin_id: string | null;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  data: Record<string, unknown>;
+  read_at: string | null;
   created_at: string;
+};
+
+export type PostKind = "update" | "highlight";
+export type MediaType = "image" | "video";
+
+export type PlayerPost = {
+  id: string;
+  player_id: string;
+  kind: PostKind;
+  body: string | null;
+  media_url: string | null;
+  media_type: MediaType | null;
+  created_at: string;
+};
+
+export type ProgramPostKind = "update" | "facility";
+
+export type ProgramPost = {
+  id: string;
+  program_id: string;
+  kind: ProgramPostKind;
+  body: string | null;
+  media_url: string | null;
+  media_type: MediaType | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+// Convenience join shapes used across the UI.
+export type NeedWithProgram = Need & { program: Program };
+export type ApplicationWithNeed = Application & { need: NeedWithProgram };
+export type ApplicationWithPlayer = Application & {
+  player: Player & { profile: Pick<Profile, "full_name" | "avatar_url"> };
 };

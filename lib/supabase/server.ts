@@ -1,14 +1,11 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-/**
- * Supabase client for use in Server Components, Route Handlers, and
- * Server Actions. Reads/writes auth cookies so sessions work across
- * server-rendered requests (relevant once you add Supabase Auth).
- */
-export async function createClient() {
-  const cookieStore = await cookies();
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 
+// Server-side Supabase client (server components, route handlers, actions).
+export function createClient() {
+  const cookieStore = cookies();
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,23 +14,18 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(
-          cookiesToSet: {
-            name: string;
-            value: string;
-            options?: Record<string, unknown>;
-          }[],
-        ) {
+        setAll(cookiesToSet: CookieToSet[]) {
+          // In a server component the cookie store is read-only; middleware
+          // handles refresh, so swallow the error there.
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, options)
             );
           } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing sessions.
+            /* no-op: called from a Server Component */
           }
         },
       },
-    },
+    }
   );
 }

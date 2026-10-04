@@ -1,205 +1,270 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Mail, CheckCircle2, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/Button";
+import { Field, Input } from "@/components/ui/Field";
+import type { UserRole } from "@/lib/types";
 
-type Mode = "signin" | "signup";
+type Mode = "magic" | "password";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [mode, setMode] = useState<Mode>("signup");
-  const [displayName, setDisplayName] = useState("");
+function LoginInner() {
+  const params = useSearchParams();
+  const roleParam = params.get("role");
+  const role: UserRole | null =
+    roleParam === "player" || roleParam === "coach" ? roleParam : null;
+
+  const [mode, setMode] = useState<Mode>("magic");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [needsConfirm, setNeedsConfirm] = useState(false);
-  const [inviteGroup, setInviteGroup] = useState<string | null>(null);
+  const [status, setStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
+  const [message, setMessage] = useState("");
 
-  // If they got here from an invite link, carry the group name through so the
-  // whole signup keeps that context (the invite code is stashed by the joiner).
-  useEffect(() => {
-    let code: string | null = null;
-    try {
-      code = localStorage.getItem("pendingInvite");
-    } catch {
-      /* ignore */
+  const supabase = createClient();
+
+  function rememberRole() {
+    if (role) {
+      document.cookie = `athletx_role=${role}; path=/; max-age=1800; samesite=lax`;
     }
-    if (!code) return;
-    createClient()
-      .rpc("group_name_by_code", { code })
-      .then(({ data }) => {
-        if (typeof data === "string" && data) setInviteGroup(data);
-      });
-  }, []);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    const supabase = createClient();
-
-    if (mode === "signup") {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: { data: { display_name: displayName.trim() } },
-      });
-      if (error) {
-        setError(error.message);
-        setBusy(false);
-        return;
-      }
-      // If email confirmation is off (recommended), a session is returned and
-      // we're signed in immediately. If it's on, there's no session yet.
-      if (!data.session) {
-        setNeedsConfirm(true);
-        setBusy(false);
-        return;
-      }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (error) {
-        setError(error.message);
-        setBusy(false);
-        return;
-      }
-    }
-
-    // If they arrived via an invite link, join that group now.
-    try {
-      const pending = localStorage.getItem("pendingInvite");
-      if (pending) {
-        await supabase.rpc("join_group", { code: pending });
-        localStorage.removeItem("pendingInvite");
-      }
-    } catch {
-      /* ignore — they can still join from onboarding */
-    }
-
-    router.push("/");
-    router.refresh();
   }
 
-  if (needsConfirm) {
+  async function sendMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) return;
+    setStatus("sending");
+    setMessage("");
+    rememberRole();
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${location.origin}/auth/callback`,
+        data: role ? { role } : undefined,
+      },
+    });
+    if (error) {
+      setStatus("error");
+      setMessage(error.message);
+    } else {
+      setStatus("sent");
+    }
+  }
+
+  async function signInWithPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || !password) return;
+    setStatus("sending");
+    setMessage("");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      setStatus("error");
+      setMessage(error.message);
+      return;
+    }
+    // Session is persisted to cookies; full nav lets the server router take over.
+    window.location.href = "/";
+  }
+
+  async function signInWithGoogle() {
+    rememberRole();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${location.origin}/auth/callback` },
+    });
+    if (error) {
+      setStatus("error");
+      setMessage(error.message);
+    }
+  }
+
+  const heading = role === "coach" ? "Coach sign in" : "Player sign in";
+
+  if (status === "sent") {
     return (
-      <main className="auth">
-        <h1>Get Better</h1>
-        <div className="notice">
-          <strong>Almost there.</strong> Check <code>{email}</code> for a
-          confirmation link, then come back and sign in.
-        </div>
+      <main
+        data-theme="dark"
+        className="min-h-dvh bg-ground text-ink flex flex-col items-center justify-center px-6 text-center"
+      >
+        <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-accent-soft text-accent">
+          <CheckCircle2 size={28} strokeWidth={2} aria-hidden />
+        </span>
+        <h1 className="mt-5 text-2xl font-display font-bold">Check your email</h1>
+        <p className="mt-2 max-w-xs text-body-2">
+          We sent a sign-in link to <strong>{email}</strong>. Open it on this
+          device to continue.
+        </p>
+        <button
+          onClick={() => setStatus("idle")}
+          className="mt-6 text-sm font-semibold text-accent"
+        >
+          Use a different email
+        </button>
       </main>
     );
   }
 
   return (
-    <main className="auth">
-      <div className="auth-hero">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className="auth-icon"
-          src="/icon-192.png"
-          alt="Get Better"
-          width={88}
-          height={88}
-        />
-        <h1>Get Better</h1>
-        <p className="auth-tagline">
-          Real change is built one day at a time.
+    <main
+      data-theme="dark"
+      className="min-h-dvh bg-ground text-ink flex flex-col px-6 pt-14 pb-10"
+    >
+      <Link
+        href="/welcome"
+        className="inline-flex items-center gap-1 text-sm font-semibold text-muted"
+      >
+        <ArrowLeft size={16} strokeWidth={2} aria-hidden />
+        Back
+      </Link>
+
+      <div className="mt-10">
+        <p className="eyebrow">{role ? "Welcome" : "Athletx"}</p>
+        <h1 className="mt-2 text-3xl font-display font-bold tracking-tight">
+          {heading}
+        </h1>
+        <p className="mt-2 text-body-2">
+          {mode === "magic"
+            ? "We'll email you a secure link — no password to remember."
+            : "Enter your email and password to sign in."}
         </p>
-        <ul className="auth-proof">
-          <li>
-            <span>✅</span> Track the habits that matter
-          </li>
-          <li>
-            <span>🔥</span> Momentum you can actually see
-          </li>
-          <li>
-            <span>👥</span> Do it with people who show up too
-          </li>
-        </ul>
       </div>
 
-      {inviteGroup && (
-        <div className="auth-invite-banner">
-          <span className="aib-emoji">🎉</span>
-          <span>
-            You&apos;re joining <strong>{inviteGroup}</strong> — create your
-            account to jump in.
-          </span>
-        </div>
+      {mode === "magic" ? (
+        <form onSubmit={sendMagicLink} className="mt-8 space-y-4">
+          <Field label="Email" htmlFor="email">
+            <Input
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </Field>
+
+          {status === "error" && (
+            <p className="text-sm text-danger">{message}</p>
+          )}
+
+          <Button type="submit" size="lg" full disabled={status === "sending"}>
+            <Mail size={18} strokeWidth={2} aria-hidden />
+            {status === "sending" ? "Sending…" : "Email me a link"}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMode("password");
+              setStatus("idle");
+              setMessage("");
+            }}
+            className="w-full text-center text-sm font-semibold text-accent"
+          >
+            Sign in with a password instead
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={signInWithPassword} className="mt-8 space-y-4">
+          <Field label="Email" htmlFor="email">
+            <Input
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </Field>
+          <Field label="Password" htmlFor="password">
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </Field>
+
+          {status === "error" && (
+            <p className="text-sm text-danger">{message}</p>
+          )}
+
+          <Button type="submit" size="lg" full disabled={status === "sending"}>
+            <Lock size={18} strokeWidth={2} aria-hidden />
+            {status === "sending" ? "Signing in…" : "Sign in"}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMode("magic");
+              setStatus("idle");
+              setMessage("");
+            }}
+            className="w-full text-center text-sm font-semibold text-accent"
+          >
+            Email me a link instead
+          </button>
+        </form>
       )}
 
-      <div className="tabs">
-        <button
-          type="button"
-          className={mode === "signup" ? "active" : ""}
-          onClick={() => setMode("signup")}
-        >
-          Create account
-        </button>
-        <button
-          type="button"
-          className={mode === "signin" ? "active" : ""}
-          onClick={() => setMode("signin")}
-        >
-          Sign in
-        </button>
+      <div className="my-6 flex items-center gap-3 text-xs text-muted-2">
+        <span className="h-px flex-1 bg-divider" />
+        or
+        <span className="h-px flex-1 bg-divider" />
       </div>
 
-      <form onSubmit={submit} className="auth-form">
-        {mode === "signup" && (
-          <>
-            <label htmlFor="displayName">Name</label>
-            <input
-              id="displayName"
-              required
-              autoComplete="name"
-              placeholder="What the group calls you"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-            />
-          </>
-        )}
+      <Button variant="secondary" size="lg" full onClick={signInWithGoogle}>
+        <GoogleMark />
+        Continue with Google
+      </Button>
 
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          required
-          autoComplete="email"
-          inputMode="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          required
-          minLength={6}
-          autoComplete={mode === "signup" ? "new-password" : "current-password"}
-          placeholder="At least 6 characters"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <button type="submit" disabled={busy}>
-          {busy
-            ? "Just a sec…"
-            : mode === "signup"
-              ? "Create account"
-              : "Sign in"}
-        </button>
-        {error && <p className="auth-error">{error}</p>}
-      </form>
+      <p className="mt-auto pt-10 text-center text-xs text-muted-2">
+        By continuing you agree to the Athletx Terms &amp; Privacy Policy.
+      </p>
     </main>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.97 10.72a5.41 5.41 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58Z"
+      />
+    </svg>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginInner />
+    </Suspense>
   );
 }

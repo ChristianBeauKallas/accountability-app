@@ -1,89 +1,64 @@
 import type { Metadata, Viewport } from "next";
+import { Barlow_Condensed, Manrope } from "next/font/google";
 import "./globals.css";
-import { createClient } from "@/lib/supabase/server";
-import SwRegister from "./sw-register";
-import InstallPrompt from "./install-prompt";
-import BottomNav from "./nav";
-import TimezoneSync from "./timezone-sync";
-import VersionWatch from "./version-watch";
+
+const barlow = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-manrope",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  applicationName: "Get Better",
-  title: "Get Better",
-  description: "Show up. Every day.",
+  applicationName: "Athletx",
+  title: "Athletx — find your spot",
+  description:
+    "Coaches post the spots they're recruiting for. Players see where they line up and put their name in — and always hear back.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Get Better",
-  },
-  icons: {
-    icon: "/favicon-32.png",
-    apple: "/apple-icon.png",
+    statusBarStyle: "default",
+    title: "Athletx",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#07090c",
+  themeColor: "#0F1210",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
 };
 
-export default async function RootLayout({
+const themeInit = `(function(){try{var t=localStorage.getItem('athletx-theme');if(t!=='light'&&t!=='dark')t='dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
+
+export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  // Fetch the current user once so the nav can link straight to their profile
-  // (skips the /me → /u/[id] redirect hop).
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Coaching nav flags: "My Plan" shows for anyone with a plan (a client, or
-  // someone running their own plan); "My Team" shows only if you hold someone
-  // else accountable.
-  let hasPlan = false;
-  let hasTeam = false;
-  let isOwner = false;
-  if (user) {
-    const { data: relFlags } = await supabase
-      .from("coaching_relationships")
-      .select("coach_id, client_id")
-      .or(`coach_id.eq.${user.id},client_id.eq.${user.id}`);
-    for (const r of relFlags ?? []) {
-      if (r.client_id === user.id) hasPlan = true;
-      if (r.coach_id === user.id && r.client_id !== user.id) hasTeam = true;
-    }
-    // Owner-only "Prompt" tab: you own a group.
-    const { data: owned } = await supabase
-      .from("groups")
-      .select("id")
-      .eq("owner_id", user.id)
-      .limit(1)
-      .maybeSingle();
-    isOwner = !!owned;
-  }
-
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${barlow.variable} ${manrope.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
       <body>
-        {children}
-        <BottomNav
-          userId={user?.id ?? null}
-          hasPlan={hasPlan}
-          hasTeam={hasTeam}
-          isOwner={isOwner}
-        />
-        {/* Only nudge to install once they're signed in — it must never sit on
-            top of the login / signup / invite flow. */}
-        {user && <InstallPrompt />}
-        {user && <TimezoneSync />}
-        <VersionWatch />
-        <SwRegister />
+        <div className="app-frame">{children}</div>
       </body>
     </html>
   );
