@@ -3,11 +3,13 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Mail, CheckCircle2, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Field";
 import type { UserRole } from "@/lib/types";
+
+type Mode = "magic" | "password";
 
 function LoginInner() {
   const params = useSearchParams();
@@ -15,10 +17,12 @@ function LoginInner() {
   const role: UserRole | null =
     roleParam === "player" || roleParam === "coach" ? roleParam : null;
 
+  const [mode, setMode] = useState<Mode>("magic");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
-    "idle"
-  );
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
   const [message, setMessage] = useState("");
 
   const supabase = createClient();
@@ -48,6 +52,24 @@ function LoginInner() {
     } else {
       setStatus("sent");
     }
+  }
+
+  async function signInWithPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || !password) return;
+    setStatus("sending");
+    setMessage("");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      setStatus("error");
+      setMessage(error.message);
+      return;
+    }
+    // Session is persisted to cookies; full nav lets the server router take over.
+    window.location.href = "/";
   }
 
   async function signInWithGoogle() {
@@ -101,33 +123,96 @@ function LoginInner() {
           {heading}
         </h1>
         <p className="mt-2 text-body-2">
-          We&rsquo;ll email you a secure link — no password to remember.
+          {mode === "magic"
+            ? "We'll email you a secure link — no password to remember."
+            : "Enter your email and password to sign in."}
         </p>
       </div>
 
-      <form onSubmit={sendMagicLink} className="mt-8 space-y-4">
-        <Field label="Email" htmlFor="email">
-          <Input
-            id="email"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </Field>
+      {mode === "magic" ? (
+        <form onSubmit={sendMagicLink} className="mt-8 space-y-4">
+          <Field label="Email" htmlFor="email">
+            <Input
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </Field>
 
-        {status === "error" && (
-          <p className="text-sm text-warm-text">{message}</p>
-        )}
+          {status === "error" && (
+            <p className="text-sm text-warm-text">{message}</p>
+          )}
 
-        <Button type="submit" size="lg" full disabled={status === "sending"}>
-          <Mail size={18} strokeWidth={2} aria-hidden />
-          {status === "sending" ? "Sending…" : "Email me a link"}
-        </Button>
-      </form>
+          <Button type="submit" size="lg" full disabled={status === "sending"}>
+            <Mail size={18} strokeWidth={2} aria-hidden />
+            {status === "sending" ? "Sending…" : "Email me a link"}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMode("password");
+              setStatus("idle");
+              setMessage("");
+            }}
+            className="w-full text-center text-sm font-semibold text-accent"
+          >
+            Sign in with a password instead
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={signInWithPassword} className="mt-8 space-y-4">
+          <Field label="Email" htmlFor="email">
+            <Input
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </Field>
+          <Field label="Password" htmlFor="password">
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </Field>
+
+          {status === "error" && (
+            <p className="text-sm text-warm-text">{message}</p>
+          )}
+
+          <Button type="submit" size="lg" full disabled={status === "sending"}>
+            <Lock size={18} strokeWidth={2} aria-hidden />
+            {status === "sending" ? "Signing in…" : "Sign in"}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMode("magic");
+              setStatus("idle");
+              setMessage("");
+            }}
+            className="w-full text-center text-sm font-semibold text-accent"
+          >
+            Email me a link instead
+          </button>
+        </form>
+      )}
 
       <div className="my-6 flex items-center gap-3 text-xs text-muted-2">
         <span className="h-px flex-1 bg-divider" />
