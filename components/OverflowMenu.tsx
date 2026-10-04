@@ -44,18 +44,23 @@ export function MenuItem({
   icon: Icon,
   children,
   danger = false,
+  disabled = false,
 }: {
   onClick?: () => void;
   icon?: LucideIcon;
   children: React.ReactNode;
   danger?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
       type="button"
-      className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium hover:bg-chip ${
-        danger ? "text-danger" : "text-ink"
+      disabled={disabled}
+      className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium ${
+        disabled
+          ? "cursor-default text-muted-2"
+          : `hover:bg-chip ${danger ? "text-danger" : "text-ink"}`
       }`}
     >
       {Icon && <Icon size={16} strokeWidth={2} />}
