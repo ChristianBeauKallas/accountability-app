@@ -27,7 +27,9 @@ Run these in the Supabase SQL editor (or `psql`) **in order**:
    `player-media` Storage bucket.
 6. `migrations/0006_player_prefs.sql` — player recruiting preferences
    (levels / states / climate) that filter the Fits feed.
-7. `seed.sql` — demo programs, needs, players, applications, and posts.
+7. `migrations/0007_program_profile.sql` — program profile fields (record,
+   enrollment, min GPA) + `program_posts` (Updates / Facilities).
+8. `seed.sql` — demo programs, needs, players, applications, and posts.
 
 The seed is safe to re-run; it clears its own rows first.
 

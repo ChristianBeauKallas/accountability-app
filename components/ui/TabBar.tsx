@@ -26,7 +26,7 @@ const FitsIcon = BaseballIcon as unknown as LucideIcon;
 const TABS: Record<Role, Tab[]> = {
   player: [
     { href: "/fits", label: "Fits", icon: FitsIcon },
-    { href: "/tracker", label: "Tracker", icon: ListChecks },
+    { href: "/tracker", label: "Matches", icon: ListChecks },
     { href: "/profile", label: "Profile", icon: User },
   ],
   coach: [

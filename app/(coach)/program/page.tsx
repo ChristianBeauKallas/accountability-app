@@ -1,7 +1,11 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getCoachPrograms } from "@/lib/coach";
-import { ProgramView, type StaffMember } from "@/components/coach/ProgramView";
+import { getProgramStats } from "@/lib/program";
+import {
+  SchoolProfile,
+  type StaffMember,
+} from "@/components/program/SchoolProfile";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +20,15 @@ export default async function ProgramPage() {
     .select("staff_role, profile:profiles(full_name)")
     .eq("program_id", program.id);
 
-  const staff = (staffData ?? []) as unknown as StaffMember[];
+  const stats = await getProgramStats(program.id);
 
-  return <ProgramView program={program} staff={staff} />;
+  return (
+    <SchoolProfile
+      program={program}
+      stats={stats}
+      staff={(staffData ?? []) as unknown as StaffMember[]}
+      editable
+      viewerId={userId}
+    />
+  );
 }

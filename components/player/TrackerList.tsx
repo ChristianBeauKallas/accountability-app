@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MapPin, Star } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
@@ -72,12 +73,16 @@ function TrackerCard({ row }: { row: TrackerRow }) {
   return (
     <Card padded className={interested ? "ring-1 ring-gold/60" : undefined}>
       <div className="flex items-start gap-3">
-        <Avatar
-          name={program?.name ?? "Program"}
-          src={program?.logo_url}
-          size={42}
-        />
-        <div className="min-w-0 flex-1">
+        <Link
+          href={program ? `/programs/${program.id}` : "#"}
+          className="flex min-w-0 flex-1 items-start gap-3"
+        >
+          <Avatar
+            name={program?.name ?? "Program"}
+            src={program?.logo_url}
+            size={42}
+          />
+          <div className="min-w-0 flex-1">
           <h3 className="truncate font-display text-base font-semibold leading-tight">
             {program?.name ?? "Program"}
           </h3>
@@ -101,7 +106,8 @@ function TrackerCard({ row }: { row: TrackerRow }) {
               In · {timeAgo(row.created_at)}
             </span>
           </div>
-        </div>
+          </div>
+        </Link>
         {row.fit_score != null && (
           <div className="shrink-0 text-right">
             <div className="flex items-center gap-0.5 text-accent">

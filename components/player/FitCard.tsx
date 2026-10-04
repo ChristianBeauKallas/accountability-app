@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { MapPin, Check } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
@@ -35,19 +36,24 @@ export function FitCard({
   return (
     <Card className="space-y-3.5">
       <div className="flex items-start gap-3">
-        <Avatar name={program.name} src={program.logo_url} size={46} />
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-lg font-display font-semibold leading-tight">
-            {program.name}
-          </h3>
-          <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
-            <MapPin size={14} strokeWidth={2} aria-hidden />
-            <span className="truncate">
-              {[program.city, program.state].filter(Boolean).join(", ")}
-              {miles ? ` · ${miles}` : ""}
-            </span>
-          </p>
-        </div>
+        <Link
+          href={`/programs/${program.id}`}
+          className="flex min-w-0 flex-1 items-start gap-3"
+        >
+          <Avatar name={program.name} src={program.logo_url} size={46} />
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-lg font-display font-semibold leading-tight">
+              {program.name}
+            </h3>
+            <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
+              <MapPin size={14} strokeWidth={2} aria-hidden />
+              <span className="truncate">
+                {[program.city, program.state].filter(Boolean).join(", ")}
+                {miles ? ` · ${miles}` : ""}
+              </span>
+            </p>
+          </div>
+        </Link>
         <div className="shrink-0 text-right">
           <div className="font-display text-[26px] font-bold leading-none text-accent tabular-nums">
             {item.fit}

@@ -20,7 +20,7 @@ export default async function TrackerPage() {
     <main className="px-5 pt-12">
       <p className="eyebrow">In the mix</p>
       <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
-        Tracker
+        Matches
       </h1>
       <p className="mt-1 mb-5 text-[15px] text-body-2">
         {rows.length > 0
