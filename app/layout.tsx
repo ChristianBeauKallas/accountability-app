@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Manrope } from "next/font/google";
 import "./globals.css";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
 const barlow = Barlow_Condensed({
   subsets: ["latin"],
@@ -59,6 +60,7 @@ export default function RootLayout({
       </head>
       <body>
         <div className="app-frame">{children}</div>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { NotificationsList } from "@/components/NotificationsList";
+import { PushPrompt } from "@/components/PushPrompt";
 import { HeaderActions } from "@/components/HeaderActions";
 import type { Notification } from "@/lib/types";
 
@@ -28,6 +29,7 @@ export default async function NotificationsPage() {
       <h1 className="mt-1 mb-5 text-3xl font-display font-bold tracking-tight">
         Notifications
       </h1>
+      <PushPrompt />
       <NotificationsList userId={userId} initial={notifications} />
     </main>
   );
