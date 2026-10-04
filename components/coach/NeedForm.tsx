@@ -110,7 +110,7 @@ export function NeedForm({
         {editing ? "Edit need" : "Post a need"}
       </h1>
       <p className="mt-1 text-[15px] text-body-2">
-        Only players who fit see this — and they put their name in with one tap.
+        Only players who fit see this — and they show interest with one tap.
       </p>
 
       <div className="mt-6 space-y-5">
