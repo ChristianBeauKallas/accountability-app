@@ -2,6 +2,7 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isEligible, computeFit, passesPlayerPrefs } from "@/lib/fit";
 import { FitsFeed } from "@/components/player/FitsFeed";
+import { FitsInfo } from "@/components/player/FitsInfo";
 import { HeaderActions } from "@/components/HeaderActions";
 import type { FeedItem } from "@/components/player/FitCard";
 import type { Need, Player, Program } from "@/lib/types";
@@ -54,14 +55,12 @@ export default async function FitsPage() {
         <p className="eyebrow">Hey {first}</p>
         <HeaderActions showBell />
       </div>
-      <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
-        Your fits
-      </h1>
-      <p className="mt-1 mb-5 text-[15px] text-body-2">
-        {items.length > 0
-          ? `${items.length} ${items.length === 1 ? "spot fits" : "spots fit"} you right now.`
-          : "Spots you fit will show up here."}
-      </p>
+      <div className="mb-5 mt-1 flex items-center gap-1.5">
+        <h1 className="text-3xl font-display font-bold tracking-tight">
+          Recommended Fits
+        </h1>
+        <FitsInfo />
+      </div>
       {player && (
         <FitsFeed
           userId={userId}
