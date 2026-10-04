@@ -1,6 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { TrackerList, type TrackerRow } from "@/components/player/TrackerList";
+import { MatchesInfo } from "@/components/player/MatchesInfo";
 import { HeaderActions } from "@/components/HeaderActions";
 import type { Program } from "@/lib/types";
 
@@ -33,12 +34,15 @@ export default async function TrackerPage() {
         <p className="eyebrow">In the mix</p>
         <HeaderActions showBell />
       </div>
-      <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
-        Matches
-      </h1>
+      <div className="mt-1 flex items-center gap-1.5">
+        <h1 className="text-3xl font-display font-bold tracking-tight">
+          Matches
+        </h1>
+        <MatchesInfo />
+      </div>
       <p className="mt-1 mb-5 text-[15px] text-body-2">
         {rows.length > 0
-          ? `${rows.length} ${rows.length === 1 ? "spot" : "spots"} you're interested in — you'll always know where you stand.`
+          ? "See where every coach stands on you — all in one place."
           : "Every spot you show interest in shows up here."}
       </p>
       <TrackerList rows={rows} followed={followed} userId={userId} />
