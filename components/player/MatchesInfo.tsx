@@ -13,12 +13,12 @@ const STAGES: { label: string; body: string; tone: "accent" | "gold" | "muted" }
     {
       label: "Mutual",
       tone: "gold",
-      body: "The coach marked interest back in you. These are your strongest leads — worth following up on.",
+      body: "You and the coach showed mutual interest. Your contact information will be shared with them.",
     },
     {
       label: "Closed",
       tone: "muted",
-      body: "The coach passed on this one for now. It happens to everyone — keep showing interest in new spots.",
+      body: "The coach passed on this one for now. You'll get the next one!",
     },
   ];
 
