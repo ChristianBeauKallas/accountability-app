@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Compass,
   ListChecks,
   User,
   Inbox,
@@ -12,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { BaseballIcon } from "@/components/ui/BaseballIcon";
 
 type Role = "player" | "coach";
 
@@ -21,9 +21,11 @@ type Tab = {
   icon: LucideIcon;
 };
 
+const FitsIcon = BaseballIcon as unknown as LucideIcon;
+
 const TABS: Record<Role, Tab[]> = {
   player: [
-    { href: "/fits", label: "Fits", icon: Compass },
+    { href: "/fits", label: "Fits", icon: FitsIcon },
     { href: "/tracker", label: "Tracker", icon: ListChecks },
     { href: "/profile", label: "Profile", icon: User },
   ],

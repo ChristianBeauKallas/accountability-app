@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Compass, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
+import { BaseballIcon } from "@/components/ui/BaseballIcon";
 import { createClient } from "@/lib/supabase/client";
 import { FitCard, type FeedItem } from "@/components/player/FitCard";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
@@ -100,7 +101,7 @@ function EmptyState({
         {appliedCount > 0 ? (
           <SlidersHorizontal size={22} strokeWidth={2} aria-hidden />
         ) : (
-          <Compass size={22} strokeWidth={2} aria-hidden />
+          <BaseballIcon size={24} strokeWidth={2} aria-hidden />
         )}
       </span>
       <p className="font-display text-lg font-semibold text-ink">
@@ -111,7 +112,7 @@ function EmptyState({
           ? "You're in for everything that fits right now. New spots show up the moment coaches post them."
           : hadItems
             ? "Try the “All fits” filter, or round out your profile so more spots turn up."
-            : "When coaches post spots you fit, they'll show up here. A fuller profile surfaces more."}
+            : "Schools we feel are a good fit will show up here."}
       </p>
     </div>
   );
