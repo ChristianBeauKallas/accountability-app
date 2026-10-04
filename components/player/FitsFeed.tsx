@@ -14,12 +14,15 @@ export function FitsFeed({
   userId,
   player,
   items,
+  followedIds = [],
 }: {
   userId: string;
   player: Player;
   items: FeedItem[];
+  followedIds?: string[];
 }) {
   const supabase = createClient();
+  const followedSet = new Set(followedIds);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
@@ -79,6 +82,7 @@ export function FitsFeed({
                 applying={applyingId === item.need.id}
                 applied={appliedIds.has(item.need.id)}
                 onApply={() => apply(item)}
+                saved={followedSet.has(item.need.program.id)}
               />
             </li>
           ))}

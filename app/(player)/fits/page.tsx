@@ -24,6 +24,12 @@ export default async function FitsPage() {
     .eq("player_id", userId);
   const appliedIds = new Set((appliedRows ?? []).map((r) => r.need_id));
 
+  const { data: followRows } = await supabase
+    .from("program_followers")
+    .select("program_id")
+    .eq("player_id", userId);
+  const followedIds = (followRows ?? []).map((r) => r.program_id);
+
   const { data: needs } = await supabase
     .from("needs")
     .select("*, program:programs(*)")
@@ -56,7 +62,14 @@ export default async function FitsPage() {
           ? `${items.length} ${items.length === 1 ? "spot fits" : "spots fit"} you right now.`
           : "Spots you fit will show up here."}
       </p>
-      {player && <FitsFeed userId={userId} player={player as Player} items={items} />}
+      {player && (
+        <FitsFeed
+          userId={userId}
+          player={player as Player}
+          items={items}
+          followedIds={followedIds}
+        />
+      )}
     </main>
   );
 }

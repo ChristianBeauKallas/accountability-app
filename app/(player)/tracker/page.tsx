@@ -41,7 +41,7 @@ export default async function TrackerPage() {
           ? `${rows.length} ${rows.length === 1 ? "spot" : "spots"} you're in for — you'll always know where you stand.`
           : "Every spot you put your name in shows up here."}
       </p>
-      <TrackerList rows={rows} followed={followed} />
+      <TrackerList rows={rows} followed={followed} userId={userId} />
     </main>
   );
 }

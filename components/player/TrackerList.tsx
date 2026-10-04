@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MapPin, Star, BadgeCheck } from "lucide-react";
+import { MapPin, BadgeCheck } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Avatar } from "@/components/ui/Avatar";
+import { SaveButton } from "@/components/SaveButton";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { STATUS_LABEL, STATUS_TONE, timeAgo } from "@/lib/format";
 import type { Application, Need, Program } from "@/lib/types";
@@ -19,11 +20,14 @@ type Filter = "all" | "active" | "interested" | "following";
 export function TrackerList({
   rows,
   followed,
+  userId,
 }: {
   rows: TrackerRow[];
   followed: Program[];
+  userId: string;
 }) {
   const [filter, setFilter] = useState<Filter>("all");
+  const followedSet = new Set(followed.map((p) => p.id));
 
   const visible = rows.filter((r) => {
     if (filter === "active") return r.status === "new" || r.status === "viewed";
@@ -83,7 +87,15 @@ export function TrackerList({
         <ul className="space-y-3">
           {visible.map((row) => (
             <li key={row.id}>
-              <TrackerCard row={row} />
+              <TrackerCard
+                row={row}
+                userId={userId}
+                saved={
+                  row.need?.program
+                    ? followedSet.has(row.need.program.id)
+                    : false
+                }
+              />
             </li>
           ))}
         </ul>
@@ -119,7 +131,15 @@ function FollowedCard({ program }: { program: Program }) {
   );
 }
 
-function TrackerCard({ row }: { row: TrackerRow }) {
+function TrackerCard({
+  row,
+  userId,
+  saved,
+}: {
+  row: TrackerRow;
+  userId: string;
+  saved: boolean;
+}) {
   const program = row.need?.program;
   const interested = row.status === "interested";
 
@@ -161,19 +181,21 @@ function TrackerCard({ row }: { row: TrackerRow }) {
           </div>
           </div>
         </Link>
-        {row.fit_score != null && (
-          <div className="shrink-0 text-right">
-            <div className="flex items-center gap-0.5 text-accent">
-              <Star size={13} strokeWidth={2} aria-hidden />
-              <span className="font-display text-lg font-bold tabular-nums">
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          {program && (
+            <SaveButton programId={program.id} playerId={userId} initial={saved} />
+          )}
+          {row.fit_score != null && (
+            <div className="text-right">
+              <span className="font-display text-lg font-bold tabular-nums text-accent">
                 {row.fit_score}
               </span>
+              <p className="text-[10px] uppercase tracking-eyebrow text-muted-2">
+                fit
+              </p>
             </div>
-            <p className="text-[10px] uppercase tracking-eyebrow text-muted-2">
-              fit
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       {interested && (
         <p className="mt-3 rounded-input bg-warm-soft px-3 py-2 text-sm font-medium text-warm-text">
