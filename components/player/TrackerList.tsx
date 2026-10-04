@@ -60,7 +60,7 @@ export function TrackerList({
           <p className="mt-1 text-sm text-body-2">
             {filter === "interested"
               ? "When a coach marks interest, it'll show up here."
-              : "Head to Fits and put your name in on a few spots."}
+              : "Head to Recommended Fits and show interest in a few spots."}
           </p>
         </div>
       ) : (
