@@ -199,7 +199,7 @@ function ApplicantSheet({
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60">
       <button className="flex-1" onClick={onClose} aria-label="Close" />
-      <div className="mx-auto w-full max-w-app rounded-t-[20px] bg-ground max-h-[86dvh] overflow-y-auto">
+      <div className="mx-auto w-full max-w-app rounded-t-[20px] bg-ground max-h-[86dvh] overflow-y-auto shadow-sheet">
         <div className="sticky top-0 flex items-center justify-between border-b border-divider bg-ground/95 px-5 py-3 backdrop-blur">
           <span className="eyebrow">Player</span>
           <button onClick={onClose} className="text-muted" aria-label="Close">

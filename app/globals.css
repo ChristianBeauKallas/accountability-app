@@ -19,11 +19,17 @@
   /* Big, condensed display type used for titles, stats and fit scores. */
   .font-display {
     font-family: var(--font-barlow), sans-serif;
+    letter-spacing: -0.011em;
   }
   h1,
   h2,
   h3 {
     @apply font-display;
+    text-wrap: balance;
+  }
+  /* Slightly tighter, more optical body rendering. */
+  body {
+    text-rendering: optimizeLegibility;
   }
   button {
     -webkit-tap-highlight-color: transparent;
