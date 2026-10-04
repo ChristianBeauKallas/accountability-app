@@ -48,8 +48,8 @@ export default async function FitsPage() {
       </h1>
       <p className="mt-1 mb-5 text-[15px] text-body-2">
         {items.length > 0
-          ? `${items.length} roster ${items.length === 1 ? "need" : "needs"} match you right now.`
-          : "Roster needs you match will show up here."}
+          ? `${items.length} ${items.length === 1 ? "spot fits" : "spots fit"} you right now.`
+          : "Spots you fit will show up here."}
       </p>
       {player && <FitsFeed userId={userId} player={player as Player} items={items} />}
     </main>

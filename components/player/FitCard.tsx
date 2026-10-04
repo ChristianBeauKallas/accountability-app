@@ -105,12 +105,12 @@ export function FitCard({
         {applied ? (
           <>
             <Check size={18} strokeWidth={2.5} aria-hidden />
-            Applied
+            You&rsquo;re in
           </>
         ) : applying ? (
-          "Applying…"
+          "Putting you in…"
         ) : (
-          "Apply"
+          "Put me in"
         )}
       </Button>
     </Card>

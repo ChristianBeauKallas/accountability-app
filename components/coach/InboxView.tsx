@@ -95,10 +95,10 @@ export function InboxView({ rows: initialRows }: { rows: InboxRow[] }) {
             <InboxIcon size={22} strokeWidth={2} aria-hidden />
           </span>
           <p className="font-display text-lg font-semibold text-ink">
-            {filter === "new" ? "No new applicants" : "Nothing here yet"}
+            {filter === "new" ? "No one new yet" : "Nothing here yet"}
           </p>
           <p className="max-w-xs text-sm text-body-2">
-            Post a need and qualified players will show up here, ranked by fit.
+            Post a need and players who fit show up here, best first.
           </p>
         </div>
       ) : (
@@ -156,7 +156,7 @@ function ApplicantCard({
             {p?.state ? ` · ${p.state}` : ""}
           </p>
           <p className="mt-1 truncate text-xs text-muted-2">
-            {row.need?.title ?? "Roster need"} · applied {timeAgo(row.created_at)}
+            {row.need?.title ?? "Roster need"} · in {timeAgo(row.created_at)}
           </p>
         </div>
         <div className="shrink-0 text-right">
@@ -201,7 +201,7 @@ function ApplicantSheet({
       <button className="flex-1" onClick={onClose} aria-label="Close" />
       <div className="mx-auto w-full max-w-app rounded-t-[20px] bg-ground max-h-[86dvh] overflow-y-auto">
         <div className="sticky top-0 flex items-center justify-between border-b border-divider bg-ground/95 px-5 py-3 backdrop-blur">
-          <span className="eyebrow">Applicant</span>
+          <span className="eyebrow">Player</span>
           <button onClick={onClose} className="text-muted" aria-label="Close">
             <X size={22} strokeWidth={2} />
           </button>
@@ -252,7 +252,7 @@ function ApplicantSheet({
           <div className="mt-5">
             {tab === "profile" && (
               <>
-                <Section title="Applying to">
+                <Section title="Going for">
                   <p className="text-[15px] font-semibold text-ink">
                     {row.need?.title ?? "Roster need"}
                   </p>

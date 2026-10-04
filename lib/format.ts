@@ -31,7 +31,7 @@ export const STATUS_LABEL: Record<ApplicationStatus, string> = {
   new: "New",
   viewed: "Viewed",
   interested: "Interested",
-  closed: "Closed",
+  closed: "Passed",
 };
 
 export const STATUS_TONE: Record<ApplicationStatus, string> = {
