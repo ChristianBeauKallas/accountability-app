@@ -17,6 +17,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { PlayerFeed } from "@/components/player/PlayerFeed";
 import { StatBlock } from "@/components/player/StatBlock";
+import { PlayerContactCard } from "@/components/ContactReveal";
 import { STATUS_LABEL, STATUS_TONE, timeAgo } from "@/lib/format";
 import type {
   Application,
@@ -244,6 +245,12 @@ function ApplicantSheet({
             </Chip>
             {p?.is_transfer && <Chip tone="status-interested">Transfer</Chip>}
           </div>
+
+          {row.status === "interested" && p && (
+            <div className="mt-4">
+              <PlayerContactCard playerId={p.id} />
+            </div>
+          )}
 
           <SegmentedControl
             className="mt-4"

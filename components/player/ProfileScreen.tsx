@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, X, Camera } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -283,8 +283,28 @@ function EditForm({
   const [isTransfer, setIsTransfer] = useState(player.is_transfer);
   const [currentSchool, setCurrentSchool] = useState(player.current_school ?? "");
   const [bio, setBio] = useState(player.bio ?? "");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("contact_info")
+        .select("email, phone")
+        .eq("user_id", profile.id)
+        .maybeSingle();
+      if (!active) return;
+      setContactEmail(data?.email ?? profile.email ?? "");
+      setContactPhone(data?.phone ?? "");
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [prefDivisions, setPrefDivisions] = useState<string[]>(
     player.pref_divisions ?? []
   );
@@ -384,9 +404,18 @@ function EditForm({
       })
       .eq("id", profile.id);
 
+    const { error: cErr } = await supabase.from("contact_info").upsert({
+      user_id: profile.id,
+      email: contactEmail.trim() || null,
+      phone: contactPhone.trim() || null,
+      updated_at: new Date().toISOString(),
+    });
+
     setSaving(false);
-    if (pErr || plErr) {
-      setError((pErr ?? plErr)?.message ?? "Couldn't save. Try again.");
+    if (pErr || plErr || cErr) {
+      setError(
+        (pErr ?? plErr ?? cErr)?.message ?? "Couldn't save. Try again."
+      );
       return;
     }
     router.refresh();
@@ -721,6 +750,36 @@ function EditForm({
             maxLength={280}
           />
         </Field>
+
+        {/* Contact — shared only on a mutual match */}
+        <div className="rounded-input border border-border bg-surface p-4 space-y-4">
+          <div>
+            <p className="eyebrow">Contact</p>
+            <p className="mt-1 text-xs text-body-2">
+              Only shared with a coach after a mutual match — never browsable.
+            </p>
+          </div>
+          <Field label="Contact email" htmlFor="cem">
+            <Input
+              id="cem"
+              type="email"
+              inputMode="email"
+              placeholder="you@email.com"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+            />
+          </Field>
+          <Field label="Phone" htmlFor="cph" hint="Optional">
+            <Input
+              id="cph"
+              type="tel"
+              inputMode="tel"
+              placeholder="(555) 555-5555"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+            />
+          </Field>
+        </div>
 
         {error && <p className="text-sm text-danger">{error}</p>}
 
