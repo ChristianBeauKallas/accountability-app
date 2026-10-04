@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
@@ -382,8 +382,34 @@ function EditForm({
   const [minGpa, setMinGpa] = useState(program.min_gpa?.toString() ?? "");
   const [pitch, setPitch] = useState(program.recruiting_pitch ?? "");
   const [about, setAbout] = useState(program.about ?? "");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [coachId, setCoachId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user || !active) return;
+      setCoachId(user.id);
+      const { data } = await supabase
+        .from("contact_info")
+        .select("email, phone")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!active) return;
+      setContactEmail(data?.email ?? user.email ?? "");
+      setContactPhone(data?.phone ?? "");
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function save() {
     setError("");
@@ -408,9 +434,21 @@ function EditForm({
         about: about.trim() || null,
       })
       .eq("id", program.id);
+
+    let cErr = null;
+    if (coachId) {
+      const res = await supabase.from("contact_info").upsert({
+        user_id: coachId,
+        email: contactEmail.trim() || null,
+        phone: contactPhone.trim() || null,
+        updated_at: new Date().toISOString(),
+      });
+      cErr = res.error;
+    }
+
     setSaving(false);
-    if (err) {
-      setError(err.message);
+    if (err || cErr) {
+      setError((err ?? cErr)?.message ?? "Couldn't save. Try again.");
       return;
     }
     router.refresh();
@@ -512,6 +550,36 @@ function EditForm({
             onChange={(e) => setWebsite(e.target.value)}
           />
         </Field>
+
+        {/* Recruiting contact — shared with a player only on a mutual match */}
+        <div className="rounded-input border border-border bg-surface p-4 space-y-4">
+          <div>
+            <p className="eyebrow">Your recruiting contact</p>
+            <p className="mt-1 text-xs text-body-2">
+              Shared with a player only after a mutual match — never public.
+            </p>
+          </div>
+          <Field label="Contact email" htmlFor="cem">
+            <Input
+              id="cem"
+              type="email"
+              inputMode="email"
+              placeholder="coach@school.edu"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+            />
+          </Field>
+          <Field label="Phone" htmlFor="cph" hint="Optional">
+            <Input
+              id="cph"
+              type="tel"
+              inputMode="tel"
+              placeholder="(555) 555-5555"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+            />
+          </Field>
+        </div>
 
         <Field
           label="What we recruit"
