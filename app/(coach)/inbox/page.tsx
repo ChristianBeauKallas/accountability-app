@@ -1,10 +1,37 @@
 import { requireProfile } from "@/lib/auth";
-import { ScreenStub } from "@/components/ui/ScreenStub";
+import { createClient } from "@/lib/supabase/server";
+import { InboxView, type InboxRow } from "@/components/coach/InboxView";
+
+export const dynamic = "force-dynamic";
 
 export default async function InboxPage() {
   const { profile } = await requireProfile("coach");
+  const supabase = createClient();
+
+  // RLS scopes these to applications for the coach's program needs.
+  const { data } = await supabase
+    .from("applications")
+    .select(
+      "*, player:players(*, profile:profiles(full_name, avatar_url)), need:needs(*)"
+    )
+    .order("fit_score", { ascending: false });
+
+  const rows = (data ?? []) as unknown as InboxRow[];
+  const newCount = rows.filter((r) => r.status === "new").length;
   const first = profile.full_name?.split(" ")[0] || "Coach";
+
   return (
-    <ScreenStub eyebrow={`Hey ${first}`} title="Inbox" phase="Phase 5" />
+    <main className="px-5 pt-12">
+      <p className="eyebrow">Hey {first}</p>
+      <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
+        Inbox
+      </h1>
+      <p className="mt-1 mb-5 text-[15px] text-body-2">
+        {rows.length > 0
+          ? `${rows.length} ${rows.length === 1 ? "applicant" : "applicants"}${newCount ? ` · ${newCount} new` : ""}, ranked by fit.`
+          : "Applicants to your needs show up here, ranked by fit."}
+      </p>
+      <InboxView rows={rows} />
+    </main>
   );
 }

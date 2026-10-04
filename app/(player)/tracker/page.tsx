@@ -14,7 +14,7 @@ export default async function TrackerPage() {
     .eq("player_id", userId)
     .order("created_at", { ascending: false });
 
-  const rows = (data ?? []) as TrackerRow[];
+  const rows = (data ?? []) as unknown as TrackerRow[];
 
   return (
     <main className="px-5 pt-12">
