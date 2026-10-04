@@ -21,7 +21,9 @@ Run these in the Supabase SQL editor (or `psql`) **in order**:
    on signup).
 2. `migrations/0002_rls.sql` — Row Level Security policies.
 3. `migrations/0003_onboarding.sql` — onboarding completion flag.
-4. `seed.sql` — demo programs, needs, players, and applications.
+4. `migrations/0004_player_need_visibility.sql` — players can read needs
+   they've applied to (keeps closed needs visible in the Tracker).
+5. `seed.sql` — demo programs, needs, players, and applications.
 
 The seed is safe to re-run; it clears its own rows first.
 
