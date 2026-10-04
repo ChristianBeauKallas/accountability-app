@@ -56,7 +56,7 @@ export function FitsFeed({
           onChange={setFilter}
           segments={[
             { value: "all", label: "All fits" },
-            { value: "top", label: "Top (75+)" },
+            { value: "top", label: "Best Fits (75%+)" },
           ]}
         />
       )}
