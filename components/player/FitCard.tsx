@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import { SaveButton } from "@/components/SaveButton";
 import { distanceMiles } from "@/lib/fit";
 import { formatMiles, poolLabel } from "@/lib/format";
 import type { Need, Player, Program } from "@/lib/types";
@@ -19,12 +20,14 @@ export function FitCard({
   onApply,
   applying,
   applied,
+  saved,
 }: {
   item: FeedItem;
   player: Player;
   onApply: () => void;
   applying: boolean;
   applied: boolean;
+  saved: boolean;
 }) {
   const { need } = item;
   const program = need.program;
@@ -54,13 +57,20 @@ export function FitCard({
             </p>
           </div>
         </Link>
-        <div className="shrink-0 text-right">
-          <div className="font-display text-[26px] font-bold leading-none text-accent tabular-nums">
-            {item.fit}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <SaveButton
+            programId={program.id}
+            playerId={player.id}
+            initial={saved}
+          />
+          <div className="text-right">
+            <div className="font-display text-[26px] font-bold leading-none text-accent tabular-nums">
+              {item.fit}
+            </div>
+            <p className="mt-0.5 text-[10px] uppercase tracking-eyebrow text-muted-2">
+              fit
+            </p>
           </div>
-          <p className="mt-0.5 text-[10px] uppercase tracking-eyebrow text-muted-2">
-            fit
-          </p>
         </div>
       </div>
 
