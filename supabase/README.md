@@ -1,5 +1,18 @@
 # Athletx — Supabase setup
 
+## Reusing an existing project? Wipe it first ⚠️
+
+If you're pointing Athletx at a Supabase project that already ran another app
+(e.g. the old "Get Better" app), run **`reset-all.sql` first**. It is
+**destructive and irreversible** — it drops the entire `public` schema and
+deletes every auth user. Only do this on a project whose data you're done
+with. (A fresh/empty project does not need it — skip straight to the schema.)
+
+Order when reusing a project:
+
+1. `reset-all.sql` — wipes old tables, functions, triggers, and all users.
+2. the four files below, in order.
+
 ## Apply the schema
 
 Run these in the Supabase SQL editor (or `psql`) **in order**:
