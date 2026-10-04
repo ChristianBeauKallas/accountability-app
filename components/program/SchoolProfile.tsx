@@ -7,14 +7,9 @@ import {
   Globe,
   X,
   ArrowLeft,
-  Users,
-  GraduationCap,
-  Trophy,
-  CloudSun,
   BadgeCheck,
   Bookmark,
   BookmarkCheck,
-  type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
@@ -26,6 +21,12 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { HeaderActions } from "@/components/HeaderActions";
 import { ProgramFeed } from "@/components/program/ProgramFeed";
+import {
+  MetricTiles,
+  StatRow,
+  type Metric,
+  type RowItem,
+} from "@/components/player/StatBlock";
 import { DIVISIONS, STATES } from "@/lib/constants";
 import { climateDisplay } from "@/lib/climate";
 import type { Program, StaffRole } from "@/lib/types";
@@ -217,6 +218,39 @@ function AboutTab({
   const minGpa = program.min_gpa ?? stats.minGpa;
   const pct = programCompleteness(program);
 
+  // Headline numbers a recruit weighs before applying.
+  const tiles: Metric[] = [
+    { value: String(stats.openNeeds), label: "Open spots", tone: "accent" },
+  ];
+  if (minGpa != null)
+    tiles.push({
+      value: minGpa.toFixed(2),
+      unit: minGpa <= 4 ? "/ 4.0" : undefined,
+      label: "Min GPA",
+      tone: "gold",
+    });
+  if (program.enrollment != null)
+    tiles.push({
+      value: program.enrollment.toLocaleString(),
+      label: "Enrollment",
+      tone: "accent",
+    });
+  if (program.record_last_season)
+    tiles.push({
+      value: program.record_last_season,
+      label: "Last season",
+      tone: "accent",
+    });
+
+  // Descriptive details — only what's actually set (no empty dashes).
+  const details: RowItem[] = [
+    { label: "Level", value: program.division },
+    program.conference
+      ? { label: "Conference", value: program.conference }
+      : null,
+    climate ? { label: "Weather", value: climate } : null,
+  ].filter(Boolean) as RowItem[];
+
   return (
     <div>
       {editable && pct < 100 && (
@@ -250,31 +284,8 @@ function AboutTab({
       )}
 
       <Section title="At a glance">
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <Stat icon={GraduationCap} label="Level" value={program.division} />
-          <Stat
-            icon={MapPin}
-            label="Location"
-            value={[program.city, program.state].filter(Boolean).join(", ") || "—"}
-          />
-          <Stat label="Conference" value={program.conference || "—"} />
-          <Stat icon={CloudSun} label="Weather" value={climate || "—"} />
-          <Stat
-            icon={Trophy}
-            label="Last season"
-            value={program.record_last_season || "—"}
-          />
-          <Stat
-            icon={Users}
-            label="Enrollment"
-            value={program.enrollment ? program.enrollment.toLocaleString() : "—"}
-          />
-          <Stat
-            label="Min GPA"
-            value={minGpa != null ? minGpa.toFixed(2) : "—"}
-          />
-          <Stat label="Open spots" value={String(stats.openNeeds)} />
-        </dl>
+        <MetricTiles tiles={tiles} />
+        <StatRow items={details} className="mt-3" />
       </Section>
 
       {stats.positions.length > 0 && (
@@ -343,26 +354,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="eyebrow mb-2">{title}</h2>
       {children}
     </section>
-  );
-}
-
-function Stat({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon?: LucideIcon;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div>
-      <dt className="flex items-center gap-1 text-xs text-muted-2">
-        {Icon && <Icon size={13} strokeWidth={2} className="text-muted-2" />}
-        {label}
-      </dt>
-      <dd className="mt-0.5 font-medium text-ink">{value}</dd>
-    </div>
   );
 }
 
