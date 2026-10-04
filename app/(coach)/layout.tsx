@@ -9,7 +9,10 @@ export default async function CoachLayout({
 }) {
   await requireProfile("coach");
   return (
-    <div className="min-h-dvh pb-[84px]">
+    <div
+      className="min-h-dvh"
+      style={{ paddingBottom: "calc(84px + env(safe-area-inset-bottom) + 28px)" }}
+    >
       <div
         className="pointer-events-none fixed inset-x-0 top-0 z-40 mx-auto flex w-full max-w-app justify-end px-4"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 10px)" }}
