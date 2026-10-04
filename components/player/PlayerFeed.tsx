@@ -308,7 +308,7 @@ function EmptyFeed({ kind, editable }: { kind: PostKind; editable: boolean }) {
         {editable
           ? isHighlight
             ? "Post your best clips — coaches scan highlights first."
-            : "Share what you're working on. Updates keep coaches warm."
+            : "Post an update so coaches can follow your season."
           : isHighlight
             ? "This player hasn't posted highlights yet."
             : "This player hasn't posted any updates yet."}

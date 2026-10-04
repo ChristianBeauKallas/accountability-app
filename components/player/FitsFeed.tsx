@@ -108,10 +108,10 @@ function EmptyState({
       </p>
       <p className="max-w-xs text-sm text-body-2">
         {appliedCount > 0
-          ? "You've applied to everything that fits right now. New roster needs show up here the moment coaches post them."
+          ? "You're in for everything that fits right now. New spots show up the moment coaches post them."
           : hadItems
-            ? "Try the “All fits” filter, or round out your profile so more needs match."
-            : "As coaches post needs you match, they'll appear here — ranked by fit. Keep your profile sharp to surface more."}
+            ? "Try the “All fits” filter, or round out your profile so more spots turn up."
+            : "When coaches post spots you fit, they'll show up here. A fuller profile surfaces more."}
       </p>
     </div>
   );

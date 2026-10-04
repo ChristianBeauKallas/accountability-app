@@ -18,9 +18,9 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   applicationName: "Athletx",
-  title: "Athletx — real roster spots, real fits",
+  title: "Athletx — find your spot",
   description:
-    "Coaches post open roster spots. Players see where they actually fit. No spam, no ghosting.",
+    "Coaches post the spots they're recruiting for. Players see where they line up and put their name in — and always hear back.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

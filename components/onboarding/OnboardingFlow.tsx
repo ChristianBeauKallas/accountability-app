@@ -92,35 +92,35 @@ function HowItWorks({ role }: { role: UserRole }) {
       ? [
           {
             icon: ClipboardList,
-            title: "Post what you need",
-            body: "List the exact spots you're recruiting — position, class, the bar you expect.",
+            title: "Post the spots you need",
+            body: "List what you're recruiting for — position, class, and the bar you expect.",
           },
           {
             icon: Inbox,
-            title: "Get a ranked inbox",
-            body: "Only players who match show up, sorted by fit. No cold DMs to sift through.",
+            title: "See who fits, first",
+            body: "Only players who fit show up, strongest first. No cold DMs to dig through.",
           },
           {
             icon: ShieldCheck,
             title: "Reach out on your terms",
-            body: "You see a player's profile once they apply. Mark interest, message, move on.",
+            body: "You see a player once they put their name in. Mark interest and reach out.",
           },
         ]
       : [
           {
             icon: Target,
-            title: "See real fits",
-            body: "We show roster needs you actually match — ranked by how well you fit.",
+            title: "See where you fit",
+            body: "The spots you actually line up for — your strongest matches first.",
           },
           {
             icon: Zap,
-            title: "Apply in one tap",
-            body: "No essays. Your profile is your application. Tap, and the coach sees you.",
+            title: "Put your name in",
+            body: "One tap. Your profile does the talking, and the coach sees you.",
           },
           {
             icon: ShieldCheck,
-            title: "No spam, no ghosting",
-            body: "Coaches can't browse players. You decide who sees you by where you apply.",
+            title: "You're in control",
+            body: "Coaches can't browse players. You choose who sees you by where you go.",
           },
         ];
 
@@ -278,7 +278,7 @@ function PlayerProfile({
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
 
-      <Field label="Positions" hint="Tap all that apply — your first pick is your primary.">
+      <Field label="Positions" hint="Tap all you play — your first pick is your primary.">
         <div className="flex flex-wrap gap-2">
           {POSITIONS.map((pos) => {
             const active = picked.includes(pos);
@@ -712,14 +712,14 @@ function AppTour({ role }: { role: UserRole; userId: string }) {
   const tabs: { icon: LucideIcon; label: string; body: string }[] =
     role === "coach"
       ? [
-          { icon: Inbox, label: "Inbox", body: "Ranked applicants for your needs." },
-          { icon: ClipboardList, label: "Needs", body: "Post and manage open spots." },
+          { icon: Inbox, label: "Inbox", body: "Players who want your spots, best fit first." },
+          { icon: ClipboardList, label: "Needs", body: "Post and manage your open spots." },
           { icon: Building2, label: "Program", body: "Your public program page." },
         ]
       : [
-          { icon: Compass, label: "Fits", body: "Needs you match, ranked by fit." },
-          { icon: ListChecks, label: "Tracker", body: "Everywhere you've applied." },
-          { icon: User, label: "Profile", body: "Keep your profile sharp." },
+          { icon: Compass, label: "Fits", body: "Spots you fit, strongest matches first." },
+          { icon: ListChecks, label: "Tracker", body: "Every spot you're in for." },
+          { icon: User, label: "Profile", body: "Your profile, updates and highlights." },
         ];
 
   return (

@@ -65,7 +65,7 @@ export default function PreviewPage() {
       <section className="space-y-3">
         <p className="eyebrow">Buttons</p>
         <Button size="lg" full>
-          Apply in one tap
+          Put me in
         </Button>
         <div className="flex gap-2">
           <Button variant="secondary">Secondary</Button>
@@ -97,7 +97,7 @@ export default function PreviewPage() {
           onChange={setSeg}
           segments={[
             { value: "fits", label: "Your fits" },
-            { value: "applied", label: "Applied" },
+            { value: "applied", label: "In the mix" },
           ]}
         />
       </section>
@@ -145,7 +145,7 @@ export default function PreviewPage() {
             <Chip>2026</Chip>
             <Chip tone="metric">Needs GPA 2.5+</Chip>
           </div>
-          <Button full>Apply</Button>
+          <Button full>Put me in</Button>
         </Card>
       </section>
     </main>

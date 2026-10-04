@@ -17,13 +17,14 @@ export default async function WelcomePage() {
       <div className="flex-1">
         <p className="eyebrow">Athletx</p>
         <h1 className="mt-3 text-[40px] leading-[1.05] font-display font-bold tracking-tight text-ink">
-          Real roster spots.
+          The spots
           <br />
-          Real fits.
+          that fit you.
         </h1>
         <p className="mt-4 text-base text-body-2 max-w-[22rem]">
-          Coaches post the spots they&rsquo;re actually recruiting. Players see
-          only where they fit — and apply in one tap. No spam. No ghosting.
+          Coaches post the roster spots they&rsquo;re recruiting for. You see
+          where you line up and put your name in. They reach out — you&rsquo;re
+          never left guessing.
         </p>
 
         {/* How it works teaser */}
@@ -31,12 +32,12 @@ export default async function WelcomePage() {
           {[
             {
               icon: Target,
-              text: "See roster needs you actually match — ranked by fit.",
+              text: "See the spots you actually line up for.",
             },
-            { icon: Zap, text: "Apply in one tap. Coaches get a clean inbox." },
+            { icon: Zap, text: "Put your name in with one tap." },
             {
               icon: ShieldCheck,
-              text: "Nobody browses players. You reach out — not the other way.",
+              text: "Coaches find you when you go to them — not before.",
             },
           ].map(({ icon: Icon, text }, i) => (
             <li key={i} className="flex items-start gap-3">

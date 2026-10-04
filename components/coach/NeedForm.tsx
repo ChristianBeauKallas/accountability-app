@@ -106,7 +106,7 @@ export function NeedForm({
         {editing ? "Edit need" : "Post a need"}
       </h1>
       <p className="mt-1 text-[15px] text-body-2">
-        Only players who match see this — and they apply in one tap.
+        Only players who fit see this — and they put their name in with one tap.
       </p>
 
       <div className="mt-6 space-y-5">
@@ -119,7 +119,7 @@ export function NeedForm({
           />
         </Field>
 
-        <Field label="Positions" hint="Players at any of these can apply.">
+        <Field label="Positions" hint="Players at any of these can go for it.">
           <div className="flex flex-wrap gap-2">
             {POSITIONS.map((pos) => {
               const active = picked.includes(pos);
