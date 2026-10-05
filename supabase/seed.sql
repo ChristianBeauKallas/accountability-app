@@ -5,8 +5,13 @@
 --
 -- Demo login accounts (email magic-link OR password):
 --   coach@seed.athletx     password: athletxdemo   (staffs Cowley College)
---   coach2@seed.athletx    password: athletxdemo   (staffs Washburn)
+--   coach2@seed.athletx    password: athletxdemo   (staffs Washburn — has mutual matches)
 --   player1@seed.athletx … player40@seed.athletx    password: athletxdemo
+--
+-- player1 (Jaden Alvarez) is the spotlight demo: strong infielder with a full
+-- Fits feed, applications across every stage (interested / mutual / closed),
+-- a mutual match with contact unlocked, follows, and notifications. Everyone
+-- has contact info seeded so the mutual-match contact card is populated.
 --
 -- Safe to re-run: clears seeded rows first.
 
@@ -118,6 +123,24 @@ from (values
   ('Oklahoma Wesleyan University','SS — athlete', array['SS'], 2026, 2027, true, 2.5, array['athleticism'], 87, 6.85, null, null, 'Athletic shortstop, two-way upside.'),
   ('Oklahoma Wesleyan University','OF — bat first', array['OF','LF'], 2026, 2027, false, 2.5, array['bat'], 91, null, null, null, 'Outfielder who profiles as a bat.'),
   ('Oklahoma Wesleyan University','RHP — strike thrower', array['RHP'], 2026, 2027, true, 2.5, array['command'], null, null, 83, null, 'Right-hander who throws strikes and competes.')
+) as v(program, title, positions, gy_min, gy_max, transfer, min_gpa, must_have, min_ev, min_60, min_fb, min_pop, descr)
+join public.programs p on p.name = v.program;
+
+-- 4b. Extra needs on the two demo-coach programs so their inboxes run deeper.
+insert into public.needs
+  (program_id, title, positions, grad_year_min, grad_year_max, accepts_transfer,
+   min_gpa, must_have, min_exit_velo, min_sixty, min_fastball_velo, min_pop_time, description, created_by)
+select p.id, v.title, v.positions, v.gy_min, v.gy_max, v.transfer, v.min_gpa, v.must_have,
+       v.min_ev, v.min_60, v.min_fb, v.min_pop, v.descr,
+       (select ps.profile_id from public.program_staff ps where ps.program_id = p.id limit 1)
+from (values
+  ('Cowley College','Utility INF — versatile', array['2B','3B','SS'], 2026, 2027, true, 2.5, array['versatility'], null::int, null::numeric, null::int, null::numeric, 'Infielder who can play multiple spots and earn at-bats.'),
+  ('Cowley College','1B — lefty bat', array['1B'], 2026, 2027, false, 2.5, array['power'], 92, null, null, null, 'Left-handed first baseman with real pop.'),
+  ('Washburn University','RHP — Friday arm', array['RHP'], 2025, 2026, true, 2.75, array['command'], null, null, 88, null, 'Weekend starter to anchor the rotation.'),
+  ('Washburn University','OF — bat & run', array['OF','CF'], 2026, 2027, false, 2.75, array['bat','speed'], null, 6.80, null, null, 'Outfielder who hits and runs the bases.'),
+  ('Emporia State University','3B — corner bat', array['3B'], 2026, 2027, false, 2.5, array['power'], 90, null, null, null, 'Third baseman with a plus bat.'),
+  ('Crowder College','SS — defender', array['SS','2B'], 2026, 2027, false, 2.5, array['defense'], null, 6.90, null, null, 'Glove-first shortstop who can really pick it.'),
+  ('Rogers State University','INF — utility bat', array['2B','3B','SS'], 2026, 2027, true, 2.5, array['versatility','bat'], 88, null, null, null, 'Versatile infielder who swings it.')
 ) as v(program, title, positions, gy_min, gy_max, transfer, min_gpa, must_have, min_ev, min_60, min_fb, min_pop, descr)
 join public.programs p on p.name = v.program;
 
@@ -304,6 +327,133 @@ begin
     from public.programs p
     join public.program_staff ps on ps.program_id = p.id
     where p.name in ('Cowley College', 'Washburn University');
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 6.7 Contact info for every seed account (players + coaches)
+--     So a mutual match reveals real-looking contact details in the demo.
+-- ---------------------------------------------------------------------------
+insert into public.contact_info (user_id, email, phone)
+select pr.id,
+       lower(regexp_replace(pr.full_name, '[^a-zA-Z]', '', 'g'))
+         || (abs(hashtext(pr.id::text)) % 90 + 10)::text || '@athletxmail.com',
+       '(' || (300 + abs(hashtext(pr.id::text)) % 99)::text || ') 555-'
+         || lpad((abs(hashtext(pr.id::text)) % 9000 + 1000)::text, 4, '0')
+from public.profiles pr
+where pr.email like '%@seed.athletx'
+on conflict (user_id) do update
+  set email = excluded.email, phone = excluded.phone;
+
+-- ---------------------------------------------------------------------------
+-- 6.8 Promote a few of each demo coach's applicants to 'interested'
+--     (fires the coach-interest notification + unlocks contact both ways).
+-- ---------------------------------------------------------------------------
+with coach_apps as (
+  select a.id,
+         row_number() over (partition by ps.profile_id
+                            order by a.fit_score desc nulls last) as rn
+  from public.applications a
+  join public.needs n on n.id = a.need_id
+  join public.program_staff ps on ps.program_id = n.program_id
+  join public.profiles cp on cp.id = ps.profile_id
+  where cp.email in ('coach@seed.athletx', 'coach2@seed.athletx')
+    and a.status in ('new', 'viewed')
+)
+update public.applications a
+set status = 'interested'
+from coach_apps c
+where a.id = c.id and c.rn <= 4;
+
+-- A few passed (closed) applications so the "Closed" view isn't empty.
+with closable as (
+  select a.id,
+         row_number() over (partition by a.player_id order by random()) as rn
+  from public.applications a
+  where a.status in ('new', 'viewed')
+)
+update public.applications a
+set status = 'closed'
+from closable c
+where a.id = c.id and c.rn = 1 and (abs(hashtext(a.id::text)) % 6) = 0;
+
+-- ---------------------------------------------------------------------------
+-- 6.9 Spotlight: player1 (Jaden Alvarez) — a complete, legible journey.
+--     A strong, broadly-eligible prospect with spots in every stage.
+-- ---------------------------------------------------------------------------
+do $$
+declare p1 uuid;
+begin
+  select id into p1 from public.profiles where email = 'player1@seed.athletx';
+  if p1 is null then return; end if;
+
+  update public.players set
+    primary_position = 'SS',
+    positions = array['SS','2B','3B'],
+    grad_year = 2026,
+    gpa = 3.40,
+    bats = 'R', throws = 'R',
+    height_in = 73, weight_lb = 185,
+    sixty_yd = 6.68, inf_velo = 88, exit_velo = 94,
+    of_velo = null, fastball_velo = null, pop_time = null,
+    is_transfer = false, current_school = null,
+    bio = 'Rangy two-way infielder — plus arm, gap-to-gap pop, high motor. Ready to compete right away.',
+    updated_at = now()
+  where id = p1;
+
+  -- Rebuild player1's applications cleanly (leaves the rest of their
+  -- eligible spots in the Fits feed). Apply to 4, prefer demo-coach programs.
+  delete from public.applications where player_id = p1;
+
+  insert into public.applications (need_id, player_id, status, fit_score, created_at, viewed_at)
+  select n.id, p1, 'new', 82 + (abs(hashtext(n.id::text)) % 15),
+         now() - (random() * interval '9 days'), null
+  from (
+    select n.* from public.needs n
+    join public.players pl on pl.id = p1
+    where n.status = 'open'
+      and pl.positions && n.positions
+      and pl.gpa >= n.min_gpa
+      and ((n.accepts_transfer and pl.is_transfer)
+           or pl.grad_year between n.grad_year_min and n.grad_year_max)
+    order by (exists (
+               select 1 from public.program_staff ps
+               join public.profiles cp on cp.id = ps.profile_id
+               where ps.program_id = n.program_id
+                 and cp.email in ('coach@seed.athletx', 'coach2@seed.athletx')
+             )) desc,
+             random()
+    limit 4
+  ) n;
+
+  -- One mutual match — prefer a demo coach's program so it shows on both sides.
+  update public.applications set status = 'interested'
+  where id = (
+    select a.id from public.applications a
+    join public.needs n on n.id = a.need_id
+    join public.programs pg on pg.id = n.program_id
+    where a.player_id = p1 and a.status in ('new', 'viewed')
+    order by (pg.name in ('Washburn University', 'Cowley College')) desc,
+             a.fit_score desc nulls last
+    limit 1
+  );
+
+  -- One pending (viewed) and one passed (closed) so all three tabs are full.
+  update public.applications set status = 'viewed', viewed_at = now() - interval '2 days'
+  where id = (select a.id from public.applications a
+              where a.player_id = p1 and a.status = 'new'
+              order by a.created_at limit 1);
+  update public.applications set status = 'closed'
+  where id = (select a.id from public.applications a
+              where a.player_id = p1 and a.status = 'new'
+              order by a.created_at desc limit 1);
+
+  -- Follow a couple of schools.
+  if to_regclass('public.program_followers') is not null then
+    insert into public.program_followers (player_id, program_id)
+    select p1, id from public.programs
+    where name in ('Cowley College', 'Washburn University')
+    on conflict do nothing;
   end if;
 end $$;
 
