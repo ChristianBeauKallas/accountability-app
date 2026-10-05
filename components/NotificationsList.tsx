@@ -40,8 +40,8 @@ export function NotificationsList({
           You&rsquo;re all caught up
         </p>
         <p className="max-w-xs text-sm text-body-2">
-          Updates from schools you follow or are in with — and coach interest —
-          show up here.
+          Updates from schools you follow or applied to — plus coach interest —
+          land here.
         </p>
       </div>
     );

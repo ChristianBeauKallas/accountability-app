@@ -134,7 +134,7 @@ function TrackerCard({
               {STATUS_LABEL[row.status]}
             </Chip>
             <span className="text-xs text-muted-2">
-              In · {timeAgo(row.created_at)}
+              Applied {timeAgo(row.created_at)}
             </span>
           </div>
           </div>
