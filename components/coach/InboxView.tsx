@@ -166,7 +166,7 @@ function ApplicantCard({
             {p?.state ? ` · ${p.state}` : ""}
           </p>
           <p className="mt-1 truncate text-xs text-muted-2">
-            {row.need?.title ?? "Roster need"} · in {timeAgo(row.created_at)}
+            {row.need?.title ?? "Roster need"} · {timeAgo(row.created_at)}
           </p>
         </div>
         <div className="shrink-0 text-right">
