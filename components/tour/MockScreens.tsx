@@ -396,8 +396,7 @@ function ProfileScreen() {
   return (
     <Shell tabs={PLAYER_TABS} active="profile">
       {/* Header — mirrors the real profile page */}
-      <div className="flex items-start justify-between">
-        <p className="eyebrow">Profile</p>
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2.5 text-muted-2">
           <Bell size={20} strokeWidth={2} aria-hidden />
           <span className="flex items-center gap-1 rounded-pill border border-border px-2.5 py-1 text-xs font-semibold text-ink">

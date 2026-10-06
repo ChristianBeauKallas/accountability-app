@@ -52,8 +52,7 @@ export default async function FollowingPage() {
 
   return (
     <main className="px-5 pt-12">
-      <div className="flex items-start justify-between">
-        <p className="eyebrow">Saved</p>
+      <div className="flex items-center justify-end">
         <HeaderActions showBell />
       </div>
       <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">
