@@ -93,7 +93,7 @@ function HowItWorks({ role }: { role: UserRole }) {
           },
           {
             icon: ShieldCheck,
-            title: "Show interest, your call",
+            title: "You control the recruiting process",
             body: "Tap I'm Interested and the coach sees you. Coaches can't browse players — you decide who gets your info.",
           },
         ];
@@ -106,7 +106,7 @@ function HowItWorks({ role }: { role: UserRole }) {
       <p className="mt-2 text-body-2">
         {role === "coach"
           ? "Built to make recruiting less noisy."
-          : "Build your profile — our algorithm does the recruiting legwork."}
+          : "Create your player profile and our network and platform do the work for you."}
       </p>
       <ul className="mt-8 space-y-6">
         {items.map(({ icon: Icon, title, body }, i) => (
@@ -374,7 +374,10 @@ function PlayerWizard({
   const isDone = step === "done";
 
   return (
-    <main className="min-h-dvh flex flex-col px-6 pt-12 pb-10">
+    <main
+      className="flex min-h-dvh flex-col px-6 pt-12"
+      style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+    >
       <div className="flex items-center gap-4">
         {i > 0 && !isDone ? (
           <button onClick={goBack} className="text-muted" aria-label="Back">
@@ -773,11 +776,18 @@ function PlayerWizard({
         )}
 
         {step === "about" && (
-          <div className="space-y-6">
-            <QHead
-              title="Tell coaches about you"
-              sub="A line or two in your own words — then let AI tighten it."
-            />
+          <div className="space-y-5">
+            <div>
+              <h1 className="text-2xl font-display font-bold leading-snug tracking-tight">
+                Tell coaches and recruiters who you are, where you&rsquo;re
+                playing now, and why they should consider you for their
+                opportunity.
+              </h1>
+              <p className="mt-3 text-[15px] text-body-2">
+                4&ndash;5 sentences in your own words — then our platform will
+                clean it up for you.
+              </p>
+            </div>
             <AboutYouAI
               value={bio}
               onChange={setBio}
@@ -953,7 +963,10 @@ function CoachWizard({
   const isDone = step === "done";
 
   return (
-    <main className="min-h-dvh flex flex-col px-6 pt-12 pb-10">
+    <main
+      className="flex min-h-dvh flex-col px-6 pt-12"
+      style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+    >
       <div className="flex items-center gap-4">
         {i > 0 && !isDone ? (
           <button onClick={goBack} className="text-muted" aria-label="Back">
