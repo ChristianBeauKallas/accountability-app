@@ -11,7 +11,7 @@ export const PLAYER_TOUR: TourStep[] = [
     screen: "fits",
     selector: '[data-tour="m-card"]',
     title: "Every card is a real opening",
-    body: "Tap a school to see its full page and facilities, or tap I'm Interested to apply in one tap.",
+    body: "Tap a school to see its full page and facilities, or tap I'm Interested to let the coach know you're interested.",
   },
   {
     screen: "fits",
