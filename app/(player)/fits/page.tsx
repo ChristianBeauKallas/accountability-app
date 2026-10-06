@@ -55,12 +55,17 @@ export default async function FitsPage() {
         <p className="eyebrow">Hey {first}</p>
         <HeaderActions showBell />
       </div>
-      <div className="mb-5 mt-1 flex items-center gap-1.5">
+      <div className="mt-1 flex items-center gap-1.5">
         <h1 className="text-3xl font-display font-bold tracking-tight">
           Recommended Fits
         </h1>
         <FitsInfo />
       </div>
+      <p className="mb-5 mt-1 text-[15px] text-body-2">
+        {items.length >= 3
+          ? `${items.length} spots match you right now.`
+          : "Spots you fit, ranked best first."}
+      </p>
       {player && (
         <FitsFeed
           userId={userId}

@@ -185,12 +185,9 @@ type PKey =
   | "location"
   | "gpa"
   | "teaser"
-  | "swing"
   | "body"
   | "metrics"
-  | "levels"
-  | "region"
-  | "size"
+  | "prefs"
   | "about"
   | "done";
 
@@ -202,12 +199,9 @@ const PLAYER_STEPS: PKey[] = [
   "location",
   "gpa",
   "teaser",
-  "swing",
   "body",
   "metrics",
-  "levels",
-  "region",
-  "size",
+  "prefs",
   "about",
   "done",
 ];
@@ -597,47 +591,41 @@ function PlayerWizard({
           </div>
         )}
 
-        {step === "swing" && (
+        {step === "body" && (
           <div className="space-y-6">
-            <QHead
-              title={pitcher ? "Which arm do you throw with?" : "How do you hit & throw?"}
-            />
-            {!pitcher && (
+            <QHead title="Your measurables" />
+            <div className="flex flex-wrap gap-x-10 gap-y-5">
+              {!pitcher && (
+                <div>
+                  <p className="mb-2 text-sm font-semibold text-body-2">Bats</p>
+                  <div className="flex gap-2">
+                    {BATS.map((b) => (
+                      <OptionPill
+                        key={b}
+                        active={bats === b}
+                        onClick={() => setBats(b)}
+                      >
+                        {b === "S" ? "Switch" : b === "R" ? "Right" : "Left"}
+                      </OptionPill>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
-                <p className="mb-2 text-sm font-semibold text-body-2">Bats</p>
+                <p className="mb-2 text-sm font-semibold text-body-2">Throws</p>
                 <div className="flex gap-2">
-                  {BATS.map((b) => (
+                  {THROWS.map((t) => (
                     <OptionPill
-                      key={b}
-                      active={bats === b}
-                      onClick={() => setBats(b)}
+                      key={t}
+                      active={throws === t}
+                      onClick={() => setThrows(t)}
                     >
-                      {b === "S" ? "Switch" : b === "R" ? "Right" : "Left"}
+                      {t === "R" ? "Right" : "Left"}
                     </OptionPill>
                   ))}
                 </div>
               </div>
-            )}
-            <div>
-              <p className="mb-2 text-sm font-semibold text-body-2">Throws</p>
-              <div className="flex gap-2">
-                {THROWS.map((t) => (
-                  <OptionPill
-                    key={t}
-                    active={throws === t}
-                    onClick={() => setThrows(t)}
-                  >
-                    {t === "R" ? "Right" : "Left"}
-                  </OptionPill>
-                ))}
-              </div>
             </div>
-          </div>
-        )}
-
-        {step === "body" && (
-          <div className="space-y-6">
-            <QHead title="Your measurables" />
             <div
               className={cn("grid gap-3", pitcher ? "grid-cols-2" : "grid-cols-3")}
             >
@@ -750,32 +738,28 @@ function PlayerWizard({
           </div>
         )}
 
-        {step === "levels" && (
-          <div className="space-y-6">
+        {step === "prefs" && (
+          <div className="space-y-7">
             <QHead
-              title="What levels are you interested in playing at?"
-              sub="Pick any that interest you — leave blank to see them all."
+              title="What are you looking for?"
+              sub="All optional — it just sharpens your fits. Leave blank for everything."
             />
-            <div className="flex flex-wrap gap-2">
-              {DIVISIONS.map((d) => (
-                <OptionPill
-                  key={d}
-                  active={prefDivisions.includes(d)}
-                  onClick={() => toggle(setPrefDivisions)(d)}
-                >
-                  {d}
-                </OptionPill>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {step === "region" && (
-          <div className="space-y-6">
-            <QHead
-              title="Where do you want to play?"
-              sub="Pick any weather and any states — we'll show schools matching either."
-            />
+            <div>
+              <p className="mb-2 text-sm font-semibold text-body-2">Levels</p>
+              <div className="flex flex-wrap gap-2">
+                {DIVISIONS.map((d) => (
+                  <OptionPill
+                    key={d}
+                    active={prefDivisions.includes(d)}
+                    onClick={() => toggle(setPrefDivisions)(d)}
+                  >
+                    {d}
+                  </OptionPill>
+                ))}
+              </div>
+            </div>
+
             <div>
               <p className="mb-2 text-sm font-semibold text-body-2">Weather</p>
               <div className="flex flex-wrap gap-2">
@@ -790,10 +774,30 @@ function PlayerWizard({
                 ))}
               </div>
             </div>
+
+            <div>
+              <p className="mb-2 text-sm font-semibold text-body-2">
+                School size
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SIZES.filter((s) => s.value !== "any").map((s) => (
+                  <OptionPill
+                    key={s.value}
+                    active={prefSizes.includes(s.value)}
+                    onClick={() => toggle(setPrefSizes)(s.value)}
+                  >
+                    {s.label}
+                  </OptionPill>
+                ))}
+              </div>
+            </div>
+
             <div>
               <p className="mb-2 text-sm font-semibold text-body-2">
                 Specific states{" "}
-                <span className="font-normal text-muted-2">(optional)</span>
+                <span className="font-normal text-muted-2">
+                  (adds to the above)
+                </span>
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {STATES.map((s) => (
@@ -812,45 +816,6 @@ function PlayerWizard({
                   </button>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
-
-        {step === "size" && (
-          <div className="space-y-6">
-            <QHead
-              title="What school size are you interested in?"
-              sub="Pick one or more — matching schools rank higher."
-            />
-            <div className="grid grid-cols-2 gap-2.5">
-              {SIZES.filter((s) => s.value !== "any").map((s) => {
-                const active = prefSizes.includes(s.value);
-                return (
-                  <button
-                    key={s.value}
-                    type="button"
-                    onClick={() => toggle(setPrefSizes)(s.value)}
-                    className={cn(
-                      "rounded-card border p-4 text-left transition-colors",
-                      active
-                        ? "border-accent bg-accent-soft"
-                        : "border-border bg-surface hover:border-accent/50"
-                    )}
-                  >
-                    <p
-                      className={cn(
-                        "font-display text-lg font-semibold",
-                        active ? "text-accent" : "text-ink"
-                      )}
-                    >
-                      {s.label}
-                    </p>
-                    {s.hint && (
-                      <p className="mt-0.5 text-xs text-muted-2">{s.hint}</p>
-                    )}
-                  </button>
-                );
-              })}
             </div>
           </div>
         )}
