@@ -20,15 +20,15 @@ export const PLAYER_TOUR: TourStep[] = [
     body: "Each card shows exactly why you're a fit — position, academics, distance and more.",
   },
   {
-    screen: "fits-tip",
-    selector: '[data-tour="m-tip"]',
+    screen: "fits",
+    selector: '[data-tour="m-info"]',
     title: "Tooltips",
     body: "See an ⓘ anywhere? Tap it for a simple explainer of how that feature works or how we come up with specific data.",
   },
   {
     screen: "tracker",
     selector: '[data-tour="tab-tracker"]',
-    title: "Track where you stand",
+    title: "See who's responded",
     body: "My Spots keeps every opportunity you've shown interest in, and whether each coach has responded or closed your interest.",
   },
   {
