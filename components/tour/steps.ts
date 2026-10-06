@@ -49,6 +49,12 @@ export const PLAYER_TOUR: TourStep[] = [
     title: "Save Athletx to your phone",
     body: "Athletx works better as an app on your home screen — full-screen, one tap away, and it's what makes coach alerts reliable.",
   },
+  {
+    screen: "fits",
+    selector: '[data-tour="m-menu"]',
+    title: "Turn on notifications",
+    body: "Once you've saved the app to your phone, enable push notifications from the menu up here — so you never miss a connection or a potential fit.",
+  },
 ];
 
 export const COACH_TOUR: TourStep[] = [
@@ -81,5 +87,11 @@ export const COACH_TOUR: TourStep[] = [
     install: true,
     title: "Save Athletx to your phone",
     body: "Athletx works better as an app on your home screen — full-screen, one tap away, and it's what makes recruit alerts reliable.",
+  },
+  {
+    screen: "inbox",
+    selector: '[data-tour="m-menu"]',
+    title: "Turn on notifications",
+    body: "Once you've saved the app to your phone, enable push notifications from the menu up here — so you never miss a new recruit or a mutual match.",
   },
 ];
