@@ -17,9 +17,18 @@ export const FIT_WEIGHTS = {
   metrics: 30,
   completeness: 20,
   mustHave: 25,
+  size: 15,
 } as const;
 
 export const MAX_DISTANCE_MILES = 600; // beyond this, distance score ≈ 0
+
+// Rough campus-size buckets by enrollment (for the soft size preference).
+export function sizeBucket(enrollment: number | null): "small" | "medium" | "large" | null {
+  if (enrollment == null) return null;
+  if (enrollment < 4000) return "small";
+  if (enrollment <= 12000) return "medium";
+  return "large";
+}
 
 // --------------------------------------------------------------------------
 // Hard filters
@@ -189,19 +198,35 @@ function mustHaveScore(player: Player, need: Need): number | null {
   return 0.35 + 0.65 * (hits / keywords.length);
 }
 
+// Soft match on preferred campus size (0.2–1), null when no preference set.
+function sizeScore(
+  player: Player,
+  program: Pick<Program, "enrollment">
+): number | null {
+  const pref = player.pref_size;
+  if (!pref || pref === "any") return null;
+  const bucket = sizeBucket(program.enrollment);
+  if (bucket == null) return 0.5; // size unknown → neutral
+  if (bucket === pref) return 1;
+  const order = ["small", "medium", "large"];
+  const gap = Math.abs(order.indexOf(bucket) - order.indexOf(pref));
+  return gap === 1 ? 0.5 : 0.2;
+}
+
 // --------------------------------------------------------------------------
 // Composite 0–100
 // --------------------------------------------------------------------------
 export function computeFit(
   player: Player,
   need: Need,
-  program: Pick<Program, "lat" | "lng">
+  program: Pick<Program, "lat" | "lng" | "enrollment">
 ): number {
   const factors: { weight: number; score: number | null }[] = [
     { weight: FIT_WEIGHTS.distance, score: distanceScore(player, program) },
     { weight: FIT_WEIGHTS.metrics, score: metricsScore(player, need) },
     { weight: FIT_WEIGHTS.completeness, score: profileCompleteness(player) },
     { weight: FIT_WEIGHTS.mustHave, score: mustHaveScore(player, need) },
+    { weight: FIT_WEIGHTS.size, score: sizeScore(player, program) },
   ];
 
   let weighted = 0;
