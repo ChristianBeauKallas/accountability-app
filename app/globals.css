@@ -95,3 +95,18 @@
     @apply mx-auto w-full max-w-app min-h-dvh bg-ground relative;
   }
 }
+
+/* Welcome-tour screen cross-fade */
+@keyframes tourScreenIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-tour-screen {
+  animation: tourScreenIn 0.32s ease-out;
+}

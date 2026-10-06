@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { MockScreen, type ScreenKey } from "@/components/tour/MockScreens";
 
 export type TourStep = {
+  screen: ScreenKey;
   selector: string;
   title: string;
   body: string;
@@ -10,7 +12,7 @@ export type TourStep = {
 
 type Rect = { top: number; left: number; width: number; height: number };
 
-const PAD = 8;
+const PAD = 6;
 
 export function SpotlightTour({
   steps,
@@ -21,37 +23,38 @@ export function SpotlightTour({
 }) {
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
+  const [col, setCol] = useState<Rect | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  const step = steps[index];
   const last = index >= steps.length - 1;
 
-  // Measure the current step's target (scrolling it into view first).
+  // Measure the highlighted element inside the mock screen (and the app
+  // column) whenever the step or its screen changes.
   useLayoutEffect(() => {
-    const step = steps[index];
-    const el = document.querySelector<HTMLElement>(step.selector);
-    if (!el) {
-      // Target not on screen — skip gracefully.
-      if (!last) setIndex((i) => i + 1);
-      else onClose();
-      return;
-    }
-
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    const container = containerRef.current;
+    if (!container) return;
 
     const measure = () => {
-      const r = el.getBoundingClientRect();
-      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      const cr = container.getBoundingClientRect();
+      setCol({ top: cr.top, left: cr.left, width: cr.width, height: cr.height });
+      const el = container.querySelector<HTMLElement>(step.selector);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      } else {
+        setRect(null);
+      }
     };
+
     measure();
-    const t = setTimeout(measure, 320);
+    const t = setTimeout(measure, 80); // settle after the screen fade
     window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
     return () => {
       clearTimeout(t);
       window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [index, step.selector, step.screen]);
 
   // Lock body scroll while the tour runs.
   useEffect(() => {
@@ -62,53 +65,67 @@ export function SpotlightTour({
     };
   }, []);
 
-  if (!rect) {
-    return (
-      <div className="fixed inset-0 z-[70] bg-black/70" aria-hidden />
-    );
-  }
-
-  const t = Math.max(rect.top - PAD, 0);
-  const l = Math.max(rect.left - PAD, 0);
-  const w = rect.width + PAD * 2;
-  const h = rect.height + PAD * 2;
   const vh = typeof window !== "undefined" ? window.innerHeight : 800;
   const vw = typeof window !== "undefined" ? window.innerWidth : 390;
 
-  const dim = "absolute bg-black/70 transition-all duration-300";
-  const centerY = rect.top + rect.height / 2;
-  const placeAbove = centerY > vh / 2;
+  const t = rect ? Math.max(rect.top - PAD, 0) : 0;
+  const l = rect ? Math.max(rect.left - PAD, 0) : 0;
+  const w = rect ? rect.width + PAD * 2 : 0;
+  const h = rect ? rect.height + PAD * 2 : 0;
 
+  const dim = "absolute bg-black/60 transition-all duration-300 ease-out";
+  const placeAbove = rect ? rect.top + rect.height / 2 > vh / 2 : true;
+
+  // Keep the tooltip inside the app column on wide screens.
+  const tipLeft = col ? col.left + 14 : 14;
+  const tipWidth = col ? col.width - 28 : vw - 28;
   const tooltipStyle: React.CSSProperties = placeAbove
-    ? { bottom: vh - t + 14, left: 16, right: 16 }
-    : { top: t + h + 14, left: 16, right: 16 };
+    ? { bottom: vh - t + 12, left: tipLeft, width: tipWidth }
+    : { top: t + h + 12, left: tipLeft, width: tipWidth };
 
   return (
     <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true">
-      {/* Click blocker so the app underneath can't be touched mid-tour */}
-      <div className="absolute inset-0" onClick={(e) => e.stopPropagation()} />
+      {/* Backdrop behind the phone-width mock column */}
+      <div className="absolute inset-0 bg-ground" />
 
-      {/* Four dimmed panels leaving a clear hole over the target */}
-      <div className={dim} style={{ top: 0, left: 0, width: "100%", height: t }} />
+      {/* The staged mock screen */}
       <div
-        className={dim}
-        style={{ top: t + h, left: 0, width: "100%", height: Math.max(vh - (t + h), 0) }}
-      />
-      <div className={dim} style={{ top: t, left: 0, width: l, height: h }} />
-      <div
-        className={dim}
-        style={{ top: t, left: l + w, width: Math.max(vw - (l + w), 0), height: h }}
-      />
+        ref={containerRef}
+        className="absolute inset-y-0 left-1/2 w-full max-w-app -translate-x-1/2 overflow-hidden"
+      >
+        <div key={step.screen} className="h-full animate-tour-screen">
+          <MockScreen screen={step.screen} />
+        </div>
+      </div>
 
-      {/* Accent ring around the target */}
-      <div
-        className="pointer-events-none absolute rounded-[14px] ring-2 ring-accent transition-all duration-300"
-        style={{ top: t, left: l, width: w, height: h }}
-      />
+      {/* Spotlight: four dimmed panels leaving a clear hole over the target */}
+      {rect ? (
+        <>
+          <div className={dim} style={{ top: 0, left: 0, width: "100%", height: t }} />
+          <div
+            className={dim}
+            style={{ top: t + h, left: 0, width: "100%", height: Math.max(vh - (t + h), 0) }}
+          />
+          <div className={dim} style={{ top: t, left: 0, width: l, height: h }} />
+          <div
+            className={dim}
+            style={{ top: t, left: l + w, width: Math.max(vw - (l + w), 0), height: h }}
+          />
+          <div
+            className="pointer-events-none absolute rounded-[14px] ring-2 ring-accent transition-all duration-300 ease-out"
+            style={{ top: t, left: l, width: w, height: h }}
+          />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-black/50" />
+      )}
+
+      {/* Click shield so the mock underneath can't be interacted with */}
+      <div className="absolute inset-0" aria-hidden onClick={(e) => e.stopPropagation()} />
 
       {/* Tooltip card */}
       <div
-        className="absolute mx-auto max-w-app rounded-card border border-border bg-surface p-4 shadow-sheet"
+        className="absolute rounded-card border border-border bg-surface p-4 shadow-sheet transition-all duration-300 ease-out"
         style={tooltipStyle}
       >
         <div className="flex items-center justify-between">
@@ -123,11 +140,9 @@ export function SpotlightTour({
           </button>
         </div>
         <h3 className="mt-2 font-display text-lg font-semibold leading-tight text-ink">
-          {steps[index].title}
+          {step.title}
         </h3>
-        <p className="mt-1 text-sm leading-relaxed text-body-2">
-          {steps[index].body}
-        </p>
+        <p className="mt-1 text-sm leading-relaxed text-body-2">{step.body}</p>
 
         <div className="mt-3 flex items-center justify-between">
           <div className="flex gap-1.5">
