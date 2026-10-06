@@ -10,6 +10,7 @@ export function FitsInfo() {
     <>
       <button
         type="button"
+        data-tour="fits-info"
         onClick={() => setOpen(true)}
         aria-label="How your fits work"
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-pill text-muted-2 transition-colors hover:text-accent"
