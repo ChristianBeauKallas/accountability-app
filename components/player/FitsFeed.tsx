@@ -74,8 +74,8 @@ export function FitsFeed({
         <EmptyState appliedCount={appliedCount} hadItems={items.length > 0} />
       ) : (
         <ul className="space-y-3.5">
-          {visible.map((item) => (
-            <li key={item.need.id}>
+          {visible.map((item, idx) => (
+            <li key={item.need.id} data-tour={idx === 0 ? "fit-card" : undefined}>
               <FitCard
                 item={item}
                 player={player}

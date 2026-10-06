@@ -112,7 +112,7 @@ export function FitCard({
       </div>
 
       {reasons.length > 0 && (
-        <p className="flex items-center gap-1.5 text-sm text-body-2">
+        <p data-tour="fit-why" className="flex items-center gap-1.5 text-sm text-body-2">
           <Sparkles size={14} strokeWidth={2} aria-hidden className="shrink-0 text-accent" />
           <span className="text-muted-2">Why it fits:</span>
           <span className="font-medium text-ink">{reasons.join(" · ")}</span>

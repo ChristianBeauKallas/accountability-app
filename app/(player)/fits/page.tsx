@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { isEligible, computeFit, passesPlayerPrefs } from "@/lib/fit";
 import { FitsFeed } from "@/components/player/FitsFeed";
 import { FitsInfo } from "@/components/player/FitsInfo";
+import { WelcomeTour } from "@/components/tour/WelcomeTour";
+import { PLAYER_TOUR } from "@/components/tour/steps";
 import { HeaderActions } from "@/components/HeaderActions";
 import type { FeedItem } from "@/components/player/FitCard";
 import type { Need, Player, Program } from "@/lib/types";
@@ -74,6 +76,7 @@ export default async function FitsPage() {
           followedIds={followedIds}
         />
       )}
+      <WelcomeTour steps={PLAYER_TOUR} storageKey="athletx-tour-player" />
     </main>
   );
 }

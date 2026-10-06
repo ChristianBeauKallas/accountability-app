@@ -57,6 +57,7 @@ export function TabBar({ role }: { role: Role }) {
             <li key={tab.href}>
               <Link
                 href={tab.href}
+                data-tour={`tab-${tab.href.slice(1)}`}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex h-full flex-col items-center justify-center gap-1 pt-1",
