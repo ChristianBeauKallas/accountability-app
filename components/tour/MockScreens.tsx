@@ -6,6 +6,7 @@ import {
   Info,
   Bell,
   Pencil,
+  MoreVertical,
   Bookmark,
   ListChecks,
   User,
@@ -94,6 +95,20 @@ function Shell({
     <div className="flex h-full flex-col bg-ground">
       <div className="flex-1 overflow-hidden px-5 pt-10">{children}</div>
       <MockTabBar tabs={tabs} active={active} />
+    </div>
+  );
+}
+
+// Header row with the greeting eyebrow and the top-right bell + ⋯ cluster
+// (the notifications tour step spotlights this).
+function MockTopBar({ eyebrow }: { eyebrow: string }) {
+  return (
+    <div className="flex items-start justify-between">
+      <p className="eyebrow">{eyebrow}</p>
+      <div data-tour="m-menu" className="flex items-center gap-2.5 text-muted-2">
+        <Bell size={20} strokeWidth={2} aria-hidden />
+        <MoreVertical size={20} strokeWidth={2} aria-hidden />
+      </div>
     </div>
   );
 }
@@ -228,7 +243,7 @@ function FitCardMini() {
 function FitsScreen({ applied = false }: { applied?: boolean }) {
   return (
     <Shell tabs={PLAYER_TABS} active="fits">
-      <p className="eyebrow">Hey Jordan</p>
+      <MockTopBar eyebrow="Hey Jordan" />
       <div className="mt-1 flex items-center gap-1.5">
         <h1 className="text-3xl font-display font-bold tracking-tight">Recommended Fits</h1>
         <span
@@ -528,11 +543,11 @@ function ApplicantCard({
 function InboxScreen() {
   return (
     <Shell tabs={COACH_TABS} active="inbox">
-      <ScreenTitle
-        eyebrow="Hey Coach"
-        title="Inbox"
-        sub="4 players want in · best fit first."
-      />
+      <MockTopBar eyebrow="Hey Coach" />
+      <h1 className="mt-1 text-3xl font-display font-bold tracking-tight">Inbox</h1>
+      <p className="mb-4 mt-1 text-[15px] text-body-2">
+        4 players want in · best fit first.
+      </p>
       <div className="space-y-3.5">
         <ApplicantCard
           name="Jordan Blake"
