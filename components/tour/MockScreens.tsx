@@ -25,6 +25,7 @@ import { MetricTiles, StatRow } from "@/components/player/StatBlock";
 export type ScreenKey =
   | "fits"
   | "fits-tip"
+  | "fits-interested"
   | "tracker"
   | "following"
   | "profile"
@@ -109,7 +110,13 @@ function ScreenTitle({ eyebrow, title, sub }: { eyebrow?: string; title: string;
 
 /* ------------------------------ Fit card ---------------------------- */
 
-function FitCardMock({ primary = false }: { primary?: boolean }) {
+function FitCardMock({
+  primary = false,
+  applied = false,
+}: {
+  primary?: boolean;
+  applied?: boolean;
+}) {
   return (
     <div data-tour={primary ? "m-card" : undefined}>
       <Card className="space-y-3.5">
@@ -159,9 +166,16 @@ function FitCardMock({ primary = false }: { primary?: boolean }) {
           <span className="font-medium text-ink">Plays SS/2B · 150 mi · Clears 2.5 GPA</span>
         </p>
 
-        <button className="flex h-12 w-full items-center justify-center gap-1.5 rounded-btn bg-accent text-base font-semibold text-surface">
-          I&rsquo;m Interested
-        </button>
+        {applied ? (
+          <div className="flex h-12 w-full items-center justify-center gap-1.5 rounded-btn bg-accent-soft text-base font-semibold text-accent">
+            <Check size={18} strokeWidth={2.5} aria-hidden />
+            Interested — coach notified
+          </div>
+        ) : (
+          <button className="flex h-12 w-full items-center justify-center gap-1.5 rounded-btn bg-accent text-base font-semibold text-surface">
+            I&rsquo;m Interested
+          </button>
+        )}
       </Card>
     </div>
   );
@@ -199,7 +213,7 @@ function FitCardMini() {
 
 /* ------------------------------ Screens ----------------------------- */
 
-function FitsScreen({ tip = false }: { tip?: boolean }) {
+function FitsScreen({ tip = false, applied = false }: { tip?: boolean; applied?: boolean }) {
   return (
     <Shell tabs={PLAYER_TABS} active="fits">
       <p className="eyebrow">Hey Jordan</p>
@@ -211,7 +225,7 @@ function FitsScreen({ tip = false }: { tip?: boolean }) {
       </div>
       <p className="mb-4 mt-1 text-[15px] text-body-2">6 spots match you right now.</p>
       <div className="space-y-3.5">
-        <FitCardMock primary />
+        <FitCardMock primary applied={applied} />
         <FitCardMini />
       </div>
 
@@ -612,6 +626,8 @@ export function MockScreen({ screen }: { screen: ScreenKey }) {
       return <FitsScreen />;
     case "fits-tip":
       return <FitsScreen tip />;
+    case "fits-interested":
+      return <FitsScreen applied />;
     case "tracker":
       return <TrackerScreen />;
     case "following":
