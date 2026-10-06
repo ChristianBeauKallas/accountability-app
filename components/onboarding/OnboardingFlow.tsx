@@ -31,6 +31,7 @@ import {
   isOutfielder,
 } from "@/lib/constants";
 import { CLIMATES } from "@/lib/climate";
+import { CitySearch } from "@/components/onboarding/CitySearch";
 import type { UserRole } from "@/lib/types";
 
 const SIZES: { value: string; label: string; hint: string }[] = [
@@ -260,6 +261,8 @@ function PlayerWizard({
   const [currentSchool, setCurrentSchool] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [gpa, setGpa] = useState("");
   const [bats, setBats] = useState("");
   const [throws, setThrows] = useState("");
@@ -353,6 +356,8 @@ function PlayerWizard({
         gpa: num(gpa),
         city: city.trim() || null,
         state: state || null,
+        lat,
+        lng,
         is_transfer: isTransfer,
         current_school: isTransfer ? currentSchool.trim() || null : null,
         sixty_yd: pitcher ? null : num(sixty),
@@ -489,32 +494,17 @@ function PlayerWizard({
           <div className="space-y-6">
             <QHead
               title="Where are you from?"
-              sub="Helps coaches gauge region and travel."
+              sub="Helps coaches gauge region and travel — and powers distance in your fits."
             />
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="City" htmlFor="city">
-                <Input
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="Wichita"
-                />
-              </Field>
-              <Field label="State" htmlFor="state">
-                <Select
-                  id="state"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                >
-                  <option value="">Select</option>
-                  {STATES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
+            <CitySearch
+              value={{ city, state, lat, lng }}
+              onChange={(v) => {
+                setCity(v.city);
+                setState(v.state);
+                setLat(v.lat);
+                setLng(v.lng);
+              }}
+            />
           </div>
         )}
 
