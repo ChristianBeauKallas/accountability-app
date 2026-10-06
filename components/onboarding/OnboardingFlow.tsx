@@ -8,16 +8,13 @@ import {
   ShieldCheck,
   Inbox,
   ClipboardList,
-  Building2,
-  Compass,
-  ListChecks,
-  Bookmark,
   User,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
+import { BaseballIcon } from "@/components/ui/BaseballIcon";
 import { Field, Input, Textarea } from "@/components/ui/Field";
 import { StepProgress } from "@/components/ui/ProgressBar";
 import { AboutYouAI } from "@/components/onboarding/AboutYouAI";
@@ -56,6 +53,19 @@ export function OnboardingFlow({
     return <PlayerWizard userId={userId} initialName={initialName} />;
   }
   return <CoachWizard userId={userId} initialName={initialName} />;
+}
+
+/* --------------------- Handoff: setting things up ----------------------- */
+
+function Finishing({ label }: { label: string }) {
+  return (
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
+      <div className="animate-spin text-accent" style={{ animationDuration: "1.3s" }}>
+        <BaseballIcon size={56} strokeWidth={2} aria-hidden />
+      </div>
+      <p className="font-display text-xl font-semibold text-ink">{label}</p>
+    </main>
+  );
 }
 
 /* ----------------------------- Step 1: How ----------------------------- */
@@ -269,6 +279,16 @@ function PlayerWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  // Once saved, show the "getting things ready" handoff, then drop into
+  // the Fits home screen with the welcome tour primed (?welcome=1).
+  useEffect(() => {
+    if (step !== "done") return;
+    const t = setTimeout(() => {
+      window.location.href = "/fits?welcome=1";
+    }, 1400);
+    return () => clearTimeout(t);
+  }, [step]);
+
   const toggle = (set: typeof setPrefDivisions) => (v: string) =>
     set((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
 
@@ -369,9 +389,10 @@ function PlayerWizard({
     setI(PLAYER_STEPS.indexOf("done"));
   }
 
+  if (step === "done") return <Finishing label="Getting things ready…" />;
+
   const isIntro = step === "intro";
   const isAbout = step === "about";
-  const isDone = step === "done";
 
   return (
     <main
@@ -379,7 +400,7 @@ function PlayerWizard({
       style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
     >
       <div className="flex items-center gap-4">
-        {i > 0 && !isDone ? (
+        {i > 0 ? (
           <button onClick={goBack} className="text-muted" aria-label="Back">
             <ArrowLeft size={22} strokeWidth={2} />
           </button>
@@ -796,23 +817,12 @@ function PlayerWizard({
             />
           </div>
         )}
-
-        {step === "done" && <AppTour role="player" userId={userId} />}
       </div>
 
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
       <div className="mt-4">
-        {isDone ? (
-          <Button
-            size="lg"
-            full
-            onClick={() => (window.location.href = "/fits")}
-          >
-            Enter Athletx
-            <ArrowRight size={18} strokeWidth={2} aria-hidden />
-          </Button>
-        ) : isAbout ? (
+        {isAbout ? (
           <Button size="lg" full onClick={finish} disabled={saving}>
             {saving ? "Saving…" : "Finish & see my fits"}
             {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
@@ -890,6 +900,14 @@ function CoachWizard({
 
   const step = COACH_STEPS[i];
 
+  useEffect(() => {
+    if (step !== "done") return;
+    const t = setTimeout(() => {
+      window.location.href = "/inbox?welcome=1";
+    }, 1400);
+    return () => clearTimeout(t);
+  }, [step]);
+
   function canContinue(): boolean {
     switch (step) {
       case "name":
@@ -958,9 +976,10 @@ function CoachWizard({
     setI(COACH_STEPS.indexOf("done"));
   }
 
+  if (step === "done") return <Finishing label="Getting things ready…" />;
+
   const isIntro = step === "intro";
   const isAbout = step === "about";
-  const isDone = step === "done";
 
   return (
     <main
@@ -968,7 +987,7 @@ function CoachWizard({
       style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
     >
       <div className="flex items-center gap-4">
-        {i > 0 && !isDone ? (
+        {i > 0 ? (
           <button onClick={goBack} className="text-muted" aria-label="Back">
             <ArrowLeft size={22} strokeWidth={2} />
           </button>
@@ -1096,22 +1115,12 @@ function CoachWizard({
           </div>
         )}
 
-        {step === "done" && <AppTour role="coach" userId={userId} />}
       </div>
 
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
       <div className="mt-4">
-        {isDone ? (
-          <Button
-            size="lg"
-            full
-            onClick={() => (window.location.href = "/inbox")}
-          >
-            Open my inbox
-            <ArrowRight size={18} strokeWidth={2} aria-hidden />
-          </Button>
-        ) : isAbout ? (
+        {isAbout ? (
           <Button size="lg" full onClick={finish} disabled={saving}>
             {saving ? "Saving…" : "Finish & open my inbox"}
             {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
@@ -1127,48 +1136,3 @@ function CoachWizard({
   );
 }
 
-/* ----------------------------- Step 3: Tour ----------------------------- */
-// Shown only if we ever route here; the profile step finishes onboarding
-// directly. Kept for completeness / future use.
-
-function AppTour({ role }: { role: UserRole; userId: string }) {
-  const tabs: { icon: LucideIcon; label: string; body: string }[] =
-    role === "coach"
-      ? [
-          { icon: Inbox, label: "Inbox", body: "Players who want your spots, best fit first." },
-          { icon: ClipboardList, label: "Needs", body: "Post and manage your open spots." },
-          { icon: Bookmark, label: "Following", body: "Players you're keeping an eye on." },
-          { icon: Building2, label: "Program", body: "Your public program page." },
-        ]
-      : [
-          { icon: Compass, label: "Fits", body: "Spots you fit, strongest matches first." },
-          { icon: ListChecks, label: "My Spots", body: "Spots you're interested in, and where each stands." },
-          { icon: Bookmark, label: "Following", body: "Schools you've saved to revisit." },
-          { icon: User, label: "Profile", body: "Your profile, updates and highlights." },
-        ];
-
-  return (
-    <div>
-      <h1 className="text-3xl font-display font-bold tracking-tight">
-        You&rsquo;re all set
-      </h1>
-      <p className="mt-2 text-body-2">Here&rsquo;s where everything lives.</p>
-      <ul className="mt-8 space-y-4">
-        {tabs.map(({ icon: Icon, label, body }) => (
-          <li
-            key={label}
-            className="flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-pill bg-accent-soft text-accent">
-              <Icon size={20} strokeWidth={2} aria-hidden />
-            </span>
-            <div>
-              <h2 className="font-display text-lg font-semibold">{label}</h2>
-              <p className="text-sm text-body-2">{body}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
