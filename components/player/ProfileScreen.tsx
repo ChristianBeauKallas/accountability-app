@@ -144,6 +144,10 @@ function DataTab({ player }: { player: Player }) {
     : player.pref_climate && player.pref_climate !== "any"
       ? `${climateLabel(player.pref_climate)} climate`
       : "Anywhere";
+  const sizeLabel =
+    { small: "Small", medium: "Medium", large: "Large" }[
+      player.pref_size ?? ""
+    ] ?? "Any size";
 
   return (
     <div>
@@ -202,6 +206,12 @@ function DataTab({ player }: { player: Player }) {
               <MapPin size={14} strokeWidth={2} aria-hidden className="text-muted-2" />
               {location}
             </span>
+          </div>
+          <div className="flex items-center justify-between gap-3 px-4 py-3">
+            <span className="text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+              School size
+            </span>
+            <span className="text-sm font-medium text-ink">{sizeLabel}</span>
           </div>
         </div>
       </Section>
@@ -312,6 +322,7 @@ function EditForm({
     player.pref_states ?? []
   );
   const [prefClimate, setPrefClimate] = useState(player.pref_climate ?? "");
+  const [prefSize, setPrefSize] = useState(player.pref_size ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -400,6 +411,7 @@ function EditForm({
         pref_divisions: prefDivisions,
         pref_states: prefStates,
         pref_climate: prefClimate || null,
+        pref_size: prefSize || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", profile.id);
@@ -740,6 +752,19 @@ function EditForm({
                 );
               })}
             </div>
+          </Field>
+
+          <Field label="School size" hint="We rank matching schools higher.">
+            <Select
+              id="size"
+              value={prefSize}
+              onChange={(e) => setPrefSize(e.target.value)}
+            >
+              <option value="">No preference</option>
+              <option value="small">Small (under ~4k)</option>
+              <option value="medium">Medium (~4k–12k)</option>
+              <option value="large">Large (12k+)</option>
+            </Select>
           </Field>
         </div>
 
