@@ -11,13 +11,14 @@ import {
   Building2,
   Compass,
   ListChecks,
+  Bookmark,
   User,
   type LucideIcon,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
-import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { Field, Input, Textarea } from "@/components/ui/Field";
 import { StepProgress } from "@/components/ui/ProgressBar";
 import { AboutYouAI } from "@/components/onboarding/AboutYouAI";
 import {
@@ -42,8 +43,6 @@ const SIZES: { value: string; label: string; hint: string }[] = [
   { value: "any", label: "No preference", hint: "" },
 ];
 
-type Step = "how" | "profile" | "tour";
-
 export function OnboardingFlow({
   userId,
   role,
@@ -56,54 +55,7 @@ export function OnboardingFlow({
   if (role === "player") {
     return <PlayerWizard userId={userId} initialName={initialName} />;
   }
-  return <CoachFlow userId={userId} initialName={initialName} />;
-}
-
-/* --------------------------- Coach flow -------------------------------- */
-
-function CoachFlow({
-  userId,
-  initialName,
-}: {
-  userId: string;
-  initialName: string;
-}) {
-  const [step, setStep] = useState<Step>("how");
-  const stepIndex = step === "how" ? 1 : step === "profile" ? 2 : 3;
-
-  return (
-    <main className="min-h-dvh flex flex-col px-6 pt-12 pb-10">
-      <div className="flex items-center gap-4">
-        {step !== "how" ? (
-          <button
-            onClick={() => setStep(step === "tour" ? "profile" : "how")}
-            className="text-muted"
-            aria-label="Back"
-          >
-            <ArrowLeft size={22} strokeWidth={2} />
-          </button>
-        ) : (
-          <span className="w-[22px]" />
-        )}
-        <StepProgress total={3} current={stepIndex} className="flex-1" />
-      </div>
-
-      <div className="mt-8 flex-1">
-        {step === "how" && <HowItWorks role="coach" />}
-        {step === "profile" && (
-          <CoachProfile userId={userId} initialName={initialName} />
-        )}
-        {step === "tour" && <AppTour role="coach" userId={userId} />}
-      </div>
-
-      {step === "how" && (
-        <Button size="lg" full onClick={() => setStep("profile")}>
-          Get started
-          <ArrowRight size={18} strokeWidth={2} aria-hidden />
-        </Button>
-      )}
-    </main>
-  );
+  return <CoachWizard userId={userId} initialName={initialName} />;
 }
 
 /* ----------------------------- Step 1: How ----------------------------- */
@@ -875,9 +827,36 @@ function PlayerWizard({
   );
 }
 
-/* ------------------------- Step 2: Coach profile ------------------------ */
+/* ---------------------- Coach onboarding wizard ------------------------- */
 
-function CoachProfile({
+type CKey =
+  | "intro"
+  | "name"
+  | "role"
+  | "program"
+  | "level"
+  | "location"
+  | "about"
+  | "done";
+
+const COACH_STEPS: CKey[] = [
+  "intro",
+  "name",
+  "role",
+  "program",
+  "level",
+  "location",
+  "about",
+  "done",
+];
+
+const STAFF_ROLES: { value: string; label: string }[] = [
+  { value: "head", label: "Head coach" },
+  { value: "assistant", label: "Assistant coach" },
+  { value: "recruiting_coordinator", label: "Recruiting coordinator" },
+];
+
+function CoachWizard({
   userId,
   initialName,
 }: {
@@ -885,25 +864,48 @@ function CoachProfile({
   initialName: string;
 }) {
   const supabase = createClient();
+  const [i, setI] = useState(0);
   const [name, setName] = useState(initialName);
   const [staffRole, setStaffRole] = useState("head");
   const [programName, setProgramName] = useState("");
   const [division, setDivision] = useState("");
+  const [conference, setConference] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
-  const [conference, setConference] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [about, setAbout] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const valid = name.trim() && programName.trim() && division && state;
+  const step = COACH_STEPS[i];
+
+  function canContinue(): boolean {
+    switch (step) {
+      case "name":
+        return !!name.trim();
+      case "program":
+        return !!programName.trim();
+      case "level":
+        return !!division;
+      case "location":
+        return !!state;
+      default:
+        return true;
+    }
+  }
+  function goNext() {
+    if (!canContinue()) return;
+    setError("");
+    setI((k) => Math.min(k + 1, COACH_STEPS.length - 1));
+  }
+  function goBack() {
+    setError("");
+    setI((k) => Math.max(k - 1, 0));
+  }
 
   async function finish() {
     setError("");
-    if (!valid) {
-      setError("Add your name, program, division and state to continue.");
-      return;
-    }
     setSaving(true);
 
     const { error: pErr } = await supabase
@@ -918,6 +920,8 @@ function CoachProfile({
         division,
         city: city.trim() || null,
         state,
+        lat,
+        lng,
         conference: conference.trim() || null,
         about: about.trim() || null,
       })
@@ -936,120 +940,177 @@ function CoachProfile({
       staff_role: staffRole,
     });
 
+    setSaving(false);
     if (pErr || staffErr) {
-      setSaving(false);
       setError((pErr ?? staffErr)?.message ?? "Something went wrong.");
       return;
     }
-    window.location.href = "/inbox";
+    setI(COACH_STEPS.indexOf("done"));
   }
 
+  const isIntro = step === "intro";
+  const isAbout = step === "about";
+  const isDone = step === "done";
+
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-3xl font-display font-bold tracking-tight">
-          Set up your program
-        </h1>
-        <p className="mt-2 text-body-2">
-          This is what players see when you post a need.
-        </p>
+    <main className="min-h-dvh flex flex-col px-6 pt-12 pb-10">
+      <div className="flex items-center gap-4">
+        {i > 0 && !isDone ? (
+          <button onClick={goBack} className="text-muted" aria-label="Back">
+            <ArrowLeft size={22} strokeWidth={2} />
+          </button>
+        ) : (
+          <span className="w-[22px]" />
+        )}
+        <StepProgress
+          total={COACH_STEPS.length}
+          current={i + 1}
+          className="flex-1"
+        />
       </div>
 
-      <Field label="Your name" htmlFor="cname">
-        <Input
-          id="cname"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </Field>
+      <div className="mt-8 flex-1">
+        {step === "intro" && <HowItWorks role="coach" />}
 
-      <Field label="Your role" htmlFor="srole">
-        <Select
-          id="srole"
-          value={staffRole}
-          onChange={(e) => setStaffRole(e.target.value)}
-        >
-          <option value="head">Head coach</option>
-          <option value="assistant">Assistant coach</option>
-          <option value="recruiting_coordinator">Recruiting coordinator</option>
-        </Select>
-      </Field>
+        {step === "name" && (
+          <div className="space-y-6">
+            <QHead title="First, what's your name?" />
+            <Field label="Full name" htmlFor="cname">
+              <Input
+                id="cname"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && goNext()}
+                placeholder="First Last"
+              />
+            </Field>
+          </div>
+        )}
 
-      <Field label="Program name" htmlFor="pname">
-        <Input
-          id="pname"
-          value={programName}
-          onChange={(e) => setProgramName(e.target.value)}
-          placeholder="Cowley College"
-        />
-      </Field>
+        {step === "role" && (
+          <div className="space-y-6">
+            <QHead title="What's your role?" />
+            <div className="flex flex-wrap gap-2">
+              {STAFF_ROLES.map((r) => (
+                <OptionPill
+                  key={r.value}
+                  active={staffRole === r.value}
+                  onClick={() => setStaffRole(r.value)}
+                >
+                  {r.label}
+                </OptionPill>
+              ))}
+            </div>
+          </div>
+        )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Division" htmlFor="div">
-          <Select
-            id="div"
-            value={division}
-            onChange={(e) => setDivision(e.target.value)}
+        {step === "program" && (
+          <div className="space-y-6">
+            <QHead
+              title="What program do you coach?"
+              sub="This is the name players see on your page."
+            />
+            <Field label="Program name" htmlFor="pname">
+              <Input
+                id="pname"
+                autoFocus
+                value={programName}
+                onChange={(e) => setProgramName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && goNext()}
+                placeholder="Cowley College"
+              />
+            </Field>
+          </div>
+        )}
+
+        {step === "level" && (
+          <div className="space-y-6">
+            <QHead title="What level do you play at?" />
+            <div className="flex flex-wrap gap-2">
+              {DIVISIONS.map((d) => (
+                <OptionPill
+                  key={d}
+                  active={division === d}
+                  onClick={() => setDivision(d)}
+                >
+                  {d}
+                </OptionPill>
+              ))}
+            </div>
+            <Field label="Conference" hint="Optional." htmlFor="conf">
+              <Input
+                id="conf"
+                value={conference}
+                onChange={(e) => setConference(e.target.value)}
+                placeholder="KJCCC"
+              />
+            </Field>
+          </div>
+        )}
+
+        {step === "location" && (
+          <div className="space-y-6">
+            <QHead
+              title="Where's your program?"
+              sub="Powers distance when a player sees your spots."
+            />
+            <CitySearch
+              value={{ city, state, lat, lng }}
+              onChange={(v) => {
+                setCity(v.city);
+                setState(v.state);
+                setLat(v.lat);
+                setLng(v.lng);
+              }}
+            />
+          </div>
+        )}
+
+        {step === "about" && (
+          <div className="space-y-6">
+            <QHead
+              title="Tell players about your program"
+              sub="A line or two — optional, but it helps recruits picture the fit."
+            />
+            <Textarea
+              value={about}
+              onChange={(e) => setAbout(e.target.value)}
+              placeholder="JUCO contender with a strong four-year transfer pipeline…"
+              maxLength={400}
+              rows={5}
+            />
+          </div>
+        )}
+
+        {step === "done" && <AppTour role="coach" userId={userId} />}
+      </div>
+
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+
+      <div className="mt-4">
+        {isDone ? (
+          <Button
+            size="lg"
+            full
+            onClick={() => (window.location.href = "/inbox")}
           >
-            <option value="">Select</option>
-            {DIVISIONS.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="State" htmlFor="cstate">
-          <Select
-            id="cstate"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-          >
-            <option value="">Select</option>
-            {STATES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </Select>
-        </Field>
+            Open my inbox
+            <ArrowRight size={18} strokeWidth={2} aria-hidden />
+          </Button>
+        ) : isAbout ? (
+          <Button size="lg" full onClick={finish} disabled={saving}>
+            {saving ? "Saving…" : "Finish & open my inbox"}
+            {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
+          </Button>
+        ) : (
+          <Button size="lg" full onClick={goNext} disabled={!canContinue()}>
+            {isIntro ? "Get started" : "Continue"}
+            <ArrowRight size={18} strokeWidth={2} aria-hidden />
+          </Button>
+        )}
       </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="City" htmlFor="ccity">
-          <Input
-            id="ccity"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="Arkansas City"
-          />
-        </Field>
-        <Field label="Conference" htmlFor="conf">
-          <Input
-            id="conf"
-            value={conference}
-            onChange={(e) => setConference(e.target.value)}
-            placeholder="KJCCC"
-          />
-        </Field>
-      </div>
-
-      <Field label="About the program" hint="Optional — a line or two for players.">
-        <Textarea
-          value={about}
-          onChange={(e) => setAbout(e.target.value)}
-          placeholder="JUCO contender with a strong four-year transfer pipeline…"
-          maxLength={400}
-        />
-      </Field>
-
-      {error && <p className="text-sm text-danger">{error}</p>}
-
-      <Button size="lg" full onClick={finish} disabled={saving}>
-        {saving ? "Saving…" : "Finish & open my inbox"}
-        {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
-      </Button>
-    </div>
+    </main>
   );
 }
 
@@ -1063,11 +1124,13 @@ function AppTour({ role }: { role: UserRole; userId: string }) {
       ? [
           { icon: Inbox, label: "Inbox", body: "Players who want your spots, best fit first." },
           { icon: ClipboardList, label: "Needs", body: "Post and manage your open spots." },
+          { icon: Bookmark, label: "Following", body: "Players you're keeping an eye on." },
           { icon: Building2, label: "Program", body: "Your public program page." },
         ]
       : [
           { icon: Compass, label: "Fits", body: "Spots you fit, strongest matches first." },
           { icon: ListChecks, label: "My Spots", body: "Spots you're interested in, and where each stands." },
+          { icon: Bookmark, label: "Following", body: "Schools you've saved to revisit." },
           { icon: User, label: "Profile", body: "Your profile, updates and highlights." },
         ];
 
