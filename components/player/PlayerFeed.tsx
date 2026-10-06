@@ -8,6 +8,7 @@ import {
   Trash2,
   Send,
   MessageSquare,
+  Play,
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -101,47 +102,112 @@ function PostCard({
   editable: boolean;
   onDelete: () => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const isVideo = post.media_type === "video";
+
   return (
-    <Card padded={false} className="overflow-hidden">
+    <Card className="space-y-3">
+      {/* Caption first, Twitter-style */}
+      {post.body && (
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">
+          {post.body}
+        </p>
+      )}
+
+      {/* Square, cropped media — tap to open full */}
       {post.media_url && (
-        <div className="bg-white/5">
-          {post.media_type === "video" ? (
-            <video
-              src={post.media_url}
-              controls
-              playsInline
-              className="w-full max-h-[70dvh] bg-black"
-            />
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="relative block aspect-square w-full overflow-hidden rounded-input bg-black/5"
+          aria-label="Open media"
+        >
+          {isVideo ? (
+            <>
+              <video
+                src={post.media_url}
+                muted
+                playsInline
+                preload="metadata"
+                className="h-full w-full object-cover"
+              />
+              <span className="absolute inset-0 flex items-center justify-center bg-black/15">
+                <span className="flex h-12 w-12 items-center justify-center rounded-pill bg-black/55 text-white">
+                  <Play size={22} strokeWidth={2.5} className="ml-0.5" aria-hidden />
+                </span>
+              </span>
+            </>
           ) : (
             <img
               src={post.media_url}
               alt=""
-              className="w-full object-cover"
               loading="lazy"
+              className="h-full w-full object-cover"
             />
           )}
-        </div>
+        </button>
       )}
-      <div className="p-4">
-        {post.body && (
-          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">
-            {post.body}
-          </p>
+
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-2">{timeAgo(post.created_at)}</span>
+        {editable && (
+          <button
+            onClick={onDelete}
+            className="text-muted-2 hover:text-danger"
+            aria-label="Delete post"
+          >
+            <Trash2 size={16} strokeWidth={2} />
+          </button>
         )}
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-xs text-muted-2">{timeAgo(post.created_at)}</span>
-          {editable && (
-            <button
-              onClick={onDelete}
-              className="text-muted-2 hover:text-danger"
-              aria-label="Delete post"
-            >
-              <Trash2 size={16} strokeWidth={2} />
-            </button>
-          )}
-        </div>
       </div>
+
+      {open && post.media_url && (
+        <Lightbox url={post.media_url} isVideo={isVideo} onClose={() => setOpen(false)} />
+      )}
     </Card>
+  );
+}
+
+function Lightbox({
+  url,
+  isVideo,
+  onClose,
+}: {
+  url: string;
+  isVideo: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-4"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute right-4 top-[calc(1rem+env(safe-area-inset-top))] flex h-10 w-10 items-center justify-center rounded-pill bg-white/10 text-white"
+      >
+        <X size={22} strokeWidth={2} />
+      </button>
+      {isVideo ? (
+        <video
+          src={url}
+          controls
+          autoPlay
+          playsInline
+          onClick={(e) => e.stopPropagation()}
+          className="max-h-[85dvh] max-w-full rounded-lg bg-black"
+        />
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={url}
+          alt=""
+          onClick={(e) => e.stopPropagation()}
+          className="max-h-[85dvh] max-w-full rounded-lg object-contain"
+        />
+      )}
+    </div>
   );
 }
 
@@ -230,10 +296,10 @@ function Composer({
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Share an update — a PR, a visit, a commitment…"
+          placeholder="Share an update…"
           maxLength={500}
           className="w-full resize-none bg-transparent text-[15px] leading-relaxed text-ink placeholder:text-muted-2 outline-none"
-          rows={3}
+          rows={2}
         />
       )}
       {isHighlight && (
