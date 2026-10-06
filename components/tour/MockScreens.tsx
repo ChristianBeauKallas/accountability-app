@@ -25,7 +25,6 @@ import { MetricTiles, StatRow } from "@/components/player/StatBlock";
 
 export type ScreenKey =
   | "fits"
-  | "fits-tip"
   | "fits-interested"
   | "tracker"
   | "following"
@@ -226,13 +225,16 @@ function FitCardMini() {
 
 /* ------------------------------ Screens ----------------------------- */
 
-function FitsScreen({ tip = false, applied = false }: { tip?: boolean; applied?: boolean }) {
+function FitsScreen({ applied = false }: { applied?: boolean }) {
   return (
     <Shell tabs={PLAYER_TABS} active="fits">
       <p className="eyebrow">Hey Jordan</p>
       <div className="mt-1 flex items-center gap-1.5">
         <h1 className="text-3xl font-display font-bold tracking-tight">Recommended Fits</h1>
-        <span className="flex h-7 w-7 items-center justify-center text-muted-2">
+        <span
+          data-tour="m-info"
+          className="flex h-7 w-7 items-center justify-center text-muted-2"
+        >
           <Info size={19} strokeWidth={2} aria-hidden />
         </span>
       </div>
@@ -241,30 +243,6 @@ function FitsScreen({ tip = false, applied = false }: { tip?: boolean; applied?:
         <FitCardMock primary applied={applied} />
         <FitCardMini />
       </div>
-
-      {tip && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center px-0">
-          <div
-            data-tour="m-tip"
-            className="w-full max-w-app rounded-t-[20px] bg-ground shadow-sheet"
-          >
-            <div className="flex items-center justify-between border-b border-divider px-5 py-3">
-              <span className="eyebrow">How your fits work</span>
-              <Info size={18} strokeWidth={2} className="text-muted" aria-hidden />
-            </div>
-            <div className="space-y-3 px-5 pb-6 pt-4">
-              <p className="text-[14px] leading-relaxed text-body-2">
-                Athletx reads your position, class, measurables and academics and
-                matches them against what each program is recruiting.
-              </p>
-              <p className="text-[14px] leading-relaxed text-body-2">
-                You only see spots you&rsquo;re eligible for, ranked by fit. The
-                higher the number, the stronger the match.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </Shell>
   );
 }
@@ -694,8 +672,6 @@ export function MockScreen({ screen }: { screen: ScreenKey }) {
   switch (screen) {
     case "fits":
       return <FitsScreen />;
-    case "fits-tip":
-      return <FitsScreen tip />;
     case "fits-interested":
       return <FitsScreen applied />;
     case "tracker":
