@@ -36,8 +36,8 @@ import { MockScreen, type ScreenKey } from "@/components/tour/MockScreens";
 import type { UserRole, Player, Need } from "@/lib/types";
 
 const SIZES: { value: string; label: string; hint: string }[] = [
-  { value: "small", label: "Small", hint: "Under ~4k students" },
-  { value: "medium", label: "Medium", hint: "~4k–12k" },
+  { value: "small", label: "Small", hint: "Under 4k" },
+  { value: "medium", label: "Medium", hint: "4k–12k" },
   { value: "large", label: "Large", hint: "12k+" },
   { value: "any", label: "No preference", hint: "" },
 ];
@@ -238,17 +238,17 @@ const PLAYER_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
   {
     screen: "profile",
     title: "Build your profile",
-    body: "Create your custom player profile — metrics, video, academics, and the levels and schools you want. Everything a coach recruits on.",
+    body: "Create your player profile — bio, metrics, video, positions, updates, highlights, school size, location and weather preferences!",
   },
   {
     screen: "fits",
-    title: "We find the right fit",
-    body: "Our platform compares your profile to what every program is recruiting and ranks the opportunities you fit best.",
+    title: "Find the right fit",
+    body: "Athletx compares your player profile against every open opportunity on the platform and ranks them by which ones fit you best.",
   },
   {
     screen: "fits-interested",
-    title: "You control the recruiting process",
-    body: "Browse the opportunities we surface and let coaches know you're interested. Coaches can't browse players — you decide who sees you.",
+    title: "Control the recruiting process",
+    body: "Browse the open opportunities on your fit feed and let coaches know when you're interested. Coaches don't browse you — you decide who to share your profile with.",
   },
 ];
 
@@ -364,6 +364,12 @@ function PlayerWizard({
   // the Fits home screen with the welcome tour primed (?welcome=1).
   useEffect(() => {
     if (step !== "done") return;
+    // Re-arm the welcome tour so it fires after every completed setup.
+    try {
+      localStorage.removeItem("athletx-tour-player");
+    } catch {
+      /* ignore */
+    }
     const t = setTimeout(() => {
       window.location.href = "/fits?welcome=1";
     }, 1400);
@@ -396,7 +402,7 @@ function PlayerWizard({
         return !!state;
       case "gpa": {
         const n = Number(gpa);
-        return gpa !== "" && n >= 0 && n <= 4;
+        return gpa !== "" && n >= 0 && n <= 6;
       }
       default:
         return true;
@@ -608,14 +614,14 @@ function PlayerWizard({
 
         {step === "gpa" && (
           <div className="space-y-6">
-            <QHead title="What's your GPA?" sub="On a 4.0 scale — coaches filter on this." />
+            <QHead title="What's your GPA?" sub="Weighted or unweighted — coaches filter on this." />
             <Field label="GPA" htmlFor="gpa">
               <Input
                 id="gpa"
                 type="number"
                 step="0.01"
                 min="0"
-                max="4"
+                max="6"
                 inputMode="decimal"
                 autoFocus
                 placeholder="3.4"
@@ -637,11 +643,12 @@ function PlayerWizard({
                   {matchCount}
                 </div>
                 <h1 className="mt-3 text-2xl font-display font-bold tracking-tight">
-                  open {matchCount === 1 ? "spot" : "spots"} already match you
+                  open {matchCount === 1 ? "opportunity" : "opportunities"}{" "}
+                  already {matchCount === 1 ? "fits" : "fit"} your profile
                 </h1>
                 <p className="mt-3 max-w-xs text-[15px] text-body-2">
-                  Finish your profile and we&rsquo;ll rank them by fit — then
-                  you apply in one tap.
+                  Finish building your player profile, and we&rsquo;ll rank the
+                  opportunities by best fit.
                 </p>
               </>
             ) : (
@@ -650,8 +657,8 @@ function PlayerWizard({
                   You&rsquo;re off to a strong start
                 </h1>
                 <p className="mt-3 max-w-xs text-[15px] text-body-2">
-                  Add a few more details and we&rsquo;ll surface the spots that
-                  fit you best.
+                  Add a few more details and we&rsquo;ll surface the
+                  opportunities that fit you best.
                 </p>
               </>
             )}
@@ -865,15 +872,32 @@ function PlayerWizard({
                 School size
               </p>
               <div className="flex flex-wrap gap-2">
-                {SIZES.filter((s) => s.value !== "any").map((s) => (
-                  <OptionPill
-                    key={s.value}
-                    active={prefSizes.includes(s.value)}
-                    onClick={() => toggle(setPrefSizes)(s.value)}
-                  >
-                    {s.label}
-                  </OptionPill>
-                ))}
+                {SIZES.filter((s) => s.value !== "any").map((s) => {
+                  const active = prefSizes.includes(s.value);
+                  return (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => toggle(setPrefSizes)(s.value)}
+                      className={cn(
+                        "flex flex-col items-start rounded-btn px-4 py-2 text-left transition-colors",
+                        active
+                          ? "bg-accent text-surface"
+                          : "bg-chip text-body-2 hover:bg-accent-soft"
+                      )}
+                    >
+                      <span className="text-sm font-semibold">{s.label}</span>
+                      <span
+                        className={cn(
+                          "text-xs",
+                          active ? "text-surface/80" : "text-muted-2"
+                        )}
+                      >
+                        {s.hint}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1012,6 +1036,11 @@ function CoachWizard({
 
   useEffect(() => {
     if (step !== "done") return;
+    try {
+      localStorage.removeItem("athletx-tour-coach");
+    } catch {
+      /* ignore */
+    }
     const t = setTimeout(() => {
       window.location.href = "/inbox?welcome=1";
     }, 1400);
