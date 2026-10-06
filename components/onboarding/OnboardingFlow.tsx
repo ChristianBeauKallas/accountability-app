@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Target,
-  Zap,
   ShieldCheck,
   Inbox,
   ClipboardList,
@@ -108,19 +107,19 @@ function HowItWorks({ role }: { role: UserRole }) {
         ]
       : [
           {
-            icon: Target,
-            title: "See where you fit",
-            body: "The spots you actually line up for — your strongest matches first.",
+            icon: User,
+            title: "Build your profile",
+            body: "Add your metrics, video, academics, and the levels and schools you want — everything a coach recruits on.",
           },
           {
-            icon: Zap,
-            title: "Show your interest",
-            body: "One tap on I'm Interested. Your profile does the talking, and the coach sees you.",
+            icon: Target,
+            title: "We find your best fits",
+            body: "Our algorithm compares your profile to what every program is recruiting and ranks the spots you fit best.",
           },
           {
             icon: ShieldCheck,
-            title: "You're in control",
-            body: "Coaches can't browse players. You choose who sees you by where you go.",
+            title: "Show interest, your call",
+            body: "Tap I'm Interested and the coach sees you. Coaches can't browse players — you decide who gets your info.",
           },
         ];
 
@@ -132,7 +131,7 @@ function HowItWorks({ role }: { role: UserRole }) {
       <p className="mt-2 text-body-2">
         {role === "coach"
           ? "Built to make recruiting less noisy."
-          : "Built so the right programs actually find you."}
+          : "Build your profile — our algorithm does the recruiting legwork."}
       </p>
       <ul className="mt-8 space-y-6">
         {items.map(({ icon: Icon, title, body }, i) => (
