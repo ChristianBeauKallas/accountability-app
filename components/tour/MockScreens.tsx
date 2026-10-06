@@ -5,13 +5,14 @@ import {
   Check,
   Sparkles,
   Info,
+  Bell,
+  Pencil,
   Bookmark,
   ListChecks,
   User,
   Inbox,
   ClipboardList,
   Building2,
-  Play,
   Clock,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Avatar } from "@/components/ui/Avatar";
 import { BaseballIcon } from "@/components/ui/BaseballIcon";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { MetricTiles, StatRow } from "@/components/player/StatBlock";
 
 export type ScreenKey =
@@ -382,58 +384,118 @@ function FollowingScreen() {
 function ProfileScreen() {
   return (
     <Shell tabs={PLAYER_TABS} active="profile">
-      <div className="flex items-center gap-4">
-        <Avatar name="Jordan Blake" size={68} />
+      {/* Header — mirrors the real profile page */}
+      <div className="flex items-start justify-between">
+        <p className="eyebrow">Profile</p>
+        <div className="flex items-center gap-2.5 text-muted-2">
+          <Bell size={20} strokeWidth={2} aria-hidden />
+          <span className="flex items-center gap-1 rounded-pill border border-border px-2.5 py-1 text-xs font-semibold text-ink">
+            <Pencil size={13} strokeWidth={2} aria-hidden /> Edit
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center gap-4">
+        <Avatar name="Jordan Blake" size={64} />
         <div className="min-w-0">
-          <h1 className="text-2xl font-display font-bold leading-tight tracking-tight">
+          <h1 className="truncate text-2xl font-display font-bold leading-tight">
             Jordan Blake
           </h1>
-          <p className="text-[15px] text-body-2">SS / 2B · 2026</p>
-          <p className="flex items-center gap-1 text-sm text-muted">
+          <p className="text-sm text-muted">SS · Class of 2026</p>
+          <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
             <MapPin size={13} strokeWidth={2} aria-hidden /> Wichita, KS
           </p>
         </div>
       </div>
 
+      <SegmentedControl
+        className="mt-5"
+        value="data"
+        onChange={() => {}}
+        segments={[
+          { value: "data", label: "Bio" },
+          { value: "updates", label: "Updates" },
+          { value: "highlights", label: "Highlights" },
+        ]}
+      />
+
       <div className="mt-5">
-        <StatRow
-          items={[
-            { label: "Height", value: "6'1\"" },
-            { label: "Weight", value: "190" },
-            { label: "Bats", value: "R" },
-            { label: "Throws", value: "R" },
-          ]}
-        />
-        <MetricTiles
-          className="mt-3"
-          tiles={[
-            { value: "92", unit: "mph", label: "Exit velo", tone: "accent" },
-            { value: "6.8", unit: "sec", label: "60 yard", tone: "accent" },
-            { value: "84", unit: "mph", label: "INF velo", tone: "accent" },
-            { value: "3.60", unit: "/ 4.0", label: "GPA", tone: "gold" },
-          ]}
-        />
-      </div>
+        {/* About */}
+        <div>
+          <h2 className="eyebrow mb-2">About</h2>
+          <p className="text-[15px] leading-relaxed text-body-2">
+            Twitchy middle infielder with plus hands, a quick first step, and
+            advanced barrel control to both gaps. Hit .410 with a .520 OBP and 14
+            steals in fall ball — I play my best when the game speeds up.
+            Three-year varsity starter carrying a 3.6 GPA, looking for a program
+            that develops middle infielders and competes for a conference title.
+          </p>
+        </div>
 
-      <p className="mt-4 text-[13px] leading-relaxed text-body-2">
-        Twitchy middle infielder with plus hands and a quick first step. Hit .410
-        with a .520 OBP in fall ball…
-      </p>
+        <div className="mt-5">
+          <StatRow
+            items={[
+              { label: "Height", value: "6'1\"" },
+              { label: "Weight", value: "190" },
+              { label: "Bats", value: "R" },
+              { label: "Throws", value: "R" },
+            ]}
+          />
+          <MetricTiles
+            className="mt-3"
+            tiles={[
+              { value: "92", unit: "mph", label: "Exit velo", tone: "accent" },
+              { value: "6.8", unit: "sec", label: "60 yard", tone: "accent" },
+              { value: "84", unit: "mph", label: "INF velo", tone: "accent" },
+              { value: "3.60", unit: "/ 4.0", label: "GPA", tone: "gold" },
+            ]}
+          />
+        </div>
 
-      <div className="mt-4">
-        <p className="eyebrow mb-2">Highlights</p>
-        <div className="grid grid-cols-2 gap-3">
-          {[0, 1].map((k) => (
-            <div
-              key={k}
-              className="relative flex h-20 items-center justify-center rounded-card bg-chip"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-pill bg-surface text-accent shadow-card">
-                <Play size={16} strokeWidth={2.5} className="ml-0.5" aria-hidden />
+        {/* Positions */}
+        <section className="mt-6">
+          <h2 className="eyebrow mb-2">Positions</h2>
+          <div className="flex flex-wrap gap-2">
+            <Chip tone="accent">★ SS</Chip>
+            <Chip>2B</Chip>
+            <Chip>3B</Chip>
+          </div>
+        </section>
+
+        {/* Interested in */}
+        <section className="mt-6">
+          <h2 className="eyebrow mb-2">Interested in</h2>
+          <div className="divide-y divide-divider rounded-card border border-border bg-surface">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+                Levels
+              </span>
+              <div className="flex flex-wrap justify-end gap-1.5">
+                <Chip tone="accent" size="sm">
+                  D2
+                </Chip>
+                <Chip tone="accent" size="sm">
+                  JUCO
+                </Chip>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+                Location
+              </span>
+              <span className="flex items-center gap-1.5 text-sm font-medium text-ink">
+                <MapPin size={14} strokeWidth={2} aria-hidden className="text-muted-2" />
+                Warm, TX
               </span>
             </div>
-          ))}
-        </div>
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+                School size
+              </span>
+              <span className="text-sm font-medium text-ink">Medium</span>
+            </div>
+          </div>
+        </section>
       </div>
     </Shell>
   );
