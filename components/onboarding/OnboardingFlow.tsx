@@ -325,7 +325,13 @@ function PlayerWizard({
 
   const primary = picked[0] ?? null;
   const step = PLAYER_STEPS[i];
-  const pitcher = isPitcher(primary);
+  // Detect roles across ALL picked positions so a two-way player (or a
+  // pitcher picked second) still gets the right questions.
+  const fielders = picked.filter((p) => !isPitcher(p));
+  const hasPitch = picked.some(isPitcher);
+  const hasHit = fielders.length > 0;
+  const catcherAny = fielders.some(isCatcher);
+  const outfielderAny = fielders.some(isOutfielder);
   const openNeedsRef = useRef<Need[] | null>(null);
 
   // On the teaser step, count how many open spots the player already matches.
@@ -459,16 +465,14 @@ function PlayerWizard({
         lng,
         is_transfer: isTransfer,
         current_school: isTransfer ? currentSchool.trim() || null : null,
-        sixty_yd: pitcher ? null : num(sixty),
-        exit_velo: pitcher ? null : num(exitVelo),
+        sixty_yd: hasHit ? num(sixty) : null,
+        exit_velo: hasHit ? num(exitVelo) : null,
         inf_velo:
-          !pitcher && !isCatcher(primary) && !isOutfielder(primary)
-            ? num(throwVelo)
-            : null,
-        of_velo: isOutfielder(primary) ? num(throwVelo) : null,
-        fastball_velo: pitcher ? num(fastball) : null,
-        pop_time: isCatcher(primary) ? num(popTime) : null,
-        pitches: pitcher ? pitches : [],
+          hasHit && !catcherAny && !outfielderAny ? num(throwVelo) : null,
+        of_velo: hasHit && outfielderAny && !catcherAny ? num(throwVelo) : null,
+        fastball_velo: hasPitch ? num(fastball) : null,
+        pop_time: hasHit && catcherAny ? num(popTime) : null,
+        pitches: hasPitch ? pitches : [],
         bio: bio.trim() || null,
         pref_divisions: prefDivisions,
         pref_states: prefStates,
@@ -669,7 +673,7 @@ function PlayerWizard({
           <div className="space-y-6">
             <QHead title="Your measurables" />
             <div className="flex flex-wrap gap-x-10 gap-y-5">
-              {!pitcher && (
+              {hasHit && (
                 <div>
                   <p className="mb-2 text-sm font-semibold text-body-2">Bats</p>
                   <div className="flex gap-2">
@@ -701,7 +705,7 @@ function PlayerWizard({
               </div>
             </div>
             <div
-              className={cn("grid gap-3", pitcher ? "grid-cols-2" : "grid-cols-3")}
+              className={cn("grid gap-3", hasHit ? "grid-cols-3" : "grid-cols-2")}
             >
               <Field label="Height">
                 <div className="flex gap-2">
@@ -733,7 +737,7 @@ function PlayerWizard({
                   onChange={(e) => setWeight(e.target.value)}
                 />
               </Field>
-              {!pitcher && (
+              {hasHit && (
                 <Field label="60 time" htmlFor="sixty">
                   <Input
                     id="sixty"
@@ -753,7 +757,7 @@ function PlayerWizard({
         {step === "metrics" && (
           <div className="space-y-6">
             <QHead title="Your numbers" />
-            {pitcher && (
+            {hasPitch && (
               <div>
                 <p className="mb-2 text-sm font-semibold text-body-2">
                   Pitches you throw
@@ -772,7 +776,7 @@ function PlayerWizard({
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              {pitcher ? (
+              {hasPitch && (
                 <Field label="Fastball velo (mph)" htmlFor="fb">
                   <Input
                     id="fb"
@@ -783,7 +787,8 @@ function PlayerWizard({
                     onChange={(e) => setFastball(e.target.value)}
                   />
                 </Field>
-              ) : (
+              )}
+              {hasHit && (
                 <Field label="Exit velo (mph)" htmlFor="ev">
                   <Input
                     id="ev"
@@ -795,7 +800,7 @@ function PlayerWizard({
                   />
                 </Field>
               )}
-              {isCatcher(primary) ? (
+              {hasHit && catcherAny && (
                 <Field label="Pop time (sec)" htmlFor="pop">
                   <Input
                     id="pop"
@@ -807,9 +812,10 @@ function PlayerWizard({
                     onChange={(e) => setPopTime(e.target.value)}
                   />
                 </Field>
-              ) : !pitcher ? (
+              )}
+              {hasHit && !catcherAny && (
                 <Field
-                  label={isOutfielder(primary) ? "OF velo (mph)" : "INF velo (mph)"}
+                  label={outfielderAny ? "OF velo (mph)" : "INF velo (mph)"}
                   htmlFor="tv"
                 >
                   <Input
@@ -821,7 +827,7 @@ function PlayerWizard({
                     onChange={(e) => setThrowVelo(e.target.value)}
                   />
                 </Field>
-              ) : null}
+              )}
             </div>
             <p className="text-xs text-muted-2">
               No numbers yet? Leave them blank — you can add them any time from
