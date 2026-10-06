@@ -41,12 +41,33 @@ export default async function FitsPage() {
   let items: FeedItem[] = [];
   if (player) {
     const typedPlayer = player as Player;
-    items = ((needs ?? []) as unknown as (Need & { program: Program })[])
-      .filter((n) => n.program && !appliedIds.has(n.id))
-      .filter((n) => isEligible(typedPlayer, n))
-      .filter((n) => passesPlayerPrefs(typedPlayer, n.program))
-      .map((n) => ({ need: n, fit: computeFit(typedPlayer, n, n.program) }))
-      .sort((a, b) => b.fit - a.fit);
+    const open = ((needs ?? []) as unknown as (Need & { program: Program })[]).filter(
+      (n) => n.program && !appliedIds.has(n.id)
+    );
+
+    const rank = (list: (Need & { program: Program })[]) =>
+      list
+        .map((n) => ({ need: n, fit: computeFit(typedPlayer, n, n.program) }))
+        .sort((a, b) => b.fit - a.fit);
+
+    // Eligibility (position / class / academics) is a hard filter and never
+    // depends on location. Preferences only sharpen the ranking.
+    const eligible = open.filter((n) => isEligible(typedPlayer, n));
+    const preferred = eligible.filter((n) =>
+      passesPlayerPrefs(typedPlayer, n.program)
+    );
+
+    // Always surface a usable feed: lead with preference matches, then
+    // backfill with the rest of the eligible opportunities so nobody lands on
+    // an empty page just because of where they are or what they picked.
+    const MIN_FITS = 4;
+    if (preferred.length >= MIN_FITS) {
+      items = rank(preferred);
+    } else {
+      const prefIds = new Set(preferred.map((n) => n.id));
+      const extra = eligible.filter((n) => !prefIds.has(n.id));
+      items = [...rank(preferred), ...rank(extra)];
+    }
   }
 
   const first = profile.full_name?.split(" ")[0] || "there";
