@@ -557,7 +557,7 @@ function EditForm({
               type="number"
               step="0.01"
               min="0"
-              max="4"
+              max="6"
               inputMode="decimal"
               value={gpa}
               onChange={(e) => setGpa(e.target.value)}
