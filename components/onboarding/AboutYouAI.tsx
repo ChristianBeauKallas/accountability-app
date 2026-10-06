@@ -115,9 +115,9 @@ export function AboutYouAI({
         <Textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Lefty bat, plus runner, team captain. Hit .380 last spring…"
-          maxLength={400}
-          rows={5}
+          placeholder="e.g. I'm a left-handed hitting shortstop at Wichita East, class of 2026. Hit .380 with plus speed last spring and captained the team…"
+          maxLength={700}
+          rows={6}
         />
         {speechSupported && (
           <button
@@ -165,8 +165,8 @@ export function AboutYouAI({
       <p className="text-xs text-muted-2">
         {note ||
           (speechSupported
-            ? "Type it, or tap the mic to say it — then let AI tighten it up for coaches."
-            : "Jot a line or two — then let AI tighten it up for coaches.")}
+            ? "Type it, or tap the mic to say it — then we'll tighten it up for coaches."
+            : "Write it in your own words — then we'll tighten it up for coaches.")}
       </p>
     </div>
   );
