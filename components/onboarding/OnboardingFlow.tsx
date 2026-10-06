@@ -31,6 +31,7 @@ import {
 import { CLIMATES } from "@/lib/climate";
 import { isEligible } from "@/lib/fit";
 import { CitySearch } from "@/components/onboarding/CitySearch";
+import { MockScreen, type ScreenKey } from "@/components/tour/MockScreens";
 import type { UserRole, Player, Need } from "@/lib/types";
 
 const SIZES: { value: string; label: string; hint: string }[] = [
@@ -204,6 +205,83 @@ function QHead({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
+/* ------------------- Player intro carousel (3 steps) ------------------- */
+
+// A scaled, framed screenshot of a real app screen, used as the hero of
+// each intro slide.
+const PHONE_W = 360;
+const PHONE_H = 760;
+
+function PhonePreview({ screen, height }: { screen: ScreenKey; height: number }) {
+  const scale = height / PHONE_H;
+  return (
+    <div
+      className="overflow-hidden rounded-[30px] border-[5px] border-ink/10 bg-ground shadow-sheet"
+      style={{ width: PHONE_W * scale, height }}
+    >
+      <div
+        style={{
+          width: PHONE_W,
+          height: PHONE_H,
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+        }}
+      >
+        <MockScreen screen={screen} />
+      </div>
+    </div>
+  );
+}
+
+const PLAYER_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
+  {
+    screen: "profile",
+    title: "Build your profile",
+    body: "Create your custom player profile — metrics, video, academics, and the levels and schools you want. Everything a coach recruits on.",
+  },
+  {
+    screen: "fits",
+    title: "We find the right fit",
+    body: "Our platform compares your profile to what every program is recruiting and ranks the opportunities you fit best.",
+  },
+  {
+    screen: "fits-interested",
+    title: "You control the recruiting process",
+    body: "Browse the opportunities we surface and let coaches know you're interested. Coaches can't browse players — you decide who sees you.",
+  },
+];
+
+function PlayerIntro({ slide }: { slide: number }) {
+  const s = PLAYER_INTRO[slide];
+  return (
+    <div className="flex h-full flex-col">
+      <p className="eyebrow">How Athletx works</p>
+      <div key={`t-${slide}`} className="animate-tour-screen">
+        <h1 className="mt-1 text-[26px] font-display font-bold leading-tight tracking-tight">
+          {s.title}
+        </h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-body-2">{s.body}</p>
+      </div>
+      <div className="relative mt-5 flex flex-1 items-start justify-center">
+        <div key={`p-${slide}`} className="animate-tour-screen">
+          <PhonePreview screen={s.screen} height={404} />
+        </div>
+      </div>
+      <div className="mt-4 flex justify-center gap-2">
+        {PLAYER_INTRO.map((_, k) => (
+          <span
+            key={k}
+            className={
+              "h-1.5 rounded-pill transition-all " +
+              (k === slide ? "w-6 bg-accent" : "w-1.5 bg-border")
+            }
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PlayerWizard({
   userId,
   initialName,
@@ -213,6 +291,7 @@ function PlayerWizard({
 }) {
   const supabase = createClient();
   const [i, setI] = useState(0);
+  const [introSlide, setIntroSlide] = useState(0);
   const [name, setName] = useState(initialName);
   const [picked, setPicked] = useState<string[]>([]);
   const [gradYear, setGradYear] = useState("");
@@ -331,6 +410,15 @@ function PlayerWizard({
     setError("");
     setI((k) => Math.max(k - 1, 0));
   }
+  // Intro is a 3-slide carousel before the questions start.
+  function introNext() {
+    if (introSlide < PLAYER_INTRO.length - 1) setIntroSlide((s) => s + 1);
+    else goNext();
+  }
+  function handleBack() {
+    if (step === "intro" && introSlide > 0) setIntroSlide((s) => s - 1);
+    else goBack();
+  }
 
   async function finish() {
     setError("");
@@ -400,8 +488,8 @@ function PlayerWizard({
       style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
     >
       <div className="flex items-center gap-4">
-        {i > 0 ? (
-          <button onClick={goBack} className="text-muted" aria-label="Back">
+        {i > 0 || (isIntro && introSlide > 0) ? (
+          <button onClick={handleBack} className="text-muted" aria-label="Back">
             <ArrowLeft size={22} strokeWidth={2} />
           </button>
         ) : (
@@ -415,7 +503,7 @@ function PlayerWizard({
       </div>
 
       <div className="mt-8 flex-1">
-        {step === "intro" && <HowItWorks role="player" />}
+        {step === "intro" && <PlayerIntro slide={introSlide} />}
 
         {step === "name" && (
           <div className="space-y-6">
@@ -827,6 +915,11 @@ function PlayerWizard({
             {saving ? "Saving…" : "Finish & see my fits"}
             {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
           </Button>
+        ) : isIntro ? (
+          <Button size="lg" full onClick={introNext}>
+            {introSlide < PLAYER_INTRO.length - 1 ? "Next" : "Get started"}
+            <ArrowRight size={18} strokeWidth={2} aria-hidden />
+          </Button>
         ) : (
           <Button
             size="lg"
@@ -834,11 +927,7 @@ function PlayerWizard({
             onClick={goNext}
             disabled={!canContinue()}
           >
-            {step === "teaser"
-              ? "Keep going"
-              : isIntro
-                ? "Get started"
-                : "Continue"}
+            {step === "teaser" ? "Keep going" : "Continue"}
             <ArrowRight size={18} strokeWidth={2} aria-hidden />
           </Button>
         )}
