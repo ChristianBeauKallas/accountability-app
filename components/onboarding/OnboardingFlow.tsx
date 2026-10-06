@@ -277,8 +277,8 @@ function PlayerWizard({
   const [bio, setBio] = useState("");
   const [prefDivisions, setPrefDivisions] = useState<string[]>([]);
   const [prefStates, setPrefStates] = useState<string[]>([]);
-  const [prefClimate, setPrefClimate] = useState("");
-  const [prefSize, setPrefSize] = useState("");
+  const [prefClimates, setPrefClimates] = useState<string[]>([]);
+  const [prefSizes, setPrefSizes] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -372,8 +372,8 @@ function PlayerWizard({
         bio: bio.trim() || null,
         pref_divisions: prefDivisions,
         pref_states: prefStates,
-        pref_climate: prefClimate || null,
-        pref_size: prefSize && prefSize !== "any" ? prefSize : null,
+        pref_climates: prefClimates,
+        pref_sizes: prefSizes,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
@@ -569,7 +569,7 @@ function PlayerWizard({
 
         {step === "body" && (
           <div className="space-y-6">
-            <QHead title="Your measurables" sub="Optional — but coaches always look." />
+            <QHead title="Your measurables" />
             <div
               className={cn("grid gap-3", pitcher ? "grid-cols-2" : "grid-cols-3")}
             >
@@ -622,7 +622,7 @@ function PlayerWizard({
 
         {step === "metrics" && (
           <div className="space-y-6">
-            <QHead title="Your numbers" sub="Add what you've got — skip the rest." />
+            <QHead title="Your numbers" />
             <div className="grid grid-cols-2 gap-3">
               {pitcher ? (
                 <Field label="Fastball velo (mph)" htmlFor="fb">
@@ -685,7 +685,7 @@ function PlayerWizard({
         {step === "levels" && (
           <div className="space-y-6">
             <QHead
-              title="What levels are you open to?"
+              title="What levels are you interested in playing at?"
               sub="Pick any that interest you — leave blank to see them all."
             />
             <div className="flex flex-wrap gap-2">
@@ -706,7 +706,7 @@ function PlayerWizard({
           <div className="space-y-6">
             <QHead
               title="Where do you want to play?"
-              sub="Pick a region's weather, or choose exact states below."
+              sub="Pick any weather and any states — we'll show schools matching either."
             />
             <div>
               <p className="mb-2 text-sm font-semibold text-body-2">Weather</p>
@@ -714,10 +714,8 @@ function PlayerWizard({
                 {CLIMATES.map((c) => (
                   <OptionPill
                     key={c.value}
-                    active={prefClimate === c.value}
-                    onClick={() =>
-                      setPrefClimate((cur) => (cur === c.value ? "" : c.value))
-                    }
+                    active={prefClimates.includes(c.value)}
+                    onClick={() => toggle(setPrefClimates)(c.value)}
                   >
                     {c.label}
                   </OptionPill>
@@ -727,9 +725,7 @@ function PlayerWizard({
             <div>
               <p className="mb-2 text-sm font-semibold text-body-2">
                 Specific states{" "}
-                <span className="font-normal text-muted-2">
-                  (optional — overrides weather)
-                </span>
+                <span className="font-normal text-muted-2">(optional)</span>
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {STATES.map((s) => (
@@ -755,35 +751,38 @@ function PlayerWizard({
         {step === "size" && (
           <div className="space-y-6">
             <QHead
-              title="What size school feels right?"
-              sub="We'll nudge matching schools up — you'll still see the rest."
+              title="What school size are you interested in?"
+              sub="Pick one or more — matching schools rank higher."
             />
             <div className="grid grid-cols-2 gap-2.5">
-              {SIZES.map((s) => (
-                <button
-                  key={s.value}
-                  type="button"
-                  onClick={() => setPrefSize(s.value)}
-                  className={cn(
-                    "rounded-card border p-4 text-left transition-colors",
-                    prefSize === s.value
-                      ? "border-accent bg-accent-soft"
-                      : "border-border bg-surface hover:border-accent/50"
-                  )}
-                >
-                  <p
+              {SIZES.filter((s) => s.value !== "any").map((s) => {
+                const active = prefSizes.includes(s.value);
+                return (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => toggle(setPrefSizes)(s.value)}
                     className={cn(
-                      "font-display text-lg font-semibold",
-                      prefSize === s.value ? "text-accent" : "text-ink"
+                      "rounded-card border p-4 text-left transition-colors",
+                      active
+                        ? "border-accent bg-accent-soft"
+                        : "border-border bg-surface hover:border-accent/50"
                     )}
                   >
-                    {s.label}
-                  </p>
-                  {s.hint && (
-                    <p className="mt-0.5 text-xs text-muted-2">{s.hint}</p>
-                  )}
-                </button>
-              ))}
+                    <p
+                      className={cn(
+                        "font-display text-lg font-semibold",
+                        active ? "text-accent" : "text-ink"
+                      )}
+                    >
+                      {s.label}
+                    </p>
+                    {s.hint && (
+                      <p className="mt-0.5 text-xs text-muted-2">{s.hint}</p>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
