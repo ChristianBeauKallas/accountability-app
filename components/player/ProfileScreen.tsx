@@ -313,6 +313,9 @@ function EditForm({
   );
   const [fastball, setFastball] = useState(player.fastball_velo?.toString() ?? "");
   const [popTime, setPopTime] = useState(player.pop_time?.toString() ?? "");
+  const [battingAvg, setBattingAvg] = useState(
+    player.batting_avg?.toString() ?? ""
+  );
   const [pitches, setPitches] = useState<string[]>(player.pitches ?? []);
   const [isTransfer, setIsTransfer] = useState(player.is_transfer);
   const [currentSchool, setCurrentSchool] = useState(player.current_school ?? "");
@@ -436,6 +439,7 @@ function EditForm({
         current_school: isTransfer ? currentSchool.trim() || null : null,
         sixty_yd: hasHit ? num(sixty) : null,
         exit_velo: hasHit ? num(exitVelo) : null,
+        batting_avg: hasHit ? num(battingAvg) : null,
         inf_velo:
           hasHit && !catcherAny && !outfielderAny ? num(throwVelo) : null,
         of_velo: hasHit && outfielderAny && !catcherAny ? num(throwVelo) : null,
@@ -692,6 +696,21 @@ function EditForm({
                 inputMode="numeric"
                 value={throwVelo}
                 onChange={(e) => setThrowVelo(e.target.value)}
+              />
+            </Field>
+          )}
+          {hasHit && (
+            <Field label="Batting avg" htmlFor="ba">
+              <Input
+                id="ba"
+                type="number"
+                step="0.001"
+                min="0"
+                max="1"
+                inputMode="decimal"
+                placeholder=".380"
+                value={battingAvg}
+                onChange={(e) => setBattingAvg(e.target.value)}
               />
             </Field>
           )}
