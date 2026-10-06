@@ -1,5 +1,6 @@
 import { requireProfile } from "@/lib/auth";
 import { TabBar } from "@/components/ui/TabBar";
+import { NotificationNudge } from "@/components/NotificationNudge";
 
 export default async function CoachLayout({
   children,
@@ -14,6 +15,7 @@ export default async function CoachLayout({
     >
       {children}
       <TabBar role="coach" />
+      <NotificationNudge />
     </div>
   );
 }
