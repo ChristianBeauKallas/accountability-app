@@ -49,6 +49,8 @@ export type Player = {
   fastball_velo: number | null;
   pop_time: number | null;
   batting_avg: number | null;
+  spin_rate: number | null;
+  era: number | null;
   pitches: string[];
   highlight_url: string | null;
   bio: string | null;

@@ -317,6 +317,8 @@ function PlayerWizard({
   const [fastball, setFastball] = useState("");
   const [popTime, setPopTime] = useState("");
   const [battingAvg, setBattingAvg] = useState("");
+  const [spinRate, setSpinRate] = useState("");
+  const [era, setEra] = useState("");
   const [pitches, setPitches] = useState<string[]>([]);
   const [bio, setBio] = useState("");
   const [prefDivisions, setPrefDivisions] = useState<string[]>([]);
@@ -486,6 +488,8 @@ function PlayerWizard({
           hasHit && !catcherAny && !outfielderAny ? num(throwVelo) : null,
         of_velo: hasHit && outfielderAny && !catcherAny ? num(throwVelo) : null,
         fastball_velo: hasPitch ? num(fastball) : null,
+        spin_rate: hasPitch ? num(spinRate) : null,
+        era: hasPitch ? num(era) : null,
         pop_time: hasHit && catcherAny ? num(popTime) : null,
         pitches: hasPitch ? pitches : [],
         bio: bio.trim() || null,
@@ -757,7 +761,7 @@ function PlayerWizard({
         {step === "hitting" && (
           <div className="space-y-6">
             <QHead
-              title="Position player numbers"
+              title="Position player metrics"
               sub="All optional — add what you've got, skip the rest."
             />
             <div className="grid grid-cols-2 gap-3">
@@ -829,7 +833,7 @@ function PlayerWizard({
         {step === "pitching" && (
           <div className="space-y-6">
             <QHead
-              title="Pitching numbers"
+              title="Pitching metrics"
               sub="All optional — add what you've got, skip the rest."
             />
             <div>
@@ -857,6 +861,27 @@ function PlayerWizard({
                   placeholder="86"
                   value={fastball}
                   onChange={(e) => setFastball(e.target.value)}
+                />
+              </Field>
+              <Field label="Spin rate (rpm)" htmlFor="spin">
+                <Input
+                  id="spin"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="2200"
+                  value={spinRate}
+                  onChange={(e) => setSpinRate(e.target.value)}
+                />
+              </Field>
+              <Field label="ERA" htmlFor="era">
+                <Input
+                  id="era"
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="3.45"
+                  value={era}
+                  onChange={(e) => setEra(e.target.value)}
                 />
               </Field>
             </div>
