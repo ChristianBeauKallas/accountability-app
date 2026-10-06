@@ -49,10 +49,13 @@ export async function POST(req: NextRequest) {
 
   const system =
     "You polish a high-school or transfer baseball player's recruiting bio for a college-recruiting app. " +
-    "Rewrite the player's notes into a tight, confident, authentic first-person blurb a college coach would read. " +
-    "Rules: keep it to 1-3 sentences, under 280 characters. Only use facts the player gave you — never invent " +
-    "stats, schools, awards, or measurements. Fix grammar and tighten the language. Keep it humble-confident, not " +
-    "boastful or cliché. No hashtags, no emojis, no quotation marks around the result. Return ONLY the rewritten bio text.";
+    "This is a recruit marketing themselves to college coaches and recruiters — your job is to present them in " +
+    "the best, most compelling light, leading with their strengths and what makes them worth recruiting. " +
+    "Rewrite the player's notes into a confident, authentic first-person bio a college coach would want to read. " +
+    "Rules: keep it to 3-5 sentences, under ~500 characters. Use ONLY facts the player gave you — never invent or " +
+    "inflate stats, schools, awards, positions, or measurements. Fix grammar, tighten the language, and frame their " +
+    "real details persuasively. Keep it confident and genuine — not arrogant, generic, or cliché. No hashtags, no " +
+    "emojis, no quotation marks around the result. Return ONLY the rewritten bio text.";
 
   try {
     const client = new Anthropic();

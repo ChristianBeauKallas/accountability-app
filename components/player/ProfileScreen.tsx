@@ -805,7 +805,8 @@ function EditForm({
           <Textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            maxLength={280}
+            maxLength={700}
+            rows={5}
           />
         </Field>
 
