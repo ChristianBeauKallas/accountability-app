@@ -58,6 +58,10 @@
   body {
     height: 100%;
   }
+  html,
+  body {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-ground text-ink font-sans antialiased;
     font-size: 16px;
@@ -92,7 +96,7 @@
   }
   /* App is mobile-first; center it in a 480px frame on larger screens. */
   .app-frame {
-    @apply mx-auto w-full max-w-app min-h-dvh bg-ground relative;
+    @apply mx-auto w-full max-w-app min-h-dvh bg-ground relative overflow-x-hidden;
   }
 }
 
