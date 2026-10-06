@@ -30,8 +30,7 @@ export default async function TrackerPage() {
 
   return (
     <main className="px-5 pt-12">
-      <div className="flex items-start justify-between">
-        <p className="eyebrow">In the mix</p>
+      <div className="flex items-center justify-end">
         <HeaderActions showBell />
       </div>
       <div className="mt-1 flex items-center gap-1.5">
