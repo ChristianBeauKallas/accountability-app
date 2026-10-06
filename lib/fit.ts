@@ -224,6 +224,68 @@ function sizeScore(
 }
 
 // --------------------------------------------------------------------------
+// "Why this fits" — the 2–3 strongest, human-readable reasons.
+// --------------------------------------------------------------------------
+function metricBarMet(player: Player, need: Need): string | null {
+  if (
+    need.min_exit_velo != null &&
+    player.exit_velo != null &&
+    player.exit_velo >= need.min_exit_velo
+  )
+    return `${player.exit_velo} mph exit velo`;
+  if (
+    need.min_fastball_velo != null &&
+    player.fastball_velo != null &&
+    player.fastball_velo >= need.min_fastball_velo
+  )
+    return `${player.fastball_velo} mph fastball`;
+  if (
+    need.min_sixty != null &&
+    player.sixty_yd != null &&
+    player.sixty_yd <= need.min_sixty
+  )
+    return `${player.sixty_yd} sixty`;
+  if (
+    need.min_pop_time != null &&
+    player.pop_time != null &&
+    player.pop_time <= need.min_pop_time
+  )
+    return `${player.pop_time} pop time`;
+  return null;
+}
+
+export function fitReasons(
+  player: Player,
+  need: Need,
+  program: Pick<Program, "division" | "state" | "lat" | "lng">
+): string[] {
+  const out: string[] = [];
+
+  const matched = (player.positions ?? []).filter((p) =>
+    (need.positions ?? []).includes(p)
+  );
+  if (matched.length) out.push(`Plays ${matched.slice(0, 2).join("/")}`);
+
+  const metric = metricBarMet(player, need);
+  if (metric) out.push(`Hits ${metric}`);
+
+  const miles = distanceMiles(player, program);
+  if (miles != null && miles <= MAX_DISTANCE_MILES) {
+    out.push(`${Math.round(miles)} mi away`);
+  }
+
+  if (need.min_gpa && (player.gpa ?? 0) >= need.min_gpa) {
+    out.push(`Clears ${need.min_gpa.toFixed(1)} GPA`);
+  }
+
+  if (player.pref_divisions?.includes(program.division)) {
+    out.push(`${program.division} — your level`);
+  }
+
+  return out.slice(0, 3);
+}
+
+// --------------------------------------------------------------------------
 // Composite 0–100
 // --------------------------------------------------------------------------
 export function computeFit(

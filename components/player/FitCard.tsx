@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { MapPin, Check } from "lucide-react";
+import { MapPin, Check, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { SaveButton } from "@/components/SaveButton";
-import { distanceMiles } from "@/lib/fit";
+import { distanceMiles, fitReasons } from "@/lib/fit";
 import { formatMiles, poolLabel } from "@/lib/format";
 import type { Need, Player, Program } from "@/lib/types";
 
@@ -35,6 +35,7 @@ export function FitCard({
     need.positions.includes(p)
   );
   const miles = formatMiles(distanceMiles(player, program));
+  const reasons = fitReasons(player, need, program);
 
   return (
     <Card className="space-y-3.5">
@@ -109,6 +110,14 @@ export function FitCard({
           <Chip tone="metric">POP ≤ {need.min_pop_time}</Chip>
         )}
       </div>
+
+      {reasons.length > 0 && (
+        <p className="flex items-center gap-1.5 text-sm text-body-2">
+          <Sparkles size={14} strokeWidth={2} aria-hidden className="shrink-0 text-accent" />
+          <span className="text-muted-2">Why it fits:</span>
+          <span className="font-medium text-ink">{reasons.join(" · ")}</span>
+        </p>
+      )}
 
       {need.must_have.length > 0 && (
         <p className="text-sm text-body-2">
