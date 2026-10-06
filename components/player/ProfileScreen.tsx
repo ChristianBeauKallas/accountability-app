@@ -23,6 +23,7 @@ import {
   STATES,
   BATS,
   THROWS,
+  PITCHES,
   isPitcher,
   isCatcher,
   isOutfielder,
@@ -186,6 +187,19 @@ function DataTab({ player }: { player: Player }) {
         </div>
       </Section>
 
+      {/* Pitches */}
+      {isPitcher(player.primary_position) && (player.pitches ?? []).length > 0 && (
+        <Section title="Pitches">
+          <div className="flex flex-wrap gap-2">
+            {(player.pitches ?? []).map((p) => (
+              <Chip key={p} tone="accent">
+                {p}
+              </Chip>
+            ))}
+          </div>
+        </Section>
+      )}
+
       {/* Interested in */}
       <Section title="Interested in">
         <div className="divide-y divide-divider rounded-card border border-border bg-surface">
@@ -299,6 +313,7 @@ function EditForm({
   );
   const [fastball, setFastball] = useState(player.fastball_velo?.toString() ?? "");
   const [popTime, setPopTime] = useState(player.pop_time?.toString() ?? "");
+  const [pitches, setPitches] = useState<string[]>(player.pitches ?? []);
   const [isTransfer, setIsTransfer] = useState(player.is_transfer);
   const [currentSchool, setCurrentSchool] = useState(player.current_school ?? "");
   const [bio, setBio] = useState(player.bio ?? "");
@@ -423,6 +438,7 @@ function EditForm({
         of_velo: isOutfielder(primary) ? num(throwVelo) : null,
         fastball_velo: isPitcher(primary) ? num(fastball) : null,
         pop_time: isCatcher(primary) ? num(popTime) : null,
+        pitches: isPitcher(primary) ? pitches : [],
         bio: bio.trim() || null,
         pref_divisions: prefDivisions,
         pref_states: prefStates,
@@ -677,6 +693,31 @@ function EditForm({
             <span />
           )}
         </div>
+
+        {isPitcher(primary) && (
+          <Field label="Pitches" hint="Tap all you throw.">
+            <div className="flex flex-wrap gap-2">
+              {PITCHES.map((p) => {
+                const active = pitches.includes(p);
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => toggleIn(setPitches)(p)}
+                    className={cn(
+                      "h-9 rounded-pill px-3.5 text-sm font-semibold transition-colors",
+                      active
+                        ? "bg-accent text-surface"
+                        : "bg-chip text-body-2 hover:bg-accent-soft"
+                    )}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+        )}
 
         <label className="flex items-center gap-3 rounded-input border border-border bg-surface p-3">
           <input
