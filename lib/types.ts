@@ -53,7 +53,9 @@ export type Player = {
   pref_divisions: string[];
   pref_states: string[];
   pref_climate: string | null;
+  pref_climates: string[];
   pref_size: string | null;
+  pref_sizes: string[];
   updated_at: string;
 };
 

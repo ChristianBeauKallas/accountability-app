@@ -58,8 +58,9 @@ export function isEligible(player: Player, need: Need): boolean {
   );
 }
 
-// Player-side preferences: levels (divisions) and location (states or climate).
-// Empty / unset preferences mean "no filter".
+// Player-side preferences: levels (divisions) and location. Location is
+// ADDITIVE — a program passes if it matches any chosen state OR any chosen
+// climate. Empty / unset preferences mean "no filter".
 export function passesPlayerPrefs(
   player: Player,
   program: Pick<Program, "division" | "state">
@@ -70,12 +71,16 @@ export function passesPlayerPrefs(
   ) {
     return false;
   }
-  if (player.pref_states?.length) {
-    if (!program.state || !player.pref_states.includes(program.state)) {
-      return false;
-    }
-  } else if (player.pref_climate && player.pref_climate !== "any") {
-    if (stateClimate(program.state) !== player.pref_climate) return false;
+
+  const states = player.pref_states ?? [];
+  const climates = (player.pref_climates ?? []).filter(
+    (c) => c && c !== "any"
+  );
+  if (states.length || climates.length) {
+    const inStates = program.state ? states.includes(program.state) : false;
+    const climate = stateClimate(program.state);
+    const inClimate = climate ? climates.includes(climate) : false;
+    if (!inStates && !inClimate) return false;
   }
   return true;
 }
@@ -198,19 +203,24 @@ function mustHaveScore(player: Player, need: Need): number | null {
   return 0.35 + 0.65 * (hits / keywords.length);
 }
 
-// Soft match on preferred campus size (0.2–1), null when no preference set.
+// Soft match on preferred campus size(s) (0.2–1), null when none chosen.
+// With several sizes selected, take the best match.
 function sizeScore(
   player: Player,
   program: Pick<Program, "enrollment">
 ): number | null {
-  const pref = player.pref_size;
-  if (!pref || pref === "any") return null;
+  const prefs = (player.pref_sizes ?? []).filter((s) => s && s !== "any");
+  if (prefs.length === 0) return null;
   const bucket = sizeBucket(program.enrollment);
   if (bucket == null) return 0.5; // size unknown → neutral
-  if (bucket === pref) return 1;
   const order = ["small", "medium", "large"];
-  const gap = Math.abs(order.indexOf(bucket) - order.indexOf(pref));
-  return gap === 1 ? 0.5 : 0.2;
+  let best = 0.2;
+  for (const pref of prefs) {
+    const gap = Math.abs(order.indexOf(bucket) - order.indexOf(pref));
+    const s = gap === 0 ? 1 : gap === 1 ? 0.5 : 0.2;
+    if (s > best) best = s;
+  }
+  return best;
 }
 
 // --------------------------------------------------------------------------
