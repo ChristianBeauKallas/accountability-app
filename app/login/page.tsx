@@ -145,11 +145,15 @@ function LoginInner() {
       <div className="mt-10">
         <p className="eyebrow">{isSignup ? "Welcome" : "Welcome back"}</p>
         <h1 className="mt-2 text-3xl font-display font-bold tracking-tight">
-          {isSignup ? "Create your free account" : "Sign in"}
+          {isSignup
+            ? role === "coach"
+              ? "Find the right players"
+              : "Find the right fit for you"
+            : "Sign in"}
         </h1>
         <p className="mt-2 text-body-2">
           {isSignup
-            ? "Set up your account with an email and password."
+            ? "Create your free account — it only takes a minute."
             : "Enter your email and password to continue."}
         </p>
       </div>
