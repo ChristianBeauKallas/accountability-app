@@ -24,6 +24,7 @@ import {
   STATES,
   BATS,
   THROWS,
+  PITCHES,
   isPitcher,
   isCatcher,
   isOutfielder,
@@ -312,6 +313,7 @@ function PlayerWizard({
   const [throwVelo, setThrowVelo] = useState("");
   const [fastball, setFastball] = useState("");
   const [popTime, setPopTime] = useState("");
+  const [pitches, setPitches] = useState<string[]>([]);
   const [bio, setBio] = useState("");
   const [prefDivisions, setPrefDivisions] = useState<string[]>([]);
   const [prefStates, setPrefStates] = useState<string[]>([]);
@@ -460,6 +462,7 @@ function PlayerWizard({
         of_velo: isOutfielder(primary) ? num(throwVelo) : null,
         fastball_velo: pitcher ? num(fastball) : null,
         pop_time: isCatcher(primary) ? num(popTime) : null,
+        pitches: pitcher ? pitches : [],
         bio: bio.trim() || null,
         pref_divisions: prefDivisions,
         pref_states: prefStates,
@@ -743,6 +746,24 @@ function PlayerWizard({
         {step === "metrics" && (
           <div className="space-y-6">
             <QHead title="Your numbers" />
+            {pitcher && (
+              <div>
+                <p className="mb-2 text-sm font-semibold text-body-2">
+                  Pitches you throw
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {PITCHES.map((p) => (
+                    <OptionPill
+                      key={p}
+                      active={pitches.includes(p)}
+                      onClick={() => toggle(setPitches)(p)}
+                    >
+                      {p}
+                    </OptionPill>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               {pitcher ? (
                 <Field label="Fastball velo (mph)" htmlFor="fb">

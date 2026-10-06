@@ -34,6 +34,19 @@ export const STATES = [
 export const BATS = ["R", "L", "S"] as const;
 export const THROWS = ["R", "L"] as const;
 
+// Pitch arsenal — shown when a player's position is RHP/LHP.
+export const PITCHES = [
+  "Fastball",
+  "2-Seam",
+  "Cutter",
+  "Sinker",
+  "Slider",
+  "Curveball",
+  "Changeup",
+  "Splitter",
+  "Knuckleball",
+] as const;
+
 export function isPitcher(position: string | null | undefined): boolean {
   return !!position && (PITCHER_POSITIONS as readonly string[]).includes(position);
 }
