@@ -3,7 +3,6 @@
 import {
   MapPin,
   Check,
-  Sparkles,
   Info,
   Bell,
   Pencil,
@@ -121,13 +120,16 @@ function FitCardMock({
 }) {
   return (
     <div data-tour={primary ? "m-card" : undefined}>
-      <Card className="space-y-3.5">
+      <Card className="space-y-3">
         <div className="flex items-start gap-3">
           <Avatar name="Dodge City CC" size={46} />
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-lg font-display font-semibold leading-tight">
               Dodge City CC
             </h3>
+            <p className="mt-0.5 text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+              JUCO · KJCCC
+            </p>
             <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
               <MapPin size={14} strokeWidth={2} aria-hidden />
               <span className="truncate">Dodge City, KS · 150 mi</span>
@@ -144,12 +146,9 @@ function FitCardMock({
           </div>
         </div>
 
-        <div>
-          <p className="eyebrow">JUCO · KJCCC</p>
-          <p className="mt-1 text-[15px] font-semibold text-ink">
-            Middle infield — 2026 / 2027
-          </p>
-        </div>
+        <p className="text-[15px] font-semibold text-ink">
+          Middle infield — 2026 / 2027
+        </p>
 
         <div className="flex flex-wrap gap-2">
           <Chip tone="accent">SS</Chip>
@@ -159,14 +158,19 @@ function FitCardMock({
           <Chip tone="metric">EV 88+</Chip>
         </div>
 
-        <p
-          data-tour={primary ? "m-why" : undefined}
-          className="flex items-center gap-1.5 text-sm text-body-2"
-        >
-          <Sparkles size={14} strokeWidth={2} aria-hidden className="shrink-0 text-accent" />
-          <span className="text-muted-2">Why it fits:</span>
-          <span className="font-medium text-ink">Plays SS/2B · 150 mi · Clears 2.5 GPA</span>
-        </p>
+        <div className="space-y-1.5 border-t border-divider pt-3">
+          <p className="text-sm leading-snug text-body-2">
+            <span className="font-semibold text-ink">What they&rsquo;re looking for: </span>
+            versatility, glove
+          </p>
+          <p
+            data-tour={primary ? "m-why" : undefined}
+            className="text-sm leading-snug text-body-2"
+          >
+            <span className="font-semibold text-ink">Why you fit: </span>
+            Plays SS/2B · 150 mi · Clears 2.5 GPA
+          </p>
+        </div>
 
         {applied ? (
           <div className="flex h-12 w-full items-center justify-center gap-1.5 rounded-btn bg-accent-soft text-base font-semibold text-accent">
@@ -192,6 +196,9 @@ function FitCardMini() {
           <h3 className="truncate text-lg font-display font-semibold leading-tight">
             Barton CC
           </h3>
+          <p className="mt-0.5 text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+            JUCO · KJCCC
+          </p>
           <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
             <MapPin size={14} strokeWidth={2} aria-hidden />
             <span className="truncate">Great Bend, KS · 165 mi</span>

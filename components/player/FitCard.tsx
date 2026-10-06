@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Check, Sparkles } from "lucide-react";
+import { MapPin, Check } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
@@ -38,7 +38,7 @@ export function FitCard({
   const reasons = fitReasons(player, need, program);
 
   return (
-    <Card className="space-y-3.5">
+    <Card className="space-y-3">
       <div className="flex items-start gap-3">
         <Link
           href={`/programs/${program.id}`}
@@ -49,6 +49,10 @@ export function FitCard({
             <h3 className="truncate text-lg font-display font-semibold leading-tight">
               {program.name}
             </h3>
+            <p className="mt-0.5 text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+              {program.division}
+              {program.conference ? ` · ${program.conference}` : ""}
+            </p>
             <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
               <MapPin size={14} strokeWidth={2} aria-hidden />
               <span className="truncate">
@@ -75,13 +79,7 @@ export function FitCard({
         </div>
       </div>
 
-      <div>
-        <p className="eyebrow">
-          {program.division}
-          {program.conference ? ` · ${program.conference}` : ""}
-        </p>
-        <p className="mt-1 text-[15px] font-semibold text-ink">{need.title}</p>
-      </div>
+      <p className="text-[15px] font-semibold text-ink">{need.title}</p>
 
       <div className="flex flex-wrap gap-2">
         {matched.map((p) => (
@@ -111,19 +109,23 @@ export function FitCard({
         )}
       </div>
 
-      {reasons.length > 0 && (
-        <p data-tour="fit-why" className="flex items-center gap-1.5 text-sm text-body-2">
-          <Sparkles size={14} strokeWidth={2} aria-hidden className="shrink-0 text-accent" />
-          <span className="text-muted-2">Why it fits:</span>
-          <span className="font-medium text-ink">{reasons.join(" · ")}</span>
-        </p>
-      )}
-
-      {need.must_have.length > 0 && (
-        <p className="text-sm text-body-2">
-          <span className="font-semibold text-ink">Wants: </span>
-          {need.must_have.join(", ")}
-        </p>
+      {(need.must_have.length > 0 || reasons.length > 0) && (
+        <div className="space-y-1.5 border-t border-divider pt-3">
+          {need.must_have.length > 0 && (
+            <p className="text-sm leading-snug text-body-2">
+              <span className="font-semibold text-ink">
+                What they&rsquo;re looking for:{" "}
+              </span>
+              {need.must_have.join(", ")}
+            </p>
+          )}
+          {reasons.length > 0 && (
+            <p data-tour="fit-why" className="text-sm leading-snug text-body-2">
+              <span className="font-semibold text-ink">Why you fit: </span>
+              {reasons.join(" · ")}
+            </p>
+          )}
+        </div>
       )}
 
       <Button full onClick={onApply} disabled={applying || applied}>
