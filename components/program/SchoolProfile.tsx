@@ -300,24 +300,26 @@ function AboutTab({
         </Section>
       )}
 
-      <Section title="Staff">
-        <ul className="space-y-2">
-          {staff.map((s, i) => (
-            <li key={i} className="flex items-center gap-3">
-              <Avatar name={s.profile?.full_name ?? "Coach"} size={36} />
-              <div>
-                <p className="text-[15px] font-medium text-ink">
-                  {s.profile?.full_name ?? "Coach"}
-                </p>
-                <p className="text-xs text-muted-2">{STAFF_LABEL[s.staff_role]}</p>
-              </div>
-            </li>
-          ))}
-          {staff.length === 0 && (
-            <li className="text-sm text-muted-2">No staff listed.</li>
-          )}
-        </ul>
-      </Section>
+      {(staff.length > 0 || editable) && (
+        <Section title="Staff">
+          <ul className="space-y-2">
+            {staff.map((s, i) => (
+              <li key={i} className="flex items-center gap-3">
+                <Avatar name={s.profile?.full_name ?? "Coach"} size={36} />
+                <div>
+                  <p className="text-[15px] font-medium text-ink">
+                    {s.profile?.full_name ?? "Coach"}
+                  </p>
+                  <p className="text-xs text-muted-2">{STAFF_LABEL[s.staff_role]}</p>
+                </div>
+              </li>
+            ))}
+            {staff.length === 0 && (
+              <li className="text-sm text-muted-2">No staff listed.</li>
+            )}
+          </ul>
+        </Section>
+      )}
 
       {program.website && (
         <a
