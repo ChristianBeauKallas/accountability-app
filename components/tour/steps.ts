@@ -5,7 +5,7 @@ export const PLAYER_TOUR: TourStep[] = [
     screen: "fits",
     selector: '[data-tour="tab-fits"]',
     title: "This is your home base",
-    body: "Fits shows the open spots you match, ranked best first. New ones appear the moment coaches post them.",
+    body: "Fits shows the open opportunities you match, ranked best first. New ones appear the moment coaches post them.",
   },
   {
     screen: "fits",
@@ -16,20 +16,20 @@ export const PLAYER_TOUR: TourStep[] = [
   {
     screen: "fits",
     selector: '[data-tour="m-why"]',
-    title: "No black box",
-    body: "Each card shows your match score and exactly why you fit — position, academics, distance and more.",
+    title: "Transparency",
+    body: "Each card shows exactly why you're a fit — position, academics, distance and more.",
   },
   {
     screen: "fits-tip",
     selector: '[data-tour="m-tip"]',
-    title: "Tooltips everywhere",
-    body: "See an ⓘ anywhere? Tap it for a plain-English explainer — like how your fit score is calculated.",
+    title: "Tooltips",
+    body: "See an ⓘ anywhere? Tap it for a simple explainer of how that feature works or how we come up with specific data.",
   },
   {
     screen: "tracker",
     selector: '[data-tour="tab-tracker"]',
     title: "Track where you stand",
-    body: "My Spots keeps every opening you've shown interest in, and whether each coach has responded.",
+    body: "My Spots keeps every opportunity you've shown interest in, and whether each coach has responded or closed your interest.",
   },
   {
     screen: "following",
@@ -40,8 +40,8 @@ export const PLAYER_TOUR: TourStep[] = [
   {
     screen: "profile",
     selector: '[data-tour="tab-profile"]',
-    title: "Make your profile shine",
-    body: "Add a photo, upload highlight video, and post updates — the more complete you are, the more spots you match.",
+    title: "Build your profile",
+    body: "Add a profile photo, upload highlight videos, and post updates — the more complete you are, the more spots you match.",
   },
 ];
 
