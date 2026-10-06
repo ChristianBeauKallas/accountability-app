@@ -21,7 +21,6 @@ function LoginInner() {
   // Entering with a role (from the "I'm a…" cards) means a new account.
   const [mode, setMode] = useState<Mode>(paramRole ? "signup" : "signin");
   const [role, setRole] = useState<UserRole>(paramRole ?? "player");
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "confirm" | "error">(
@@ -61,7 +60,7 @@ function LoginInner() {
       email,
       password,
       options: {
-        data: { role, full_name: name.trim() || undefined },
+        data: { role },
         emailRedirectTo: `${location.origin}/auth/callback`,
       },
     });
@@ -175,18 +174,6 @@ function LoginInner() {
                 </button>
               ))}
             </div>
-          </Field>
-        )}
-
-        {isSignup && (
-          <Field label="Full name" htmlFor="name">
-            <Input
-              id="name"
-              autoComplete="name"
-              placeholder="First Last"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
           </Field>
         )}
 
