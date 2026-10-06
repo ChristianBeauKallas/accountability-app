@@ -12,6 +12,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { CitySearch } from "@/components/onboarding/CitySearch";
 import { HeaderActions } from "@/components/HeaderActions";
 import { PlayerFeed } from "@/components/player/PlayerFeed";
 import { StatBlock } from "@/components/player/StatBlock";
@@ -138,16 +139,22 @@ function DataTab({ player }: { player: Player }) {
   const pct = Math.round(profileCompleteness(player) * 100);
 
   const prefStates = player.pref_states ?? [];
+  const prefClimates = player.pref_climates ?? [];
   const prefDivisions = player.pref_divisions ?? [];
-  const location = prefStates.length
-    ? prefStates.join(", ")
-    : player.pref_climate && player.pref_climate !== "any"
-      ? `${climateLabel(player.pref_climate)} climate`
-      : "Anywhere";
-  const sizeLabel =
-    { small: "Small", medium: "Medium", large: "Large" }[
-      player.pref_size ?? ""
-    ] ?? "Any size";
+  const locationParts = [
+    ...prefClimates.map((c) => climateLabel(c)).filter(Boolean),
+    ...prefStates,
+  ];
+  const location = locationParts.length ? locationParts.join(", ") : "Anywhere";
+  const sizeMap: Record<string, string> = {
+    small: "Small",
+    medium: "Medium",
+    large: "Large",
+  };
+  const prefSizes = player.pref_sizes ?? [];
+  const sizeLabel = prefSizes.length
+    ? prefSizes.map((s) => sizeMap[s] ?? s).join(", ")
+    : "Any size";
 
   return (
     <div>
@@ -274,6 +281,8 @@ function EditForm({
   const [gpa, setGpa] = useState(player.gpa?.toString() ?? "");
   const [city, setCity] = useState(player.city ?? "");
   const [state, setState] = useState(player.state ?? "");
+  const [lat, setLat] = useState<number | null>(player.lat ?? null);
+  const [lng, setLng] = useState<number | null>(player.lng ?? null);
   const [bats, setBats] = useState(player.bats ?? "");
   const [throws, setThrows] = useState(player.throws ?? "");
   const [heightFt, setHeightFt] = useState(
@@ -321,8 +330,10 @@ function EditForm({
   const [prefStates, setPrefStates] = useState<string[]>(
     player.pref_states ?? []
   );
-  const [prefClimate, setPrefClimate] = useState(player.pref_climate ?? "");
-  const [prefSize, setPrefSize] = useState(player.pref_size ?? "");
+  const [prefClimates, setPrefClimates] = useState<string[]>(
+    player.pref_climates ?? []
+  );
+  const [prefSizes, setPrefSizes] = useState<string[]>(player.pref_sizes ?? []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -360,6 +371,9 @@ function EditForm({
       cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]
     );
   }
+  const toggleIn =
+    (set: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
+      set((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
 
   const primary = picked[0] ?? null;
   const num = (v: string) => (v === "" ? null : Number(v));
@@ -396,6 +410,8 @@ function EditForm({
         gpa: num(gpa),
         city: city.trim() || null,
         state: state || null,
+        lat,
+        lng,
         is_transfer: isTransfer,
         current_school: isTransfer ? currentSchool.trim() || null : null,
         sixty_yd: num(sixty),
@@ -410,8 +426,8 @@ function EditForm({
         bio: bio.trim() || null,
         pref_divisions: prefDivisions,
         pref_states: prefStates,
-        pref_climate: prefClimate || null,
-        pref_size: prefSize || null,
+        pref_climates: prefClimates,
+        pref_sizes: prefSizes,
         updated_at: new Date().toISOString(),
       })
       .eq("id", profile.id);
@@ -533,21 +549,17 @@ function EditForm({
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="City" htmlFor="ci">
-            <Input id="ci" value={city} onChange={(e) => setCity(e.target.value)} />
-          </Field>
-          <Field label="State" htmlFor="st">
-            <Select id="st" value={state} onChange={(e) => setState(e.target.value)}>
-              <option value="">Select</option>
-              {STATES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
+        <Field label="Hometown" htmlFor="loc">
+          <CitySearch
+            value={{ city, state, lat, lng }}
+            onChange={(v) => {
+              setCity(v.city);
+              setState(v.state);
+              setLat(v.lat);
+              setLng(v.lng);
+            }}
+          />
+        </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Bats" htmlFor="ba">
@@ -713,22 +725,29 @@ function EditForm({
           </Field>
 
           <Field
-            label="Climate"
-            hint="Prefer a region's weather. Ignored if you pick states below."
-            htmlFor="clim"
+            label="Weather"
+            hint="Pick any. Combines with the states below."
           >
-            <Select
-              id="clim"
-              value={prefClimate}
-              onChange={(e) => setPrefClimate(e.target.value)}
-            >
-              <option value="">Anywhere</option>
-              {CLIMATES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </Select>
+            <div className="flex flex-wrap gap-2">
+              {CLIMATES.map((c) => {
+                const active = prefClimates.includes(c.value);
+                return (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => toggleIn(setPrefClimates)(c.value)}
+                    className={cn(
+                      "h-9 rounded-pill px-4 text-sm font-semibold transition-colors",
+                      active
+                        ? "bg-accent text-surface"
+                        : "bg-chip text-body-2 hover:bg-accent-soft"
+                    )}
+                  >
+                    {c.label}
+                  </button>
+                );
+              })}
+            </div>
           </Field>
 
           <Field label="States" hint="Tap the states you'd go to. None = anywhere.">
@@ -754,17 +773,31 @@ function EditForm({
             </div>
           </Field>
 
-          <Field label="School size" hint="We rank matching schools higher.">
-            <Select
-              id="size"
-              value={prefSize}
-              onChange={(e) => setPrefSize(e.target.value)}
-            >
-              <option value="">No preference</option>
-              <option value="small">Small (under ~4k)</option>
-              <option value="medium">Medium (~4k–12k)</option>
-              <option value="large">Large (12k+)</option>
-            </Select>
+          <Field label="School size" hint="Pick any — matching schools rank higher.">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: "small", label: "Small" },
+                { value: "medium", label: "Medium" },
+                { value: "large", label: "Large" },
+              ].map((s) => {
+                const active = prefSizes.includes(s.value);
+                return (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => toggleIn(setPrefSizes)(s.value)}
+                    className={cn(
+                      "h-9 rounded-pill px-4 text-sm font-semibold transition-colors",
+                      active
+                        ? "bg-accent text-surface"
+                        : "bg-chip text-body-2 hover:bg-accent-soft"
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
           </Field>
         </div>
 
