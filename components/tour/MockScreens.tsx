@@ -124,12 +124,14 @@ function FitCardMock({
         <div className="flex items-start gap-3">
           <Avatar name="Dodge City CC" size={46} />
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-lg font-display font-semibold leading-tight">
-              Dodge City CC
-            </h3>
-            <p className="mt-0.5 text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
-              JUCO · KJCCC
-            </p>
+            <div className="flex items-baseline gap-2">
+              <h3 className="min-w-0 truncate text-lg font-display font-semibold leading-tight">
+                Dodge City CC
+              </h3>
+              <span className="shrink-0 whitespace-nowrap text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+                JUCO · KJCCC
+              </span>
+            </div>
             <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
               <MapPin size={14} strokeWidth={2} aria-hidden />
               <span className="truncate">Dodge City, KS · 150 mi</span>
@@ -193,12 +195,14 @@ function FitCardMini() {
       <div className="flex items-start gap-3">
         <Avatar name="Barton CC" size={46} />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-lg font-display font-semibold leading-tight">
-            Barton CC
-          </h3>
-          <p className="mt-0.5 text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
-            JUCO · KJCCC
-          </p>
+          <div className="flex items-baseline gap-2">
+            <h3 className="min-w-0 truncate text-lg font-display font-semibold leading-tight">
+              Barton CC
+            </h3>
+            <span className="shrink-0 whitespace-nowrap text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+              JUCO · KJCCC
+            </span>
+          </div>
           <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
             <MapPin size={14} strokeWidth={2} aria-hidden />
             <span className="truncate">Great Bend, KS · 165 mi</span>

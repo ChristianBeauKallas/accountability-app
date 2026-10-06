@@ -21,18 +21,16 @@ export default async function WelcomePage() {
       </div>
 
       {/* Hero */}
-      <div className="mt-14">
+      <div className="mt-16">
         <h1 className="text-[44px] leading-[1.02] font-display font-bold tracking-tight text-ink">
-          Helping ball players find the right fit.
+          Helping ball players and coaches find the right fit.
         </h1>
-        <p className="mt-5 max-w-[22rem] text-[17px] leading-relaxed text-body-2">
-          Build your recruiting profile and let our algorithm take care of the
-          rest.
-        </p>
       </div>
 
+      <div className="flex-1" />
+
       {/* Role picker */}
-      <div className="mt-12 space-y-4">
+      <div className="space-y-4">
         <p className="text-center text-sm text-muted">I&rsquo;m a&hellip;</p>
         <div className="grid grid-cols-2 gap-3">
           <RoleCard href="/login?role=player" title="Player" sub="HS or transfer" />

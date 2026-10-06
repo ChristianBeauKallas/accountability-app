@@ -46,13 +46,15 @@ export function FitCard({
         >
           <Avatar name={program.name} src={program.logo_url} size={46} />
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-lg font-display font-semibold leading-tight">
-              {program.name}
-            </h3>
-            <p className="mt-0.5 text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
-              {program.division}
-              {program.conference ? ` · ${program.conference}` : ""}
-            </p>
+            <div className="flex items-baseline gap-2">
+              <h3 className="min-w-0 truncate text-lg font-display font-semibold leading-tight">
+                {program.name}
+              </h3>
+              <span className="shrink-0 whitespace-nowrap text-xs font-semibold uppercase tracking-eyebrow text-muted-2">
+                {program.division}
+                {program.conference ? ` · ${program.conference}` : ""}
+              </span>
+            </div>
             <p className="mt-0.5 flex items-center gap-1 text-sm text-muted">
               <MapPin size={14} strokeWidth={2} aria-hidden />
               <span className="truncate">
