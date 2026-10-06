@@ -264,7 +264,7 @@ function PlayerIntro({ slide }: { slide: number }) {
       </div>
       <div className="relative mt-5 flex flex-1 items-start justify-center">
         <div key={`p-${slide}`} className="animate-tour-screen">
-          <PhonePreview screen={s.screen} height={404} />
+          <PhonePreview screen={s.screen} height={436} />
         </div>
       </div>
       <div className="mt-4 flex justify-center gap-2">
