@@ -187,7 +187,8 @@ function DataTab({ player }: { player: Player }) {
       </Section>
 
       {/* Pitches */}
-      {isPitcher(player.primary_position) && (player.pitches ?? []).length > 0 && (
+      {(player.positions ?? []).some(isPitcher) &&
+        (player.pitches ?? []).length > 0 && (
         <Section title="Pitches">
           <div className="flex flex-wrap gap-2">
             {(player.pitches ?? []).map((p) => (
@@ -390,6 +391,11 @@ function EditForm({
       set((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
 
   const primary = picked[0] ?? null;
+  const fielders = picked.filter((p) => !isPitcher(p));
+  const hasPitch = picked.some(isPitcher);
+  const hasHit = fielders.length > 0;
+  const catcherAny = fielders.some(isCatcher);
+  const outfielderAny = fielders.some(isOutfielder);
   const num = (v: string) => (v === "" ? null : Number(v));
 
   function togglePos(pos: string) {
@@ -428,16 +434,14 @@ function EditForm({
         lng,
         is_transfer: isTransfer,
         current_school: isTransfer ? currentSchool.trim() || null : null,
-        sixty_yd: num(sixty),
-        exit_velo: isPitcher(primary) ? null : num(exitVelo),
+        sixty_yd: hasHit ? num(sixty) : null,
+        exit_velo: hasHit ? num(exitVelo) : null,
         inf_velo:
-          !isPitcher(primary) && !isCatcher(primary) && !isOutfielder(primary)
-            ? num(throwVelo)
-            : null,
-        of_velo: isOutfielder(primary) ? num(throwVelo) : null,
-        fastball_velo: isPitcher(primary) ? num(fastball) : null,
-        pop_time: isCatcher(primary) ? num(popTime) : null,
-        pitches: isPitcher(primary) ? pitches : [],
+          hasHit && !catcherAny && !outfielderAny ? num(throwVelo) : null,
+        of_velo: hasHit && outfielderAny && !catcherAny ? num(throwVelo) : null,
+        fastball_velo: hasPitch ? num(fastball) : null,
+        pop_time: hasHit && catcherAny ? num(popTime) : null,
+        pitches: hasPitch ? pitches : [],
         bio: bio.trim() || null,
         pref_divisions: prefDivisions,
         pref_states: prefStates,
@@ -643,7 +647,7 @@ function EditForm({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {isPitcher(primary) ? (
+          {hasPitch && (
             <Field label="Fastball velo" htmlFor="fb">
               <Input
                 id="fb"
@@ -653,7 +657,8 @@ function EditForm({
                 onChange={(e) => setFastball(e.target.value)}
               />
             </Field>
-          ) : (
+          )}
+          {hasHit && (
             <Field label="Exit velo" htmlFor="ev">
               <Input
                 id="ev"
@@ -664,7 +669,7 @@ function EditForm({
               />
             </Field>
           )}
-          {isCatcher(primary) ? (
+          {hasHit && catcherAny && (
             <Field label="Pop time" htmlFor="pt">
               <Input
                 id="pt"
@@ -675,9 +680,10 @@ function EditForm({
                 onChange={(e) => setPopTime(e.target.value)}
               />
             </Field>
-          ) : !isPitcher(primary) ? (
+          )}
+          {hasHit && !catcherAny && (
             <Field
-              label={isOutfielder(primary) ? "OF velo" : "INF velo"}
+              label={outfielderAny ? "OF velo" : "INF velo"}
               htmlFor="tv"
             >
               <Input
@@ -688,12 +694,10 @@ function EditForm({
                 onChange={(e) => setThrowVelo(e.target.value)}
               />
             </Field>
-          ) : (
-            <span />
           )}
         </div>
 
-        {isPitcher(primary) && (
+        {hasPitch && (
           <Field label="Pitches" hint="Tap all you throw.">
             <div className="flex flex-wrap gap-2">
               {PITCHES.map((p) => {
