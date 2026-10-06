@@ -1,0 +1,173 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Mic, Square, Sparkles, Undo2 } from "lucide-react";
+import { cn } from "@/lib/cn";
+import { Textarea } from "@/components/ui/Field";
+
+export function AboutYouAI({
+  value,
+  onChange,
+  position,
+  gradYear,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  position?: string | null;
+  gradYear?: string | null;
+}) {
+  const [listening, setListening] = useState(false);
+  const [polishing, setPolishing] = useState(false);
+  const [note, setNote] = useState("");
+  const [prev, setPrev] = useState<string | null>(null);
+
+  const recRef = useRef<any>(null);
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  const speechSupported =
+    typeof window !== "undefined" &&
+    ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+
+  useEffect(() => {
+    return () => {
+      try {
+        recRef.current?.stop();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, []);
+
+  function toggleMic() {
+    if (!speechSupported) return;
+    if (listening) {
+      recRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    const SR =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const rec = new SR();
+    rec.lang = "en-US";
+    rec.interimResults = false;
+    rec.continuous = true;
+    rec.onresult = (e: any) => {
+      let finalText = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
+      }
+      if (finalText.trim()) {
+        const base = valueRef.current;
+        onChange((base ? base.trim() + " " : "") + finalText.trim());
+      }
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recRef.current = rec;
+    setNote("");
+    rec.start();
+    setListening(true);
+  }
+
+  async function polish() {
+    const text = value.trim();
+    if (!text || polishing) return;
+    setPolishing(true);
+    setNote("");
+    try {
+      const res = await fetch("/api/ai/bio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, position, gradYear }),
+      });
+      if (res.status === 503) {
+        setNote("AI polish isn't set up yet.");
+        return;
+      }
+      if (!res.ok) {
+        setNote("Couldn't polish that — try again.");
+        return;
+      }
+      const data = (await res.json()) as { text?: string };
+      if (data.text) {
+        setPrev(text);
+        onChange(data.text);
+        setNote("Polished ✨ — tweak anything you want.");
+      }
+    } catch {
+      setNote("Couldn't polish that — try again.");
+    } finally {
+      setPolishing(false);
+    }
+  }
+
+  function undo() {
+    if (prev == null) return;
+    onChange(prev);
+    setPrev(null);
+    setNote("");
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="relative">
+        <Textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Lefty bat, plus runner, team captain. Hit .380 last spring…"
+          maxLength={400}
+          rows={5}
+        />
+        {speechSupported && (
+          <button
+            type="button"
+            onClick={toggleMic}
+            aria-label={listening ? "Stop recording" : "Dictate with your voice"}
+            className={cn(
+              "absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-pill transition-colors",
+              listening
+                ? "bg-danger text-surface animate-pulse"
+                : "bg-accent-soft text-accent"
+            )}
+          >
+            {listening ? (
+              <Square size={16} strokeWidth={2.5} aria-hidden />
+            ) : (
+              <Mic size={18} strokeWidth={2} aria-hidden />
+            )}
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={polish}
+          disabled={!value.trim() || polishing}
+          className="inline-flex items-center gap-2 rounded-btn bg-ink px-3.5 py-2 text-sm font-semibold text-ground disabled:opacity-50"
+        >
+          <Sparkles size={16} strokeWidth={2} aria-hidden />
+          {polishing ? "Polishing…" : "Polish for recruiting"}
+        </button>
+        {prev != null && (
+          <button
+            type="button"
+            onClick={undo}
+            className="inline-flex items-center gap-1.5 rounded-btn border border-border px-3 py-2 text-sm font-semibold text-body-2"
+          >
+            <Undo2 size={15} strokeWidth={2} aria-hidden />
+            Undo
+          </button>
+        )}
+      </div>
+
+      <p className="text-xs text-muted-2">
+        {note ||
+          (speechSupported
+            ? "Type it, or tap the mic to say it — then let AI tighten it up for coaches."
+            : "Jot a line or two — then let AI tighten it up for coaches.")}
+      </p>
+    </div>
+  );
+}

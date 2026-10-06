@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { StepProgress } from "@/components/ui/ProgressBar";
+import { AboutYouAI } from "@/components/onboarding/AboutYouAI";
 import {
   POSITIONS,
   DIVISIONS,
@@ -42,6 +43,21 @@ export function OnboardingFlow({
   role: UserRole;
   initialName: string;
 }) {
+  if (role === "player") {
+    return <PlayerWizard userId={userId} initialName={initialName} />;
+  }
+  return <CoachFlow userId={userId} initialName={initialName} />;
+}
+
+/* --------------------------- Coach flow -------------------------------- */
+
+function CoachFlow({
+  userId,
+  initialName,
+}: {
+  userId: string;
+  initialName: string;
+}) {
   const [step, setStep] = useState<Step>("how");
   const stepIndex = step === "how" ? 1 : step === "profile" ? 2 : 3;
 
@@ -63,14 +79,11 @@ export function OnboardingFlow({
       </div>
 
       <div className="mt-8 flex-1">
-        {step === "how" && <HowItWorks role={role} />}
-        {step === "profile" &&
-          (role === "coach" ? (
-            <CoachProfile userId={userId} initialName={initialName} />
-          ) : (
-            <PlayerProfile userId={userId} initialName={initialName} />
-          ))}
-        {step === "tour" && <AppTour role={role} userId={userId} />}
+        {step === "how" && <HowItWorks role="coach" />}
+        {step === "profile" && (
+          <CoachProfile userId={userId} initialName={initialName} />
+        )}
+        {step === "tour" && <AppTour role="coach" userId={userId} />}
       </div>
 
       {step === "how" && (
@@ -152,9 +165,72 @@ function HowItWorks({ role }: { role: UserRole }) {
   );
 }
 
-/* ------------------------- Step 2: Player profile ----------------------- */
+/* ---------------------- Player onboarding wizard ------------------------ */
 
-function PlayerProfile({
+type PKey =
+  | "intro"
+  | "name"
+  | "positions"
+  | "class"
+  | "location"
+  | "gpa"
+  | "swing"
+  | "body"
+  | "metrics"
+  | "about"
+  | "done";
+
+const PLAYER_STEPS: PKey[] = [
+  "intro",
+  "name",
+  "positions",
+  "class",
+  "location",
+  "gpa",
+  "swing",
+  "body",
+  "metrics",
+  "about",
+  "done",
+];
+
+function OptionPill({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "h-11 rounded-btn px-4 text-sm font-semibold transition-colors",
+        active
+          ? "bg-accent text-surface"
+          : "bg-chip text-body-2 hover:bg-accent-soft"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function QHead({ title, sub }: { title: string; sub?: string }) {
+  return (
+    <div>
+      <h1 className="text-[28px] leading-tight font-display font-bold tracking-tight">
+        {title}
+      </h1>
+      {sub && <p className="mt-2 text-body-2">{sub}</p>}
+    </div>
+  );
+}
+
+function PlayerWizard({
   userId,
   initialName,
 }: {
@@ -162,19 +238,20 @@ function PlayerProfile({
   initialName: string;
 }) {
   const supabase = createClient();
+  const [i, setI] = useState(0);
   const [name, setName] = useState(initialName);
+  const [picked, setPicked] = useState<string[]>([]);
   const [gradYear, setGradYear] = useState("");
-  const [picked, setPicked] = useState<string[]>([]); // click order; [0] = primary
-  const [bats, setBats] = useState("");
-  const [throws, setThrows] = useState("");
+  const [isTransfer, setIsTransfer] = useState(false);
+  const [currentSchool, setCurrentSchool] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [gpa, setGpa] = useState("");
+  const [bats, setBats] = useState("");
+  const [throws, setThrows] = useState("");
   const [heightFt, setHeightFt] = useState("");
   const [heightIn, setHeightIn] = useState("");
   const [weight, setWeight] = useState("");
-  const [isTransfer, setIsTransfer] = useState(false);
-  const [currentSchool, setCurrentSchool] = useState("");
   const [sixty, setSixty] = useState("");
   const [exitVelo, setExitVelo] = useState("");
   const [throwVelo, setThrowVelo] = useState("");
@@ -185,6 +262,13 @@ function PlayerProfile({
   const [error, setError] = useState("");
 
   const primary = picked[0] ?? null;
+  const step = PLAYER_STEPS[i];
+  const pitcher = isPitcher(primary);
+
+  const years = useMemo(() => {
+    const now = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, k) => now + k - 1);
+  }, []);
 
   function togglePos(pos: string) {
     setPicked((cur) =>
@@ -192,27 +276,42 @@ function PlayerProfile({
     );
   }
 
-  const valid =
-    name.trim() &&
-    gradYear &&
-    picked.length > 0 &&
-    state &&
-    gpa &&
-    Number(gpa) >= 0 &&
-    Number(gpa) <= 4;
+  function canContinue(): boolean {
+    switch (step) {
+      case "name":
+        return !!name.trim();
+      case "positions":
+        return picked.length > 0;
+      case "class":
+        return !!gradYear;
+      case "location":
+        return !!state;
+      case "gpa": {
+        const n = Number(gpa);
+        return gpa !== "" && n >= 0 && n <= 4;
+      }
+      default:
+        return true;
+    }
+  }
+
+  function goNext() {
+    if (!canContinue()) return;
+    setError("");
+    setI((k) => Math.min(k + 1, PLAYER_STEPS.length - 1));
+  }
+  function goBack() {
+    setError("");
+    setI((k) => Math.max(k - 1, 0));
+  }
 
   async function finish() {
     setError("");
-    if (!valid) {
-      setError("Add your name, grad year, position, state and GPA to continue.");
-      return;
-    }
     setSaving(true);
     const totalHeight =
       heightFt || heightIn
         ? Number(heightFt || 0) * 12 + Number(heightIn || 0)
         : null;
-
     const num = (v: string) => (v === "" ? null : Number(v));
 
     const { error: pErr } = await supabase
@@ -235,293 +334,387 @@ function PlayerProfile({
         state: state || null,
         is_transfer: isTransfer,
         current_school: isTransfer ? currentSchool.trim() || null : null,
-        sixty_yd: num(sixty),
-        exit_velo: isPitcher(primary) ? null : num(exitVelo),
+        sixty_yd: pitcher ? null : num(sixty),
+        exit_velo: pitcher ? null : num(exitVelo),
         inf_velo:
-          !isPitcher(primary) && !isCatcher(primary) && !isOutfielder(primary)
+          !pitcher && !isCatcher(primary) && !isOutfielder(primary)
             ? num(throwVelo)
             : null,
         of_velo: isOutfielder(primary) ? num(throwVelo) : null,
-        fastball_velo: isPitcher(primary) ? num(fastball) : null,
+        fastball_velo: pitcher ? num(fastball) : null,
         pop_time: isCatcher(primary) ? num(popTime) : null,
         bio: bio.trim() || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
 
+    setSaving(false);
     if (pErr || plErr) {
-      setSaving(false);
       setError((pErr ?? plErr)?.message ?? "Something went wrong. Try again.");
       return;
     }
-    window.location.href = "/fits";
+    setI(PLAYER_STEPS.indexOf("done"));
   }
 
-  const years = useMemo(() => {
-    const now = new Date().getFullYear();
-    return Array.from({ length: 6 }, (_, i) => now + i - 1);
-  }, []);
+  const isIntro = step === "intro";
+  const isAbout = step === "about";
+  const isDone = step === "done";
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-3xl font-display font-bold tracking-tight">
-          Build your profile
-        </h1>
-        <p className="mt-2 text-body-2">
-          This is your application. The more complete, the better your fits.
-        </p>
+    <main className="min-h-dvh flex flex-col px-6 pt-12 pb-10">
+      <div className="flex items-center gap-4">
+        {i > 0 && !isDone ? (
+          <button onClick={goBack} className="text-muted" aria-label="Back">
+            <ArrowLeft size={22} strokeWidth={2} />
+          </button>
+        ) : (
+          <span className="w-[22px]" />
+        )}
+        <StepProgress
+          total={PLAYER_STEPS.length}
+          current={i + 1}
+          className="flex-1"
+        />
       </div>
 
-      <Field label="Full name" htmlFor="name">
-        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-      </Field>
+      <div className="mt-8 flex-1">
+        {step === "intro" && <HowItWorks role="player" />}
 
-      <Field label="Positions" hint="Tap all you play — your first pick is your primary.">
-        <div className="flex flex-wrap gap-2">
-          {POSITIONS.map((pos) => {
-            const active = picked.includes(pos);
-            const isPrimary = primary === pos;
-            return (
-              <button
-                key={pos}
-                type="button"
-                onClick={() => togglePos(pos)}
-                className={cn(
-                  "h-9 rounded-pill px-3.5 text-sm font-semibold transition-colors",
-                  active
-                    ? "bg-accent text-surface"
-                    : "bg-chip text-body-2 hover:bg-accent-soft"
-                )}
-              >
-                {isPrimary ? `★ ${pos}` : pos}
-              </button>
-            );
-          })}
-        </div>
-      </Field>
+        {step === "name" && (
+          <div className="space-y-6">
+            <QHead title="First, what's your name?" />
+            <Field label="Full name" htmlFor="name">
+              <Input
+                id="name"
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && goNext()}
+                placeholder="First Last"
+              />
+            </Field>
+          </div>
+        )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Grad year" htmlFor="grad">
-          <Select
-            id="grad"
-            value={gradYear}
-            onChange={(e) => setGradYear(e.target.value)}
-          >
-            <option value="">Select</option>
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="GPA" htmlFor="gpa">
-          <Input
-            id="gpa"
-            type="number"
-            step="0.01"
-            min="0"
-            max="4"
-            inputMode="decimal"
-            placeholder="3.4"
-            value={gpa}
-            onChange={(e) => setGpa(e.target.value)}
-          />
-        </Field>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="City" htmlFor="city">
-          <Input
-            id="city"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="Wichita"
-          />
-        </Field>
-        <Field label="State" htmlFor="state">
-          <Select
-            id="state"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-          >
-            <option value="">Select</option>
-            {STATES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Bats" htmlFor="bats">
-          <Select id="bats" value={bats} onChange={(e) => setBats(e.target.value)}>
-            <option value="">—</option>
-            {BATS.map((b) => (
-              <option key={b} value={b}>
-                {b === "S" ? "Switch" : b === "R" ? "Right" : "Left"}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Throws" htmlFor="throws">
-          <Select
-            id="throws"
-            value={throws}
-            onChange={(e) => setThrows(e.target.value)}
-          >
-            <option value="">—</option>
-            {THROWS.map((t) => (
-              <option key={t} value={t}>
-                {t === "R" ? "Right" : "Left"}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        <Field label="Height" htmlFor="hft">
-          <div className="flex gap-2">
-            <Input
-              id="hft"
-              type="number"
-              inputMode="numeric"
-              placeholder="6"
-              value={heightFt}
-              onChange={(e) => setHeightFt(e.target.value)}
-              aria-label="Feet"
+        {step === "positions" && (
+          <div className="space-y-6">
+            <QHead
+              title="What do you play?"
+              sub="Tap all you play — your first pick is your primary (★)."
             />
-            <Input
-              type="number"
-              inputMode="numeric"
-              placeholder="1"
-              value={heightIn}
-              onChange={(e) => setHeightIn(e.target.value)}
-              aria-label="Inches"
+            <div className="flex flex-wrap gap-2">
+              {POSITIONS.map((pos) => (
+                <button
+                  key={pos}
+                  type="button"
+                  onClick={() => togglePos(pos)}
+                  className={cn(
+                    "h-10 rounded-pill px-4 text-sm font-semibold transition-colors",
+                    picked.includes(pos)
+                      ? "bg-accent text-surface"
+                      : "bg-chip text-body-2 hover:bg-accent-soft"
+                  )}
+                >
+                  {primary === pos ? `★ ${pos}` : pos}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === "class" && (
+          <div className="space-y-6">
+            <QHead title="What's your class?" sub="Your graduation year." />
+            <div className="flex flex-wrap gap-2">
+              {years.map((y) => (
+                <OptionPill
+                  key={y}
+                  active={gradYear === String(y)}
+                  onClick={() => setGradYear(String(y))}
+                >
+                  {y}
+                </OptionPill>
+              ))}
+            </div>
+            <label className="flex items-center gap-3 rounded-input border border-border bg-surface p-3">
+              <input
+                type="checkbox"
+                checked={isTransfer}
+                onChange={(e) => setIsTransfer(e.target.checked)}
+                className="h-5 w-5 accent-accent"
+              />
+              <span className="text-[15px] text-ink">
+                I&rsquo;m a transfer (currently in college)
+              </span>
+            </label>
+            {isTransfer && (
+              <Field label="Current school" htmlFor="cs">
+                <Input
+                  id="cs"
+                  value={currentSchool}
+                  onChange={(e) => setCurrentSchool(e.target.value)}
+                  placeholder="Cowley College"
+                />
+              </Field>
+            )}
+          </div>
+        )}
+
+        {step === "location" && (
+          <div className="space-y-6">
+            <QHead
+              title="Where are you from?"
+              sub="Helps coaches gauge region and travel."
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="City" htmlFor="city">
+                <Input
+                  id="city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="Wichita"
+                />
+              </Field>
+              <Field label="State" htmlFor="state">
+                <Select
+                  id="state"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                >
+                  <option value="">Select</option>
+                  {STATES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+          </div>
+        )}
+
+        {step === "gpa" && (
+          <div className="space-y-6">
+            <QHead title="What's your GPA?" sub="On a 4.0 scale — coaches filter on this." />
+            <Field label="GPA" htmlFor="gpa">
+              <Input
+                id="gpa"
+                type="number"
+                step="0.01"
+                min="0"
+                max="4"
+                inputMode="decimal"
+                autoFocus
+                placeholder="3.4"
+                value={gpa}
+                onChange={(e) => setGpa(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && goNext()}
+              />
+            </Field>
+          </div>
+        )}
+
+        {step === "swing" && (
+          <div className="space-y-6">
+            <QHead
+              title={pitcher ? "Which arm do you throw with?" : "How do you hit & throw?"}
+            />
+            {!pitcher && (
+              <div>
+                <p className="mb-2 text-sm font-semibold text-body-2">Bats</p>
+                <div className="flex gap-2">
+                  {BATS.map((b) => (
+                    <OptionPill
+                      key={b}
+                      active={bats === b}
+                      onClick={() => setBats(b)}
+                    >
+                      {b === "S" ? "Switch" : b === "R" ? "Right" : "Left"}
+                    </OptionPill>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <p className="mb-2 text-sm font-semibold text-body-2">Throws</p>
+              <div className="flex gap-2">
+                {THROWS.map((t) => (
+                  <OptionPill
+                    key={t}
+                    active={throws === t}
+                    onClick={() => setThrows(t)}
+                  >
+                    {t === "R" ? "Right" : "Left"}
+                  </OptionPill>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === "body" && (
+          <div className="space-y-6">
+            <QHead title="Your measurables" sub="Optional — but coaches always look." />
+            <div
+              className={cn("grid gap-3", pitcher ? "grid-cols-2" : "grid-cols-3")}
+            >
+              <Field label="Height">
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="6"
+                    value={heightFt}
+                    onChange={(e) => setHeightFt(e.target.value)}
+                    aria-label="Feet"
+                  />
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="1"
+                    value={heightIn}
+                    onChange={(e) => setHeightIn(e.target.value)}
+                    aria-label="Inches"
+                  />
+                </div>
+              </Field>
+              <Field label="Weight" htmlFor="wt">
+                <Input
+                  id="wt"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="190"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                />
+              </Field>
+              {!pitcher && (
+                <Field label="60 time" htmlFor="sixty">
+                  <Input
+                    id="sixty"
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="6.8"
+                    value={sixty}
+                    onChange={(e) => setSixty(e.target.value)}
+                  />
+                </Field>
+              )}
+            </div>
+          </div>
+        )}
+
+        {step === "metrics" && (
+          <div className="space-y-6">
+            <QHead title="Your numbers" sub="Add what you've got — skip the rest." />
+            <div className="grid grid-cols-2 gap-3">
+              {pitcher ? (
+                <Field label="Fastball velo (mph)" htmlFor="fb">
+                  <Input
+                    id="fb"
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="86"
+                    value={fastball}
+                    onChange={(e) => setFastball(e.target.value)}
+                  />
+                </Field>
+              ) : (
+                <Field label="Exit velo (mph)" htmlFor="ev">
+                  <Input
+                    id="ev"
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="92"
+                    value={exitVelo}
+                    onChange={(e) => setExitVelo(e.target.value)}
+                  />
+                </Field>
+              )}
+              {isCatcher(primary) ? (
+                <Field label="Pop time (sec)" htmlFor="pop">
+                  <Input
+                    id="pop"
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="1.95"
+                    value={popTime}
+                    onChange={(e) => setPopTime(e.target.value)}
+                  />
+                </Field>
+              ) : !pitcher ? (
+                <Field
+                  label={isOutfielder(primary) ? "OF velo (mph)" : "INF velo (mph)"}
+                  htmlFor="tv"
+                >
+                  <Input
+                    id="tv"
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="82"
+                    value={throwVelo}
+                    onChange={(e) => setThrowVelo(e.target.value)}
+                  />
+                </Field>
+              ) : null}
+            </div>
+            <p className="text-xs text-muted-2">
+              No numbers yet? Leave them blank — you can add them any time from
+              your profile.
+            </p>
+          </div>
+        )}
+
+        {step === "about" && (
+          <div className="space-y-6">
+            <QHead
+              title="Tell coaches about you"
+              sub="A line or two in your own words — then let AI tighten it."
+            />
+            <AboutYouAI
+              value={bio}
+              onChange={setBio}
+              position={primary}
+              gradYear={gradYear}
             />
           </div>
-        </Field>
-        <Field label="Weight" htmlFor="wt">
-          <Input
-            id="wt"
-            type="number"
-            inputMode="numeric"
-            placeholder="190"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-          />
-        </Field>
-        <Field label="60 time" htmlFor="sixty">
-          <Input
-            id="sixty"
-            type="number"
-            step="0.01"
-            inputMode="decimal"
-            placeholder="6.8"
-            value={sixty}
-            onChange={(e) => setSixty(e.target.value)}
-          />
-        </Field>
+        )}
+
+        {step === "done" && <AppTour role="player" userId={userId} />}
       </div>
 
-      {/* Position-aware metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        {isPitcher(primary) ? (
-          <Field label="Fastball velo (mph)" htmlFor="fb">
-            <Input
-              id="fb"
-              type="number"
-              inputMode="numeric"
-              placeholder="86"
-              value={fastball}
-              onChange={(e) => setFastball(e.target.value)}
-            />
-          </Field>
-        ) : (
-          <Field label="Exit velo (mph)" htmlFor="ev">
-            <Input
-              id="ev"
-              type="number"
-              inputMode="numeric"
-              placeholder="92"
-              value={exitVelo}
-              onChange={(e) => setExitVelo(e.target.value)}
-            />
-          </Field>
-        )}
-        {isCatcher(primary) ? (
-          <Field label="Pop time (sec)" htmlFor="pop">
-            <Input
-              id="pop"
-              type="number"
-              step="0.01"
-              inputMode="decimal"
-              placeholder="1.95"
-              value={popTime}
-              onChange={(e) => setPopTime(e.target.value)}
-            />
-          </Field>
-        ) : !isPitcher(primary) ? (
-          <Field
-            label={isOutfielder(primary) ? "OF velo (mph)" : "INF velo (mph)"}
-            htmlFor="tv"
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+
+      <div className="mt-4">
+        {isDone ? (
+          <Button
+            size="lg"
+            full
+            onClick={() => (window.location.href = "/fits")}
           >
-            <Input
-              id="tv"
-              type="number"
-              inputMode="numeric"
-              placeholder="82"
-              value={throwVelo}
-              onChange={(e) => setThrowVelo(e.target.value)}
-            />
-          </Field>
+            Enter Athletx
+            <ArrowRight size={18} strokeWidth={2} aria-hidden />
+          </Button>
+        ) : isAbout ? (
+          <Button size="lg" full onClick={finish} disabled={saving}>
+            {saving ? "Saving…" : "Finish & see my fits"}
+            {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
+          </Button>
         ) : (
-          <span />
+          <Button
+            size="lg"
+            full
+            onClick={goNext}
+            disabled={!canContinue()}
+          >
+            {isIntro ? "Get started" : "Continue"}
+            <ArrowRight size={18} strokeWidth={2} aria-hidden />
+          </Button>
         )}
       </div>
-
-      <label className="flex items-center gap-3 rounded-input border border-border bg-surface p-3">
-        <input
-          type="checkbox"
-          checked={isTransfer}
-          onChange={(e) => setIsTransfer(e.target.checked)}
-          className="h-5 w-5 accent-accent"
-        />
-        <span className="text-[15px] text-ink">
-          I&rsquo;m a transfer (currently in college)
-        </span>
-      </label>
-      {isTransfer && (
-        <Field label="Current school" htmlFor="cs">
-          <Input
-            id="cs"
-            value={currentSchool}
-            onChange={(e) => setCurrentSchool(e.target.value)}
-            placeholder="Cowley College"
-          />
-        </Field>
-      )}
-
-      <Field label="About you" hint="One or two lines coaches should know.">
-        <Textarea
-          value={bio}
-          onChange={(e) => setBio(e.target.value)}
-          placeholder="Lefty bat, plus runner, team captain…"
-          maxLength={280}
-        />
-      </Field>
-
-      {error && <p className="text-sm text-danger">{error}</p>}
-
-      <Button size="lg" full onClick={finish} disabled={saving}>
-        {saving ? "Saving…" : "Finish & see my fits"}
-        {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
-      </Button>
-    </div>
+    </main>
   );
 }
 
