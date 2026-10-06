@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -31,8 +31,9 @@ import {
   isOutfielder,
 } from "@/lib/constants";
 import { CLIMATES } from "@/lib/climate";
+import { isEligible } from "@/lib/fit";
 import { CitySearch } from "@/components/onboarding/CitySearch";
-import type { UserRole } from "@/lib/types";
+import type { UserRole, Player, Need } from "@/lib/types";
 
 const SIZES: { value: string; label: string; hint: string }[] = [
   { value: "small", label: "Small", hint: "Under ~4k students" },
@@ -183,6 +184,7 @@ type PKey =
   | "class"
   | "location"
   | "gpa"
+  | "teaser"
   | "swing"
   | "body"
   | "metrics"
@@ -199,6 +201,7 @@ const PLAYER_STEPS: PKey[] = [
   "class",
   "location",
   "gpa",
+  "teaser",
   "swing",
   "body",
   "metrics",
@@ -279,12 +282,46 @@ function PlayerWizard({
   const [prefStates, setPrefStates] = useState<string[]>([]);
   const [prefClimates, setPrefClimates] = useState<string[]>([]);
   const [prefSizes, setPrefSizes] = useState<string[]>([]);
+  const [matchCount, setMatchCount] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const primary = picked[0] ?? null;
   const step = PLAYER_STEPS[i];
   const pitcher = isPitcher(primary);
+  const openNeedsRef = useRef<Need[] | null>(null);
+
+  // On the teaser step, count how many open spots the player already matches.
+  useEffect(() => {
+    if (step !== "teaser") return;
+    let active = true;
+    setMatchCount(null);
+    (async () => {
+      let needs = openNeedsRef.current;
+      if (!needs) {
+        const { data } = await supabase
+          .from("needs")
+          .select(
+            "positions, grad_year_min, grad_year_max, accepts_transfer, min_gpa"
+          )
+          .eq("status", "open");
+        needs = (data ?? []) as unknown as Need[];
+        openNeedsRef.current = needs;
+      }
+      const me = {
+        positions: picked,
+        grad_year: gradYear ? Number(gradYear) : null,
+        is_transfer: isTransfer,
+        gpa: gpa ? Number(gpa) : null,
+      } as Player;
+      const n = needs.filter((nd) => isEligible(me, nd)).length;
+      if (active) setMatchCount(n);
+    })();
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   const toggle = (set: typeof setPrefDivisions) => (v: string) =>
     set((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
@@ -526,6 +563,37 @@ function PlayerWizard({
                 onKeyDown={(e) => e.key === "Enter" && goNext()}
               />
             </Field>
+          </div>
+        )}
+
+        {step === "teaser" && (
+          <div className="flex flex-col items-center justify-center pt-12 text-center">
+            {matchCount == null ? (
+              <p className="text-body-2">Finding your matches…</p>
+            ) : matchCount > 0 ? (
+              <>
+                <div className="font-display text-[88px] font-bold leading-none text-accent tabular-nums">
+                  {matchCount}
+                </div>
+                <h1 className="mt-3 text-2xl font-display font-bold tracking-tight">
+                  open {matchCount === 1 ? "spot" : "spots"} already match you
+                </h1>
+                <p className="mt-3 max-w-xs text-[15px] text-body-2">
+                  Finish your profile and we&rsquo;ll rank them by fit — then
+                  you apply in one tap.
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-2xl font-display font-bold tracking-tight">
+                  You&rsquo;re off to a strong start
+                </h1>
+                <p className="mt-3 max-w-xs text-[15px] text-body-2">
+                  Add a few more details and we&rsquo;ll surface the spots that
+                  fit you best.
+                </p>
+              </>
+            )}
           </div>
         )}
 
@@ -829,7 +897,11 @@ function PlayerWizard({
             onClick={goNext}
             disabled={!canContinue()}
           >
-            {isIntro ? "Get started" : "Continue"}
+            {step === "teaser"
+              ? "Keep going"
+              : isIntro
+                ? "Get started"
+                : "Continue"}
             <ArrowRight size={18} strokeWidth={2} aria-hidden />
           </Button>
         )}
