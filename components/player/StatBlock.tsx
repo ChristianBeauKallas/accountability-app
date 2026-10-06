@@ -131,6 +131,9 @@ export function StatBlock({
       metricTiles.push({ value: String(v), unit, label, tone: "accent" });
   };
   add(player.fastball_velo, "FB velo", "mph");
+  add(player.spin_rate, "Spin", "rpm");
+  if (player.era != null)
+    metricTiles.push({ value: player.era.toFixed(2), label: "ERA", tone: "accent" });
   add(player.pop_time, "Pop time", "sec");
   add(player.exit_velo, "Exit velo", "mph");
   if (player.batting_avg != null)

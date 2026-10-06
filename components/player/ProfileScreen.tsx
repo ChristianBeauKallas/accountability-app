@@ -316,6 +316,8 @@ function EditForm({
   const [battingAvg, setBattingAvg] = useState(
     player.batting_avg?.toString() ?? ""
   );
+  const [spinRate, setSpinRate] = useState(player.spin_rate?.toString() ?? "");
+  const [era, setEra] = useState(player.era?.toString() ?? "");
   const [pitches, setPitches] = useState<string[]>(player.pitches ?? []);
   const [isTransfer, setIsTransfer] = useState(player.is_transfer);
   const [currentSchool, setCurrentSchool] = useState(player.current_school ?? "");
@@ -444,6 +446,8 @@ function EditForm({
           hasHit && !catcherAny && !outfielderAny ? num(throwVelo) : null,
         of_velo: hasHit && outfielderAny && !catcherAny ? num(throwVelo) : null,
         fastball_velo: hasPitch ? num(fastball) : null,
+        spin_rate: hasPitch ? num(spinRate) : null,
+        era: hasPitch ? num(era) : null,
         pop_time: hasHit && catcherAny ? num(popTime) : null,
         pitches: hasPitch ? pitches : [],
         bio: bio.trim() || null,
@@ -659,6 +663,29 @@ function EditForm({
                 inputMode="numeric"
                 value={fastball}
                 onChange={(e) => setFastball(e.target.value)}
+              />
+            </Field>
+          )}
+          {hasPitch && (
+            <Field label="Spin rate" htmlFor="spin">
+              <Input
+                id="spin"
+                type="number"
+                inputMode="numeric"
+                value={spinRate}
+                onChange={(e) => setSpinRate(e.target.value)}
+              />
+            </Field>
+          )}
+          {hasPitch && (
+            <Field label="ERA" htmlFor="era">
+              <Input
+                id="era"
+                type="number"
+                step="0.01"
+                inputMode="decimal"
+                value={era}
+                onChange={(e) => setEra(e.target.value)}
               />
             </Field>
           )}
