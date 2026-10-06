@@ -98,8 +98,7 @@ function Header({
 }) {
   return (
     <>
-      <div className="flex items-start justify-between">
-        <p className="eyebrow">Profile</p>
+      <div className="flex items-center justify-end">
         <HeaderActions showBell onEdit={onEdit} editLabel="Edit profile" />
       </div>
 
