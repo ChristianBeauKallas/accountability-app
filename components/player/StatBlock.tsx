@@ -133,6 +133,12 @@ export function StatBlock({
   add(player.fastball_velo, "FB velo", "mph");
   add(player.pop_time, "Pop time", "sec");
   add(player.exit_velo, "Exit velo", "mph");
+  if (player.batting_avg != null)
+    metricTiles.push({
+      value: player.batting_avg.toFixed(3).replace(/^0\./, "."),
+      label: "Batting avg",
+      tone: "accent",
+    });
   add(player.sixty_yd, "60 yard", "sec");
   add(player.inf_velo, "INF velo", "mph");
   add(player.of_velo, "OF velo", "mph");
