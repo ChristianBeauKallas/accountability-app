@@ -424,11 +424,9 @@ function ProfileScreen() {
         <div>
           <h2 className="eyebrow mb-2">About</h2>
           <p className="text-[15px] leading-relaxed text-body-2">
-            Twitchy middle infielder with plus hands, a quick first step, and
-            advanced barrel control to both gaps. Hit .410 with a .520 OBP and 14
-            steals in fall ball — I play my best when the game speeds up.
-            Three-year varsity starter carrying a 3.6 GPA, looking for a program
-            that develops middle infielders and competes for a conference title.
+            Twitchy middle infielder with plus hands and a quick first step.
+            Three-year varsity starter hitting .410 with a 3.6 GPA — looking for
+            a program that develops middle infielders.
           </p>
         </div>
 
