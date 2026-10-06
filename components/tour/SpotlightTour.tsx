@@ -2,12 +2,14 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { MockScreen, type ScreenKey } from "@/components/tour/MockScreens";
+import { InstallGuide } from "@/components/InstallGuide";
 
 export type TourStep = {
   screen: ScreenKey;
-  selector: string;
+  selector?: string;
   title: string;
   body: string;
+  install?: boolean;
 };
 
 type Rect = { top: number; left: number; width: number; height: number };
@@ -28,6 +30,7 @@ export function SpotlightTour({
 
   const step = steps[index];
   const last = index >= steps.length - 1;
+  const isInstall = !!step.install;
 
   // Measure the highlighted element inside the mock screen (and the app
   // column) whenever the step or its screen changes.
@@ -38,6 +41,10 @@ export function SpotlightTour({
     const measure = () => {
       const cr = container.getBoundingClientRect();
       setCol({ top: cr.top, left: cr.left, width: cr.width, height: cr.height });
+      if (isInstall || !step.selector) {
+        setRect(null);
+        return;
+      }
       const el = container.querySelector<HTMLElement>(step.selector);
       if (el) {
         const r = el.getBoundingClientRect();
@@ -54,7 +61,7 @@ export function SpotlightTour({
       clearTimeout(t);
       window.removeEventListener("resize", measure);
     };
-  }, [index, step.selector, step.screen]);
+  }, [index, step.selector, step.screen, isInstall]);
 
   // Lock body scroll while the tour runs.
   useEffect(() => {
@@ -79,9 +86,11 @@ export function SpotlightTour({
   // Keep the tooltip inside the app column on wide screens.
   const tipLeft = col ? col.left + 14 : 14;
   const tipWidth = col ? col.width - 28 : vw - 28;
-  const tooltipStyle: React.CSSProperties = placeAbove
-    ? { bottom: vh - t + 12, left: tipLeft, width: tipWidth }
-    : { top: t + h + 12, left: tipLeft, width: tipWidth };
+  const tooltipStyle: React.CSSProperties = isInstall
+    ? { left: tipLeft, width: tipWidth, top: "50%", transform: "translateY(-50%)" }
+    : placeAbove
+      ? { bottom: vh - t + 12, left: tipLeft, width: tipWidth }
+      : { top: t + h + 12, left: tipLeft, width: tipWidth };
 
   return (
     <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true">
@@ -99,7 +108,9 @@ export function SpotlightTour({
       </div>
 
       {/* Spotlight: four dimmed panels leaving a clear hole over the target */}
-      {rect ? (
+      {isInstall ? (
+        <div className="absolute inset-0 bg-black/75" />
+      ) : rect ? (
         <>
           <div className={dim} style={{ top: 0, left: 0, width: "100%", height: t }} />
           <div
@@ -144,7 +155,13 @@ export function SpotlightTour({
         </h3>
         <p className="mt-1 text-sm leading-relaxed text-body-2">{step.body}</p>
 
-        <div className="mt-3 flex items-center justify-between">
+        {isInstall && (
+          <div className="mt-4">
+            <InstallGuide />
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center justify-between">
           <div className="flex gap-1.5">
             {steps.map((_, k) => (
               <span

@@ -1,10 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sun, Moon, Pencil, LogOut, Bell, BellOff, BellRing } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  Pencil,
+  LogOut,
+  Bell,
+  BellOff,
+  BellRing,
+  Download,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { OverflowMenu, MenuItem } from "@/components/OverflowMenu";
+import { InstallModal } from "@/components/InstallGuide";
+import { isStandalone } from "@/lib/pwa";
 import {
   pushSupported,
   isSubscribed,
@@ -25,9 +36,15 @@ export function HeaderActions({
   editLabel?: string;
 }) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [showInstall, setShowInstall] = useState(false);
+  const [canInstall, setCanInstall] = useState(false);
   const [pushState, setPushState] = useState<
     "unsupported" | "off" | "on" | "blocked" | "busy"
   >("unsupported");
+
+  useEffect(() => {
+    setCanInstall(!isStandalone());
+  }, []);
 
   useEffect(() => {
     const current =
@@ -117,10 +134,16 @@ export function HeaderActions({
             {editLabel}
           </MenuItem>
         )}
+        {canInstall && (
+          <MenuItem icon={Download} onClick={() => setShowInstall(true)}>
+            Add to home screen
+          </MenuItem>
+        )}
         <MenuItem icon={LogOut} onClick={signOut} danger>
           Sign out
         </MenuItem>
       </OverflowMenu>
+      {showInstall && <InstallModal onClose={() => setShowInstall(false)} />}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Compass } from "lucide-react";
 import { SpotlightTour, type TourStep } from "@/components/tour/SpotlightTour";
+import { isStandalone } from "@/lib/pwa";
 
 function WelcomeTourInner({
   steps,
@@ -16,6 +17,14 @@ function WelcomeTourInner({
   const router = useRouter();
   const pathname = usePathname();
   const [phase, setPhase] = useState<"idle" | "modal" | "tour">("idle");
+  const [standalone, setStandalone] = useState(false);
+
+  useEffect(() => {
+    setStandalone(isStandalone());
+  }, []);
+
+  // Drop the "add to home screen" step once they're already in the app.
+  const tourSteps = standalone ? steps.filter((s) => !s.install) : steps;
 
   useEffect(() => {
     if (params.get("welcome") !== "1") return;
@@ -46,7 +55,7 @@ function WelcomeTourInner({
   }
 
   if (phase === "idle") return null;
-  if (phase === "tour") return <SpotlightTour steps={steps} onClose={dismiss} />;
+  if (phase === "tour") return <SpotlightTour steps={tourSteps} onClose={dismiss} />;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 px-6">
