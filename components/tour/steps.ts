@@ -43,6 +43,12 @@ export const PLAYER_TOUR: TourStep[] = [
     title: "Build your profile",
     body: "Add a profile photo, upload highlight videos, and post updates — the more complete you are, the more spots you match.",
   },
+  {
+    screen: "profile",
+    install: true,
+    title: "Save Athletx to your phone",
+    body: "Athletx works better as an app on your home screen — full-screen, one tap away, and it's what makes coach alerts reliable.",
+  },
 ];
 
 export const COACH_TOUR: TourStep[] = [
@@ -69,5 +75,11 @@ export const COACH_TOUR: TourStep[] = [
     selector: '[data-tour="tab-program"]',
     title: "Sell your program",
     body: "Program is your public page — add facilities and updates so recruits can picture the fit.",
+  },
+  {
+    screen: "program",
+    install: true,
+    title: "Save Athletx to your phone",
+    body: "Athletx works better as an app on your home screen — full-screen, one tap away, and it's what makes recruit alerts reliable.",
   },
 ];
