@@ -150,12 +150,14 @@ type PKey =
   | "gpa"
   | "teaser"
   | "body"
-  | "metrics"
+  | "hitting"
+  | "pitching"
   | "prefs"
   | "about"
   | "done";
 
-const PLAYER_STEPS: PKey[] = [
+// Full order; "hitting"/"pitching" are included only when they apply.
+const PLAYER_STEP_ORDER: PKey[] = [
   "intro",
   "name",
   "positions",
@@ -164,7 +166,8 @@ const PLAYER_STEPS: PKey[] = [
   "gpa",
   "teaser",
   "body",
-  "metrics",
+  "hitting",
+  "pitching",
   "prefs",
   "about",
   "done",
@@ -313,6 +316,7 @@ function PlayerWizard({
   const [throwVelo, setThrowVelo] = useState("");
   const [fastball, setFastball] = useState("");
   const [popTime, setPopTime] = useState("");
+  const [battingAvg, setBattingAvg] = useState("");
   const [pitches, setPitches] = useState<string[]>([]);
   const [bio, setBio] = useState("");
   const [prefDivisions, setPrefDivisions] = useState<string[]>([]);
@@ -324,7 +328,6 @@ function PlayerWizard({
   const [error, setError] = useState("");
 
   const primary = picked[0] ?? null;
-  const step = PLAYER_STEPS[i];
   // Detect roles across ALL picked positions so a two-way player (or a
   // pitcher picked second) still gets the right questions.
   const fielders = picked.filter((p) => !isPitcher(p));
@@ -332,6 +335,17 @@ function PlayerWizard({
   const hasHit = fielders.length > 0;
   const catcherAny = fielders.some(isCatcher);
   const outfielderAny = fielders.some(isOutfielder);
+
+  // Position-player and pitching metrics live on their own steps; include
+  // each only when it applies (two-way players see both).
+  const PLAYER_STEPS = useMemo(
+    () =>
+      PLAYER_STEP_ORDER.filter((s) =>
+        s === "hitting" ? hasHit : s === "pitching" ? hasPitch : true
+      ),
+    [hasHit, hasPitch]
+  );
+  const step = PLAYER_STEPS[i];
   const openNeedsRef = useRef<Need[] | null>(null);
 
   // On the teaser step, count how many open spots the player already matches.
@@ -467,6 +481,7 @@ function PlayerWizard({
         current_school: isTransfer ? currentSchool.trim() || null : null,
         sixty_yd: hasHit ? num(sixty) : null,
         exit_velo: hasHit ? num(exitVelo) : null,
+        batting_avg: hasHit ? num(battingAvg) : null,
         inf_velo:
           hasHit && !catcherAny && !outfielderAny ? num(throwVelo) : null,
         of_velo: hasHit && outfielderAny && !catcherAny ? num(throwVelo) : null,
@@ -704,9 +719,7 @@ function PlayerWizard({
                 </div>
               </div>
             </div>
-            <div
-              className={cn("grid gap-3", hasHit ? "grid-cols-3" : "grid-cols-2")}
-            >
+            <div className="grid grid-cols-2 gap-3">
               <Field label="Height">
                 <div className="flex gap-2">
                   <Input
@@ -737,70 +750,39 @@ function PlayerWizard({
                   onChange={(e) => setWeight(e.target.value)}
                 />
               </Field>
-              {hasHit && (
-                <Field label="60 time" htmlFor="sixty">
-                  <Input
-                    id="sixty"
-                    type="number"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="6.8"
-                    value={sixty}
-                    onChange={(e) => setSixty(e.target.value)}
-                  />
-                </Field>
-              )}
             </div>
           </div>
         )}
 
-        {step === "metrics" && (
+        {step === "hitting" && (
           <div className="space-y-6">
-            <QHead title="Your numbers" />
-            {hasPitch && (
-              <div>
-                <p className="mb-2 text-sm font-semibold text-body-2">
-                  Pitches you throw
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {PITCHES.map((p) => (
-                    <OptionPill
-                      key={p}
-                      active={pitches.includes(p)}
-                      onClick={() => toggle(setPitches)(p)}
-                    >
-                      {p}
-                    </OptionPill>
-                  ))}
-                </div>
-              </div>
-            )}
+            <QHead
+              title="Position player numbers"
+              sub="All optional — add what you've got, skip the rest."
+            />
             <div className="grid grid-cols-2 gap-3">
-              {hasPitch && (
-                <Field label="Fastball velo (mph)" htmlFor="fb">
-                  <Input
-                    id="fb"
-                    type="number"
-                    inputMode="numeric"
-                    placeholder="86"
-                    value={fastball}
-                    onChange={(e) => setFastball(e.target.value)}
-                  />
-                </Field>
-              )}
-              {hasHit && (
-                <Field label="Exit velo (mph)" htmlFor="ev">
-                  <Input
-                    id="ev"
-                    type="number"
-                    inputMode="numeric"
-                    placeholder="92"
-                    value={exitVelo}
-                    onChange={(e) => setExitVelo(e.target.value)}
-                  />
-                </Field>
-              )}
-              {hasHit && catcherAny && (
+              <Field label="Exit velo (mph)" htmlFor="ev">
+                <Input
+                  id="ev"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="92"
+                  value={exitVelo}
+                  onChange={(e) => setExitVelo(e.target.value)}
+                />
+              </Field>
+              <Field label="60 time (sec)" htmlFor="sixty">
+                <Input
+                  id="sixty"
+                  type="number"
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="6.8"
+                  value={sixty}
+                  onChange={(e) => setSixty(e.target.value)}
+                />
+              </Field>
+              {catcherAny ? (
                 <Field label="Pop time (sec)" htmlFor="pop">
                   <Input
                     id="pop"
@@ -812,8 +794,7 @@ function PlayerWizard({
                     onChange={(e) => setPopTime(e.target.value)}
                   />
                 </Field>
-              )}
-              {hasHit && !catcherAny && (
+              ) : (
                 <Field
                   label={outfielderAny ? "OF velo (mph)" : "INF velo (mph)"}
                   htmlFor="tv"
@@ -828,11 +809,57 @@ function PlayerWizard({
                   />
                 </Field>
               )}
+              <Field label="Batting avg" htmlFor="ba">
+                <Input
+                  id="ba"
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  max="1"
+                  inputMode="decimal"
+                  placeholder=".380"
+                  value={battingAvg}
+                  onChange={(e) => setBattingAvg(e.target.value)}
+                />
+              </Field>
             </div>
-            <p className="text-xs text-muted-2">
-              No numbers yet? Leave them blank — you can add them any time from
-              your profile.
-            </p>
+          </div>
+        )}
+
+        {step === "pitching" && (
+          <div className="space-y-6">
+            <QHead
+              title="Pitching numbers"
+              sub="All optional — add what you've got, skip the rest."
+            />
+            <div>
+              <p className="mb-2 text-sm font-semibold text-body-2">
+                Pitches you throw
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {PITCHES.map((p) => (
+                  <OptionPill
+                    key={p}
+                    active={pitches.includes(p)}
+                    onClick={() => toggle(setPitches)(p)}
+                  >
+                    {p}
+                  </OptionPill>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Fastball velo (mph)" htmlFor="fb">
+                <Input
+                  id="fb"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="86"
+                  value={fastball}
+                  onChange={(e) => setFastball(e.target.value)}
+                />
+              </Field>
+            </div>
           </div>
         )}
 
