@@ -15,9 +15,11 @@ import type { Need } from "@/lib/types";
 export function NeedForm({
   programId,
   need,
+  firstNeed = false,
 }: {
   programId: string;
   need?: Need;
+  firstNeed?: boolean;
 }) {
   const supabase = createClient();
   const router = useRouter();
@@ -84,7 +86,8 @@ export function NeedForm({
       setError(err.message);
       return;
     }
-    router.push("/needs");
+    // After the very first need, drop into the inbox with the welcome tour.
+    router.push(firstNeed ? "/inbox?welcome=1" : "/needs");
     router.refresh();
   }
 
@@ -96,21 +99,42 @@ export function NeedForm({
   return (
     <main className="px-5 pt-12 pb-6">
       <div className="flex items-center justify-between">
-        <Link
-          href="/needs"
-          className="inline-flex items-center gap-1 text-sm font-semibold text-muted"
-        >
-          <ArrowLeft size={16} strokeWidth={2} aria-hidden />
-          Needs
-        </Link>
+        {firstNeed ? (
+          <Link
+            href="/inbox?welcome=1"
+            className="text-sm font-semibold text-muted"
+          >
+            Skip for now
+          </Link>
+        ) : (
+          <Link
+            href="/needs"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-muted"
+          >
+            <ArrowLeft size={16} strokeWidth={2} aria-hidden />
+            Needs
+          </Link>
+        )}
         <HeaderActions />
       </div>
 
-      <h1 className="mt-4 text-3xl font-display font-bold tracking-tight">
-        {editing ? "Edit need" : "Post a need"}
+      {firstNeed && <p className="eyebrow mt-4">Last step</p>}
+      <h1
+        className={cn(
+          "text-3xl font-display font-bold tracking-tight",
+          firstNeed ? "mt-1" : "mt-4"
+        )}
+      >
+        {editing
+          ? "Edit need"
+          : firstNeed
+            ? "Post your first need"
+            : "Post a need"}
       </h1>
       <p className="mt-1 text-[15px] text-body-2">
-        Only players who fit see this — and they show interest with one tap.
+        {firstNeed
+          ? "This is how players find you — only those who fit see it, and they show interest with one tap. You can post more anytime."
+          : "Only players who fit see this — and they show interest with one tap."}
       </p>
 
       <div className="mt-6 space-y-5">
@@ -267,7 +291,13 @@ export function NeedForm({
         {error && <p className="text-sm text-danger">{error}</p>}
 
         <Button size="lg" full onClick={submit} disabled={saving}>
-          {saving ? "Saving…" : editing ? "Save changes" : "Post need"}
+          {saving
+            ? "Saving…"
+            : editing
+              ? "Save changes"
+              : firstNeed
+                ? "Post need & open my inbox"
+                : "Post need"}
         </Button>
       </div>
     </main>

@@ -1121,8 +1121,11 @@ function CoachWizard({
     } catch {
       /* ignore */
     }
+    // Finish on the first-need form — a coach's inbox is empty until they
+    // post a need, so posting one is the real finale. From there they land
+    // in the inbox with the welcome tour.
     const t = setTimeout(() => {
-      window.location.href = "/inbox?welcome=1";
+      window.location.href = "/needs/new?welcome=1";
     }, 1400);
     return () => clearTimeout(t);
   }, [step]);
@@ -1176,31 +1179,48 @@ function CoachWizard({
       .update({ full_name: name.trim(), onboarded: true })
       .eq("id", userId);
 
-    const { data: program, error: progErr } = await supabase
-      .from("programs")
-      .insert({
-        name: programName.trim(),
-        division,
-        city: city.trim() || null,
-        state,
-        lat,
-        lng,
-        conference: conference.trim() || null,
-        about: about.trim() || null,
-      })
-      .select("id")
-      .single();
+    // Join an existing program for this school if one already exists (same
+    // name + state) so two coaches from the same school land on ONE program
+    // instead of creating duplicates. Otherwise create it.
+    const schoolName = programName.trim();
+    let programId: string | null = null;
 
-    if (progErr || !program) {
-      setSaving(false);
-      setError(progErr?.message ?? "Couldn't create your program. Try again.");
-      return;
+    let lookup = supabase
+      .from("programs")
+      .select("id")
+      .ilike("name", schoolName);
+    if (state) lookup = lookup.eq("state", state);
+    const { data: existing } = await lookup.limit(1);
+
+    if (existing && existing.length > 0) {
+      programId = existing[0].id;
+    } else {
+      const { data: program, error: progErr } = await supabase
+        .from("programs")
+        .insert({
+          name: schoolName,
+          division,
+          city: city.trim() || null,
+          state,
+          lat,
+          lng,
+          conference: conference.trim() || null,
+          about: about.trim() || null,
+        })
+        .select("id")
+        .single();
+
+      if (progErr || !program) {
+        setSaving(false);
+        setError(progErr?.message ?? "Couldn't create your program. Try again.");
+        return;
+      }
+      programId = program.id;
     }
 
     // Crowdsource the school + conference into the shared reference tables so
     // the next coach can pick them. Fire-and-forget — never block onboarding,
     // and duplicates are ignored at the DB level.
-    const schoolName = programName.trim();
     if (schoolName) {
       void supabase
         .from("schools")
@@ -1225,11 +1245,15 @@ function CoachWizard({
         );
     }
 
-    const { error: staffErr } = await supabase.from("program_staff").insert({
-      program_id: program.id,
-      profile_id: userId,
-      staff_role: staffRole,
-    });
+    // Add this coach to the program (ignore if they're already on it).
+    const { error: staffErr } = await supabase.from("program_staff").upsert(
+      {
+        program_id: programId,
+        profile_id: userId,
+        staff_role: staffRole,
+      },
+      { onConflict: "program_id,profile_id", ignoreDuplicates: true }
+    );
 
     setSaving(false);
     if (pErr || staffErr) {
