@@ -73,15 +73,25 @@ export function HeaderActions({
 
   async function togglePush() {
     if (pushState === "busy" || pushState === "blocked") return;
-    if (pushState === "on") {
-      setPushState("busy");
-      await disablePush();
-      setPushState("off");
-    } else {
-      setPushState("busy");
-      const ok = await enablePush();
-      setPushState(ok ? "on" : permission() === "denied" ? "blocked" : "off");
+    const turningOn = pushState !== "on";
+    setPushState("busy");
+    try {
+      if (turningOn) {
+        await enablePush();
+      } else {
+        await disablePush();
+      }
+    } catch {
+      /* fall through — re-derive the real state below */
     }
+    // Always re-derive from the browser so a failed/throwing toggle can never
+    // leave us stuck on "busy" (which would disable the menu item).
+    if (permission() === "denied") {
+      setPushState("blocked");
+      return;
+    }
+    const sub = await isSubscribed().catch(() => false);
+    setPushState(sub ? "on" : "off");
   }
 
   function toggleTheme() {
