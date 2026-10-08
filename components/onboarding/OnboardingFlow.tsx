@@ -956,13 +956,12 @@ function PlayerWizard({
           <div className="space-y-5">
             <div>
               <h1 className="text-2xl font-display font-bold leading-snug tracking-tight">
-                Tell coaches and recruiters who you are, where you&rsquo;re
-                playing now, and why they should consider you for their
-                opportunity.
+                Your bio — who you are and why coaches should take a look.
               </h1>
               <p className="mt-3 text-[15px] text-body-2">
-                4&ndash;5 sentences in your own words — then our platform will
-                clean it up for you.
+                Tap <span className="font-semibold text-ink">Generate</span> and
+                we&rsquo;ll draft it from everything you just entered — then edit
+                it however you like. Or write your own.
               </p>
             </div>
             <AboutYouAI
@@ -970,6 +969,34 @@ function PlayerWizard({
               onChange={setBio}
               position={primary}
               gradYear={gradYear}
+              generateFields={{
+                name,
+                gradYear,
+                isTransfer,
+                currentSchool: isTransfer ? currentSchool : "",
+                primary,
+                positions: picked,
+                city,
+                state,
+                heightIn:
+                  (Number(heightFt) || 0) * 12 + (Number(heightIn) || 0) ||
+                  undefined,
+                weightLb: weight,
+                bats: hasHit ? bats : "",
+                throws,
+                gpa,
+                sixty,
+                exitVelo: hasHit ? exitVelo : "",
+                battingAvg: hasHit ? battingAvg : "",
+                infVelo:
+                  hasHit && !catcherAny && !outfielderAny ? throwVelo : "",
+                ofVelo: hasHit && outfielderAny && !catcherAny ? throwVelo : "",
+                popTime: catcherAny ? popTime : "",
+                fastball: hasPitch ? fastball : "",
+                spinRate: hasPitch ? spinRate : "",
+                era: hasPitch ? era : "",
+                pitches: hasPitch ? pitches : [],
+              }}
             />
           </div>
         )}
