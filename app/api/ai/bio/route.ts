@@ -25,7 +25,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  let body: { text?: string; position?: string; gradYear?: string | number };
+  let body: {
+    text?: string;
+    mode?: "player" | "program";
+    position?: string;
+    gradYear?: string | number;
+    programName?: string;
+    division?: string;
+    conference?: string;
+  };
   try {
     body = await req.json();
   } catch {
@@ -40,22 +48,44 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "too_long" }, { status: 400 });
   }
 
-  const context = [
-    body.position ? `Primary position: ${body.position}.` : null,
-    body.gradYear ? `Class of ${body.gradYear}.` : null,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const isProgram = body.mode === "program";
 
-  const system =
-    "You polish a high-school or transfer baseball player's recruiting bio for a college-recruiting app. " +
-    "This is a recruit marketing themselves to college coaches and recruiters — your job is to present them in " +
-    "the best, most compelling light, leading with their strengths and what makes them worth recruiting. " +
-    "Rewrite the player's notes into a confident, authentic first-person bio a college coach would want to read. " +
-    "Rules: keep it to 3-5 sentences, under ~500 characters. Use ONLY facts the player gave you — never invent or " +
-    "inflate stats, schools, awards, positions, or measurements. Fix grammar, tighten the language, and frame their " +
-    "real details persuasively. Keep it confident and genuine — not arrogant, generic, or cliché. No hashtags, no " +
-    "emojis, no quotation marks around the result. Return ONLY the rewritten bio text.";
+  const context = isProgram
+    ? [
+        body.programName ? `Program: ${body.programName}.` : null,
+        body.division ? `Level: ${body.division}.` : null,
+        body.conference ? `Conference: ${body.conference}.` : null,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : [
+        body.position ? `Primary position: ${body.position}.` : null,
+        body.gradYear ? `Class of ${body.gradYear}.` : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+  const system = isProgram
+    ? "You polish a college baseball program's 'About' blurb for recruits on a college-recruiting app. " +
+      "A coach wrote rough notes about their program; your job is to turn them into a confident, authentic " +
+      "description a recruit would want to read — leading with what makes the program worth choosing (culture, " +
+      "player development, facilities, results, academics, and where they send players). " +
+      "Rules: keep it to 3-5 sentences, under ~500 characters. Use ONLY facts the coach gave you — never invent or " +
+      "inflate records, facilities, pipelines, rankings, or results. Fix grammar, tighten the language, and frame the " +
+      "real details persuasively. Keep it genuine — not arrogant, generic, or cliché. No hashtags, no emojis, no " +
+      "quotation marks around the result. Return ONLY the rewritten blurb."
+    : "You polish a high-school or transfer baseball player's recruiting bio for a college-recruiting app. " +
+      "This is a recruit marketing themselves to college coaches and recruiters — your job is to present them in " +
+      "the best, most compelling light, leading with their strengths and what makes them worth recruiting. " +
+      "Rewrite the player's notes into a confident, authentic first-person bio a college coach would want to read. " +
+      "Rules: keep it to 3-5 sentences, under ~500 characters. Use ONLY facts the player gave you — never invent or " +
+      "inflate stats, schools, awards, positions, or measurements. Fix grammar, tighten the language, and frame their " +
+      "real details persuasively. Keep it confident and genuine — not arrogant, generic, or cliché. No hashtags, no " +
+      "emojis, no quotation marks around the result. Return ONLY the rewritten bio text.";
+
+  const task = isProgram
+    ? `Coach's notes:\n${text}\n\nRewrite as the program's About blurb.`
+    : `Player's notes:\n${text}\n\nRewrite as a recruiting bio.`;
 
   try {
     const client = new Anthropic();
@@ -67,9 +97,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "user",
-          content:
-            (context ? context + "\n\n" : "") +
-            `Player's notes:\n${text}\n\nRewrite as a recruiting bio.`,
+          content: (context ? context + "\n\n" : "") + task,
         },
       ],
     });

@@ -10,12 +10,21 @@ export function AboutYouAI({
   onChange,
   position,
   gradYear,
+  mode = "player",
+  programName,
+  division,
+  conference,
 }: {
   value: string;
   onChange: (v: string) => void;
   position?: string | null;
   gradYear?: string | null;
+  mode?: "player" | "program";
+  programName?: string | null;
+  division?: string | null;
+  conference?: string | null;
 }) {
+  const isProgram = mode === "program";
   const [listening, setListening] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [note, setNote] = useState("");
@@ -79,7 +88,15 @@ export function AboutYouAI({
       const res = await fetch("/api/ai/bio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, position, gradYear }),
+        body: JSON.stringify({
+          text,
+          mode,
+          position,
+          gradYear,
+          programName,
+          division,
+          conference,
+        }),
       });
       if (res.status === 503) {
         setNote("AI polish isn't set up yet.");
@@ -115,7 +132,11 @@ export function AboutYouAI({
         <Textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="e.g. I'm a left-handed hitting shortstop at Wichita East, class of 2026. Hit .380 with plus speed last spring and captained the team…"
+          placeholder={
+            isProgram
+              ? "e.g. JUCO contender in the KJCCC. Turf infield, indoor cages and TrackMan. We develop hitters and send guys up — 11 to four-year programs the last three years. Hard-nosed culture, strong classroom support, and we compete for a conference title every season."
+              : "e.g. I'm a left-handed hitting shortstop at Wichita East, class of 2026. Hit .380 with plus speed last spring and captained the team…"
+          }
           maxLength={700}
           rows={6}
         />
@@ -148,7 +169,7 @@ export function AboutYouAI({
           className="inline-flex items-center gap-2 rounded-btn bg-ink px-3.5 py-2 text-sm font-semibold text-ground disabled:opacity-50"
         >
           <Sparkles size={16} strokeWidth={2} aria-hidden />
-          {polishing ? "Polishing…" : "Polish for recruiting"}
+          {polishing ? "Polishing…" : isProgram ? "Polish" : "Polish for recruiting"}
         </button>
         {prev != null && (
           <button
@@ -165,8 +186,12 @@ export function AboutYouAI({
       <p className="text-xs text-muted-2">
         {note ||
           (speechSupported
-            ? "Type it, or tap the mic to say it — then we'll tighten it up for coaches."
-            : "Write it in your own words — then we'll tighten it up for coaches.")}
+            ? `Type it, or tap the mic to say it — then we'll tighten it up for ${
+                isProgram ? "recruits" : "coaches"
+              }.`
+            : `Write it in your own words — then we'll tighten it up for ${
+                isProgram ? "recruits" : "coaches"
+              }.`)}
       </p>
     </div>
   );
