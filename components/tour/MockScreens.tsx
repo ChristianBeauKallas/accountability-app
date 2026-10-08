@@ -625,7 +625,7 @@ function NeedsScreen() {
     <Shell tabs={COACH_TABS} active="needs">
       <ScreenTitle
         title="Needs"
-        sub="Post the spots you're recruiting for — only players who fit see them."
+        sub="Who you need, spot by spot — only players who fit see them."
       />
       <div className="space-y-3.5">
         <NeedCard
