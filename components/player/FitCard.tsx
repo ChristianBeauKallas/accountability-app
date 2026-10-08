@@ -81,7 +81,12 @@ export function FitCard({
         </div>
       </div>
 
-      <p className="text-[15px] font-semibold text-ink">{need.title}</p>
+      <div className="space-y-1">
+        <p className="text-[15px] font-semibold text-ink">{need.title}</p>
+        {need.description && (
+          <p className="text-sm leading-snug text-body-2">{need.description}</p>
+        )}
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {matched.map((p) => (

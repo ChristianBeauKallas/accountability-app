@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { HeaderActions } from "@/components/HeaderActions";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -69,6 +69,8 @@ export function NeedForm({
   const [minSixty, setMinSixty] = useState(need?.min_sixty?.toString() ?? "");
   const [minPop, setMinPop] = useState(need?.min_pop_time?.toString() ?? "");
   const [description, setDescription] = useState(need?.description ?? "");
+  const [generating, setGenerating] = useState(false);
+  const [genNote, setGenNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -102,6 +104,60 @@ export function NeedForm({
     setPitchesWanted((cur) =>
       cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]
     );
+  }
+
+  // Ask the AI to write a headline + short description from what's entered.
+  // Falls back gracefully — the coach can always type their own.
+  async function generate() {
+    if (!position || generating) return;
+    setGenerating(true);
+    setGenNote("");
+    try {
+      const keywords = mustHave
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const res = await fetch("/api/ai/need", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          programId,
+          position,
+          gradMin,
+          gradMax,
+          acceptsTransfer,
+          minGpa,
+          pitches: pitcher ? pitchesWanted : [],
+          mustHave: keywords,
+          minExit,
+          minFb,
+          minSixty,
+          minPop,
+        }),
+      });
+      if (res.status === 503) {
+        setGenNote("AI isn't set up yet — write your own below.");
+        return;
+      }
+      if (!res.ok) {
+        setGenNote("Couldn't generate — try again, or write your own.");
+        return;
+      }
+      const data = (await res.json()) as {
+        title?: string;
+        description?: string;
+      };
+      if (data.title) {
+        setTitle(data.title);
+        setTitleEdited(true);
+      }
+      if (data.description != null) setDescription(data.description);
+      setGenNote("Generated ✨ — tweak anything you want.");
+    } catch {
+      setGenNote("Couldn't generate — try again, or write your own.");
+    } finally {
+      setGenerating(false);
+    }
   }
 
   async function submit() {
@@ -223,28 +279,7 @@ export function NeedForm({
           </div>
         </Field>
 
-        {/* 2. Title — suggested from the position, fully editable. */}
-        <Field
-          label="Title"
-          hint={
-            position
-              ? "Suggested from the position — edit it however you like."
-              : "Pick a position and we'll suggest a title."
-          }
-          htmlFor="t"
-        >
-          <Input
-            id="t"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              setTitleEdited(true);
-            }}
-            placeholder="e.g. RHP — mid-80s+"
-          />
-        </Field>
-
-        {/* 3. Position-specific bar — only the metrics that fit the spot. */}
+        {/* 2. Position-specific bar — only the metrics that fit the spot. */}
         {position && (
           <div>
             <p className="eyebrow mb-2">
@@ -401,15 +436,49 @@ export function NeedForm({
           />
         </Field>
 
-        <Field label="Description" htmlFor="d">
-          <Textarea
-            id="d"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What you're looking for, role, timeline…"
-            maxLength={500}
-          />
-        </Field>
+        {/* 5. Headline & description — generated from everything above. */}
+        <div className="space-y-3 border-t border-divider pt-5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="eyebrow">Headline &amp; description</p>
+            <button
+              type="button"
+              onClick={generate}
+              disabled={!position || generating}
+              className="inline-flex items-center gap-1.5 rounded-btn bg-ink px-3 py-1.5 text-sm font-semibold text-ground disabled:opacity-50"
+            >
+              <Sparkles size={15} strokeWidth={2} aria-hidden />
+              {generating ? "Generating…" : "Generate with AI"}
+            </button>
+          </div>
+
+          <Field label="Headline" htmlFor="t">
+            <Input
+              id="t"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setTitleEdited(true);
+              }}
+              placeholder="e.g. RHP — mid-80s+"
+            />
+          </Field>
+
+          <Field label="Short description" htmlFor="d">
+            <Textarea
+              id="d"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What you're looking for, role, timeline…"
+              maxLength={500}
+              rows={3}
+            />
+          </Field>
+
+          <p className="text-xs text-muted-2">
+            {genNote ||
+              "Pick a position and set the bar, then let us draft the post — edit anything."}
+          </p>
+        </div>
 
         {error && <p className="text-sm text-danger">{error}</p>}
 
