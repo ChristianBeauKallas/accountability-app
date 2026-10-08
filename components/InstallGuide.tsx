@@ -5,20 +5,44 @@ import {
   Share,
   Plus,
   MoreVertical,
+  MonitorDown,
   Check,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { getPlatform, getInstallEvent } from "@/lib/pwa";
 
-function Step({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+// A single numbered step. The filled number badge makes the sequence obvious.
+function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
-    <li className="flex items-center gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-accent-soft text-accent">
-        <Icon size={18} strokeWidth={2} aria-hidden />
+    <li className="flex items-start gap-3">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-surface">
+        {n}
       </span>
-      <span className="text-[15px] leading-snug text-body-2">{children}</span>
+      <span className="pt-0.5 text-[15px] leading-snug text-body-2">{children}</span>
     </li>
+  );
+}
+
+// An OS glyph shown inline next to the word it names, so coaches recognize the
+// exact icon to tap (the Share box, the ⋮ menu, the address-bar install icon).
+function Glyph({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <span className="mx-0.5 inline-flex h-5 w-5 translate-y-[3px] items-center justify-center rounded bg-chip text-ink">
+      <Icon size={13} strokeWidth={2.25} aria-hidden />
+    </span>
+  );
+}
+
+function OrDivider() {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="h-px flex-1 bg-divider" />
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-2">
+        or step by step
+      </span>
+      <span className="h-px flex-1 bg-divider" />
+    </div>
   );
 }
 
@@ -47,17 +71,20 @@ export function InstallGuide() {
 
   if (platform === "ios") {
     return (
-      <ol className="space-y-3">
-        <Step icon={Share}>
-          Tap the <span className="font-semibold text-ink">Share</span> icon in
-          Safari&rsquo;s toolbar.
+      <ol className="space-y-3.5">
+        <Step n={1}>
+          Tap the <span className="font-semibold text-ink">Share</span> icon
+          <Glyph icon={Share} /> in Safari&rsquo;s toolbar (the bar at the bottom
+          of the screen).
         </Step>
-        <Step icon={Plus}>
-          Choose <span className="font-semibold text-ink">Add to Home Screen</span>.
+        <Step n={2}>
+          Scroll down and tap{" "}
+          <span className="font-semibold text-ink">Add to Home Screen</span>
+          <Glyph icon={Plus} />.
         </Step>
-        <Step icon={Check}>
-          Tap <span className="font-semibold text-ink">Add</span> — and open
-          Athletx like any other app.
+        <Step n={3}>
+          Tap <span className="font-semibold text-ink">Add</span> in the top
+          corner — then open Athletx from your home screen like any other app.
         </Step>
       </ol>
     );
@@ -67,24 +94,28 @@ export function InstallGuide() {
     return (
       <div className="space-y-4">
         {evt && (
-          <button
-            onClick={oneTap}
-            className="h-12 w-full rounded-btn bg-accent text-base font-semibold text-surface"
-          >
-            Install Athletx
-          </button>
+          <>
+            <button
+              onClick={oneTap}
+              className="h-12 w-full rounded-btn bg-accent text-base font-semibold text-surface"
+            >
+              Install Athletx
+            </button>
+            <OrDivider />
+          </>
         )}
-        <ol className="space-y-3">
-          <Step icon={MoreVertical}>
-            Open the <span className="font-semibold text-ink">⋮</span> menu in
-            Chrome.
+        <ol className="space-y-3.5">
+          <Step n={1}>
+            Tap the <span className="font-semibold text-ink">menu</span>
+            <Glyph icon={MoreVertical} /> in the top-right of Chrome.
           </Step>
-          <Step icon={Plus}>
-            Tap <span className="font-semibold text-ink">Install app</span> (or Add
-            to Home screen).
+          <Step n={2}>
+            Tap <span className="font-semibold text-ink">Install app</span> (or{" "}
+            <span className="font-semibold text-ink">Add to Home screen</span>).
           </Step>
-          <Step icon={Check}>
-            Confirm — and open Athletx like any other app.
+          <Step n={3}>
+            Tap <span className="font-semibold text-ink">Install</span> to confirm
+            — then open Athletx from your home screen.
           </Step>
         </ol>
       </div>
@@ -94,18 +125,29 @@ export function InstallGuide() {
   return (
     <div className="space-y-4">
       {evt && (
-        <button
-          onClick={oneTap}
-          className="h-12 w-full rounded-btn bg-accent text-base font-semibold text-surface"
-        >
-          Install Athletx
-        </button>
+        <>
+          <button
+            onClick={oneTap}
+            className="h-12 w-full rounded-btn bg-accent text-base font-semibold text-surface"
+          >
+            Install Athletx
+          </button>
+          <OrDivider />
+        </>
       )}
-      <ol className="space-y-3">
-        <Step icon={Plus}>
-          Click the install icon in your browser&rsquo;s address bar, or open the
-          browser menu and choose{" "}
-          <span className="font-semibold text-ink">Install Athletx</span>.
+      <ol className="space-y-3.5">
+        <Step n={1}>
+          Click the <span className="font-semibold text-ink">install icon</span>
+          <Glyph icon={MonitorDown} /> at the right end of the address bar — or
+          open the browser <span className="font-semibold text-ink">menu</span>
+          <Glyph icon={MoreVertical} /> if you don&rsquo;t see it.
+        </Step>
+        <Step n={2}>
+          Choose <span className="font-semibold text-ink">Install Athletx</span>.
+        </Step>
+        <Step n={3}>
+          Click <span className="font-semibold text-ink">Install</span> — Athletx
+          opens in its own window.
         </Step>
       </ol>
     </div>
