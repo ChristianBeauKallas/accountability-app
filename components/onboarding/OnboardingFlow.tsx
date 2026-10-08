@@ -1063,7 +1063,6 @@ type CKey =
   | "role"
   | "program"
   | "level"
-  | "location"
   | "about"
   | "done";
 
@@ -1073,7 +1072,6 @@ const COACH_STEPS: CKey[] = [
   "program",
   "role",
   "level",
-  "location",
   "about",
   "done",
 ];
@@ -1107,6 +1105,9 @@ function CoachWizard({
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [schoolPicked, setSchoolPicked] = useState(false);
+  // True once a school is committed (picked from the list or added as new),
+  // which reveals the inline location picker in the program step.
+  const [schoolChosen, setSchoolChosen] = useState(false);
   const [about, setAbout] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -1131,11 +1132,9 @@ function CoachWizard({
       case "name":
         return !!name.trim();
       case "program":
-        return !!programName.trim();
+        return !!programName.trim() && !!state;
       case "level":
         return !!division && !!conference.trim();
-      case "location":
-        return !!state;
       default:
         return true;
     }
@@ -1319,9 +1318,11 @@ function CoachWizard({
                 value={programName}
                 onChange={(v) => {
                   setProgramName(v);
-                  // Editing away from a picked school drops its prefilled
-                  // location so we don't carry the wrong city/state forward.
-                  if (schoolPicked) {
+                  // Editing the name re-opens the search: forget the chosen
+                  // school and drop any prefilled location so we don't carry
+                  // the wrong city/state forward.
+                  setSchoolChosen(false);
+                  if (schoolPicked || city || state) {
                     setCity("");
                     setState("");
                     setLat(null);
@@ -1331,22 +1332,45 @@ function CoachWizard({
                 }}
                 onPick={(s) => {
                   setProgramName(s.name);
-                  if (s.state) {
-                    setCity(s.city ?? "");
-                    setState(s.state);
-                    setLat(s.lat);
-                    setLng(s.lng);
-                    setSchoolPicked(true);
-                  }
+                  setCity(s.city ?? "");
+                  setState(s.state ?? "");
+                  setLat(s.lat);
+                  setLng(s.lng);
+                  setSchoolPicked(true);
+                  setSchoolChosen(true);
+                }}
+                onAddNew={() => {
+                  // New school — start its location blank for the coach to set.
+                  setCity("");
+                  setState("");
+                  setLat(null);
+                  setLng(null);
+                  setSchoolPicked(false);
+                  setSchoolChosen(true);
                 }}
               />
-              {schoolPicked && state && (
-                <p className="mt-2 text-sm text-muted-2">
-                  We&rsquo;ll prefill your location
-                  {city ? ` — ${city}, ${state}` : ` — ${state}`}.
-                </p>
-              )}
             </Field>
+
+            {schoolChosen && (
+              <div>
+                <p className="mb-1.5 text-sm font-medium text-body-2">
+                  Where is {programName.trim() || "your school"}?
+                </p>
+                <CitySearch
+                  key={`${programName}|${schoolPicked ? "picked" : "new"}`}
+                  value={{ city, state, lat, lng }}
+                  onChange={(v) => {
+                    setCity(v.city);
+                    setState(v.state);
+                    setLat(v.lat);
+                    setLng(v.lng);
+                  }}
+                />
+                <p className="mt-2 text-xs text-muted-2">
+                  This helps us match you with players nearby.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -1371,24 +1395,6 @@ function CoachWizard({
                 onChange={setConference}
               />
             </Field>
-          </div>
-        )}
-
-        {step === "location" && (
-          <div className="space-y-6">
-            <QHead
-              title="Where's your school?"
-              sub="This helps us match you with the right players nearby."
-            />
-            <CitySearch
-              value={{ city, state, lat, lng }}
-              onChange={(v) => {
-                setCity(v.city);
-                setState(v.state);
-                setLat(v.lat);
-                setLng(v.lng);
-              }}
-            />
           </div>
         )}
 

@@ -23,10 +23,12 @@ export function SchoolSearch({
   value,
   onChange,
   onPick,
+  onAddNew,
 }: {
   value: string;
   onChange: (name: string) => void;
   onPick: (school: SchoolRow) => void;
+  onAddNew?: (name: string) => void;
 }) {
   const supabase = useRef(createClient()).current;
   const [results, setResults] = useState<SchoolRow[]>([]);
@@ -89,7 +91,9 @@ export function SchoolSearch({
   // typed name as free text (no location prefill); the coach sets the
   // location on the next step, and it's saved as a new school on finish.
   function addNew() {
-    onChange(value.trim());
+    const name = value.trim();
+    onChange(name);
+    onAddNew?.(name);
     setOpen(false);
     setResults([]);
   }
