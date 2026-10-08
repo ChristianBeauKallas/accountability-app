@@ -1319,7 +1319,15 @@ function CoachWizard({
                 value={programName}
                 onChange={(v) => {
                   setProgramName(v);
-                  setSchoolPicked(false);
+                  // Editing away from a picked school drops its prefilled
+                  // location so we don't carry the wrong city/state forward.
+                  if (schoolPicked) {
+                    setCity("");
+                    setState("");
+                    setLat(null);
+                    setLng(null);
+                    setSchoolPicked(false);
+                  }
                 }}
                 onPick={(s) => {
                   setProgramName(s.name);

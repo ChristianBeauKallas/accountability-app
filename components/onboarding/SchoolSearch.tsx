@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { GraduationCap, Search } from "lucide-react";
+import { GraduationCap, Plus, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export type SchoolRow = {
@@ -70,7 +70,7 @@ export function SchoolSearch({
       return ap - bp || a.name.localeCompare(b.name);
     });
     setResults(rows);
-    setOpen(rows.length > 0);
+    setOpen(rows.length > 0 || term.length >= 2);
   }
 
   function onType(v: string) {
@@ -85,6 +85,22 @@ export function SchoolSearch({
     setResults([]);
   }
 
+  // "This isn't one of the listed schools — use what I typed." Keeps the
+  // typed name as free text (no location prefill); the coach sets the
+  // location on the next step, and it's saved as a new school on finish.
+  function addNew() {
+    onChange(value.trim());
+    setOpen(false);
+    setResults([]);
+  }
+
+  // Always offer "use what I typed" while the coach is typing: schools are
+  // scoped by state, so a same-named school in another state (Sterling
+  // College, KS vs TX) is a legitimate new entry — and we don't know their
+  // state until the next step, so we can never assume a suggestion is theirs.
+  const term = value.trim();
+  const showAdd = term.length >= 2;
+
   return (
     <div className="relative" ref={boxRef}>
       <div className="relative">
@@ -98,7 +114,7 @@ export function SchoolSearch({
           type="text"
           value={value}
           onChange={(e) => onType(e.target.value)}
-          onFocus={() => results.length > 0 && setOpen(true)}
+          onFocus={() => (results.length > 0 || showAdd) && setOpen(true)}
           autoComplete="off"
           autoCapitalize="words"
           placeholder="e.g. Cowley College"
@@ -106,7 +122,7 @@ export function SchoolSearch({
         />
       </div>
 
-      {open && results.length > 0 && (
+      {open && (results.length > 0 || showAdd) && (
         <ul className="absolute z-20 mt-1.5 max-h-72 w-full overflow-y-auto rounded-card border border-border bg-surface py-1 shadow-card">
           {results.map((s) => (
             <li key={`${s.name}-${s.state ?? ""}`}>
@@ -128,6 +144,30 @@ export function SchoolSearch({
               </button>
             </li>
           ))}
+
+          {showAdd && (
+            <li className={results.length > 0 ? "mt-1 border-t border-border pt-1" : ""}>
+              <button
+                type="button"
+                onClick={addNew}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left hover:bg-chip"
+              >
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <Plus size={15} strokeWidth={2.5} aria-hidden />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[15px] text-ink">
+                    Add &ldquo;{term}&rdquo;
+                  </span>
+                  <span className="block text-xs text-muted-2">
+                    {results.length > 0
+                      ? "Different school? You'll set its location next."
+                      : "Not listed yet — you'll set its location next."}
+                  </span>
+                </span>
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>
