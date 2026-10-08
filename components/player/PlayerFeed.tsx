@@ -9,6 +9,7 @@ import {
   Send,
   MessageSquare,
   Play,
+  ExternalLink,
   X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -104,6 +105,20 @@ function PostCard({
 }) {
   const [open, setOpen] = useState(false);
   const isVideo = post.media_type === "video";
+  // A highlight added as a link (YouTube/Hudl/X…) rather than an uploaded
+  // file — we don't host it, so link out instead of trying to play it inline.
+  const isExternal =
+    !!post.media_url &&
+    /^https?:\/\//i.test(post.media_url) &&
+    !post.media_url.includes("/storage/v1/object/public/");
+  const externalHost = (() => {
+    if (!isExternal || !post.media_url) return "";
+    try {
+      return new URL(post.media_url).hostname.replace(/^www\./, "");
+    } catch {
+      return "link";
+    }
+  })();
 
   return (
     <Card className="space-y-3">
@@ -114,8 +129,31 @@ function PostCard({
         </p>
       )}
 
+      {/* External highlight link — open in a new tab. */}
+      {post.media_url && isExternal && (
+        <a
+          href={post.media_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-input border border-border bg-surface px-4 py-3 hover:bg-chip"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-pill bg-accent-soft text-accent">
+            <Play size={18} strokeWidth={2.5} className="ml-0.5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-ink">
+              Watch highlights
+            </span>
+            <span className="block truncate text-xs text-muted-2">
+              {externalHost}
+            </span>
+          </span>
+          <ExternalLink size={16} strokeWidth={2} aria-hidden className="text-muted-2" />
+        </a>
+      )}
+
       {/* Square, cropped media — tap to open full */}
-      {post.media_url && (
+      {post.media_url && !isExternal && (
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -161,7 +199,7 @@ function PostCard({
         )}
       </div>
 
-      {open && post.media_url && (
+      {open && post.media_url && !isExternal && (
         <Lightbox url={post.media_url} isVideo={isVideo} onClose={() => setOpen(false)} />
       )}
     </Card>
