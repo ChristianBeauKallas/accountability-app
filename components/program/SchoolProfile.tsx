@@ -46,6 +46,8 @@ const STAFF_LABEL: Record<StaffRole, string> = {
   head: "Head coach",
   assistant: "Assistant coach",
   recruiting_coordinator: "Recruiting coordinator",
+  team_admin: "Team admin",
+  athletic_director: "Athletic director",
 };
 
 type Tab = "about" | "updates" | "facilities";
