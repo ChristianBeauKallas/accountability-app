@@ -1,21 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Target,
-  ShieldCheck,
-  Inbox,
-  ClipboardList,
-  User,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { BaseballIcon } from "@/components/ui/BaseballIcon";
-import { Field, Input, Textarea } from "@/components/ui/Field";
+import { Field, Input } from "@/components/ui/Field";
 import { StepProgress } from "@/components/ui/ProgressBar";
 import { AboutYouAI } from "@/components/onboarding/AboutYouAI";
 import {
@@ -67,75 +58,6 @@ function Finishing({ label }: { label: string }) {
       </div>
       <p className="font-display text-xl font-semibold text-ink">{label}</p>
     </main>
-  );
-}
-
-/* ----------------------------- Step 1: How ----------------------------- */
-
-function HowItWorks({ role }: { role: UserRole }) {
-  const items: { icon: LucideIcon; title: string; body: string }[] =
-    role === "coach"
-      ? [
-          {
-            icon: ClipboardList,
-            title: "Post the spots you need",
-            body: "List what you're recruiting for — position, class, and the bar you expect.",
-          },
-          {
-            icon: Inbox,
-            title: "See who fits, first",
-            body: "Only players who fit show up, strongest first. No cold DMs to dig through.",
-          },
-          {
-            icon: ShieldCheck,
-            title: "Reach out on your terms",
-            body: "You see a player once they show interest. Mark interest back and reach out.",
-          },
-        ]
-      : [
-          {
-            icon: User,
-            title: "Build your profile",
-            body: "Add your metrics, video, academics, and the levels and schools you want — everything a coach recruits on.",
-          },
-          {
-            icon: Target,
-            title: "We find your best fits",
-            body: "Our algorithm compares your profile to what every program is recruiting and ranks the spots you fit best.",
-          },
-          {
-            icon: ShieldCheck,
-            title: "You control the recruiting process",
-            body: "Tap I'm Interested and the coach sees you. Coaches can't browse players — you decide who gets your info.",
-          },
-        ];
-
-  return (
-    <div>
-      <h1 className="text-3xl font-display font-bold tracking-tight">
-        How Athletx works
-      </h1>
-      <p className="mt-2 text-body-2">
-        {role === "coach"
-          ? "Built to make recruiting less noisy."
-          : "Create your player profile and our network and platform do the work for you."}
-      </p>
-      <ul className="mt-8 space-y-6">
-        {items.map(({ icon: Icon, title, body }, i) => (
-          <li key={i} className="flex items-start gap-4">
-            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-pill bg-accent-soft text-accent">
-              <Icon size={20} strokeWidth={2} aria-hidden />
-            </span>
-            <div>
-              <h2 className="text-lg font-display font-semibold leading-tight">
-                {title}
-              </h2>
-              <p className="mt-1 text-[15px] text-body-2">{body}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 
@@ -1068,6 +990,57 @@ function PlayerWizard({
   );
 }
 
+/* -------------------- Coach intro carousel (3 steps) -------------------- */
+
+const COACH_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
+  {
+    screen: "needs",
+    title: "Post the spots you need",
+    body: "List the roster spots you're recruiting for — position, class, and the bar you expect.",
+  },
+  {
+    screen: "inbox",
+    title: "See who fits, first",
+    body: "Players who actually fit show up ranked best first. No cold DMs to dig through.",
+  },
+  {
+    screen: "inbox-mutual",
+    title: "Reach out on your terms",
+    body: "You only see a player once they show interest. Mark interest back and the two of you connect — recruits never get browsed.",
+  },
+];
+
+function CoachIntro({ slide }: { slide: number }) {
+  const s = COACH_INTRO[slide];
+  return (
+    <div className="flex h-full flex-col">
+      <p className="eyebrow">How Athletx works</p>
+      <div key={`t-${slide}`} className="animate-tour-screen">
+        <h1 className="mt-1 text-[26px] font-display font-bold leading-tight tracking-tight">
+          {s.title}
+        </h1>
+        <p className="mt-2 text-[15px] leading-relaxed text-body-2">{s.body}</p>
+      </div>
+      <div className="relative mt-5 flex flex-1 items-start justify-center">
+        <div key={`p-${slide}`} className="animate-tour-screen">
+          <PhonePreview screen={s.screen} height={436} />
+        </div>
+      </div>
+      <div className="mt-4 flex justify-center gap-2">
+        {COACH_INTRO.map((_, k) => (
+          <span
+            key={k}
+            className={
+              "h-1.5 rounded-pill transition-all " +
+              (k === slide ? "w-6 bg-accent" : "w-1.5 bg-border")
+            }
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------- Coach onboarding wizard ------------------------- */
 
 type CKey =
@@ -1095,6 +1068,8 @@ const STAFF_ROLES: { value: string; label: string }[] = [
   { value: "head", label: "Head coach" },
   { value: "assistant", label: "Assistant coach" },
   { value: "recruiting_coordinator", label: "Recruiting coordinator" },
+  { value: "team_admin", label: "Team admin" },
+  { value: "athletic_director", label: "Athletic director" },
 ];
 
 function CoachWizard({
@@ -1106,6 +1081,7 @@ function CoachWizard({
 }) {
   const supabase = createClient();
   const [i, setI] = useState(0);
+  const [introSlide, setIntroSlide] = useState(0);
   const [name, setName] = useState(initialName);
   const [staffRole, setStaffRole] = useState("head");
   const [programName, setProgramName] = useState("");
@@ -1141,7 +1117,7 @@ function CoachWizard({
       case "program":
         return !!programName.trim();
       case "level":
-        return !!division;
+        return !!division && !!conference.trim();
       case "location":
         return !!state;
       default:
@@ -1156,6 +1132,14 @@ function CoachWizard({
   function goBack() {
     setError("");
     setI((k) => Math.max(k - 1, 0));
+  }
+  function introNext() {
+    if (introSlide < COACH_INTRO.length - 1) setIntroSlide((s) => s + 1);
+    else goNext();
+  }
+  function handleBack() {
+    if (step === "intro" && introSlide > 0) setIntroSlide((s) => s - 1);
+    else goBack();
   }
 
   async function finish() {
@@ -1213,8 +1197,8 @@ function CoachWizard({
       style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
     >
       <div className="flex items-center gap-4">
-        {i > 0 ? (
-          <button onClick={goBack} className="text-muted" aria-label="Back">
+        {i > 0 || (isIntro && introSlide > 0) ? (
+          <button onClick={handleBack} className="text-muted" aria-label="Back">
             <ArrowLeft size={22} strokeWidth={2} />
           </button>
         ) : (
@@ -1228,7 +1212,7 @@ function CoachWizard({
       </div>
 
       <div className="mt-8 flex-1">
-        {step === "intro" && <HowItWorks role="coach" />}
+        {step === "intro" && <CoachIntro slide={introSlide} />}
 
         {step === "name" && (
           <div className="space-y-6">
@@ -1266,17 +1250,17 @@ function CoachWizard({
         {step === "program" && (
           <div className="space-y-6">
             <QHead
-              title="What program do you coach?"
+              title="What school or institution do you coach for?"
               sub="This is the name players see on your page."
             />
-            <Field label="Program name" htmlFor="pname">
+            <Field label="School / institution" htmlFor="pname">
               <Input
                 id="pname"
                 autoFocus
                 value={programName}
                 onChange={(e) => setProgramName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && goNext()}
-                placeholder="Cowley College"
+                placeholder="e.g. Cowley College"
               />
             </Field>
           </div>
@@ -1284,7 +1268,7 @@ function CoachWizard({
 
         {step === "level" && (
           <div className="space-y-6">
-            <QHead title="What level do you play at?" />
+            <QHead title="What level does your team compete at?" />
             <div className="flex flex-wrap gap-2">
               {DIVISIONS.map((d) => (
                 <OptionPill
@@ -1296,12 +1280,12 @@ function CoachWizard({
                 </OptionPill>
               ))}
             </div>
-            <Field label="Conference" hint="Optional." htmlFor="conf">
+            <Field label="Conference" htmlFor="conf">
               <Input
                 id="conf"
                 value={conference}
                 onChange={(e) => setConference(e.target.value)}
-                placeholder="KJCCC"
+                placeholder="e.g. KJCCC"
               />
             </Field>
           </div>
@@ -1310,8 +1294,8 @@ function CoachWizard({
         {step === "location" && (
           <div className="space-y-6">
             <QHead
-              title="Where's your program?"
-              sub="Powers distance when a player sees your spots."
+              title="Where's your school?"
+              sub="This helps us match you with the right players nearby."
             />
             <CitySearch
               value={{ city, state, lat, lng }}
@@ -1326,17 +1310,24 @@ function CoachWizard({
         )}
 
         {step === "about" && (
-          <div className="space-y-6">
-            <QHead
-              title="Tell players about your program"
-              sub="A line or two — optional, but it helps recruits picture the fit."
-            />
-            <Textarea
+          <div className="space-y-5">
+            <div>
+              <h1 className="text-2xl font-display font-bold leading-snug tracking-tight">
+                Tell recruits what makes your program worth choosing — your
+                culture, how you develop players, and where you send them.
+              </h1>
+              <p className="mt-3 text-[15px] text-body-2">
+                A few sentences in your own words — then our platform will clean
+                it up for you.
+              </p>
+            </div>
+            <AboutYouAI
+              mode="program"
               value={about}
-              onChange={(e) => setAbout(e.target.value)}
-              placeholder="JUCO contender with a strong four-year transfer pipeline…"
-              maxLength={400}
-              rows={5}
+              onChange={setAbout}
+              programName={programName}
+              division={division}
+              conference={conference}
             />
           </div>
         )}
@@ -1351,9 +1342,14 @@ function CoachWizard({
             {saving ? "Saving…" : "Finish & open my inbox"}
             {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
           </Button>
+        ) : isIntro ? (
+          <Button size="lg" full onClick={introNext}>
+            {introSlide < COACH_INTRO.length - 1 ? "Next" : "Get started"}
+            <ArrowRight size={18} strokeWidth={2} aria-hidden />
+          </Button>
         ) : (
           <Button size="lg" full onClick={goNext} disabled={!canContinue()}>
-            {isIntro ? "Get started" : "Continue"}
+            Continue
             <ArrowRight size={18} strokeWidth={2} aria-hidden />
           </Button>
         )}

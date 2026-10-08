@@ -31,6 +31,7 @@ export type ScreenKey =
   | "following"
   | "profile"
   | "inbox"
+  | "inbox-mutual"
   | "needs"
   | "following-coach"
   | "program";
@@ -509,11 +510,13 @@ function ApplicantCard({
   meta,
   want,
   fit,
+  mutual = false,
 }: {
   name: string;
   meta: string;
   want: string;
   fit: number;
+  mutual?: boolean;
 }) {
   return (
     <Card className="space-y-3">
@@ -532,15 +535,29 @@ function ApplicantCard({
           <p className="mt-0.5 text-[10px] uppercase tracking-eyebrow text-muted-2">fit</p>
         </div>
       </div>
-      <p className="text-sm text-body-2">
-        <span className="font-semibold text-ink">Wants: </span>
-        {want}
-      </p>
+      {mutual ? (
+        <>
+          <div className="flex items-center gap-2">
+            <Chip tone="status-new" size="sm">
+              Mutual interest
+            </Chip>
+            <span className="text-xs text-muted-2">Contact unlocked</span>
+          </div>
+          <div className="flex h-11 w-full items-center justify-center gap-1.5 rounded-btn bg-accent text-sm font-semibold text-surface">
+            Reach out to {name.split(" ")[0]}
+          </div>
+        </>
+      ) : (
+        <p className="text-sm text-body-2">
+          <span className="font-semibold text-ink">Wants: </span>
+          {want}
+        </p>
+      )}
     </Card>
   );
 }
 
-function InboxScreen() {
+function InboxScreen({ mutual = false }: { mutual?: boolean }) {
   return (
     <Shell tabs={COACH_TABS} active="inbox">
       <MockTopBar eyebrow="Hey Coach" />
@@ -554,6 +571,7 @@ function InboxScreen() {
           meta="SS / 2B · 2026 · Wichita, KS"
           want="Middle infield — 2026/27"
           fit={93}
+          mutual={mutual}
         />
         <ApplicantCard
           name="Marcus Reed"
@@ -697,6 +715,8 @@ export function MockScreen({ screen }: { screen: ScreenKey }) {
       return <ProfileScreen />;
     case "inbox":
       return <InboxScreen />;
+    case "inbox-mutual":
+      return <InboxScreen mutual />;
     case "needs":
       return <NeedsScreen />;
     case "following-coach":
