@@ -1009,8 +1009,8 @@ function PlayerWizard({
 const COACH_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
   {
     screen: "needs",
-    title: "Post the spots you need",
-    body: "List the positions you're recruiting for with as much detail as possible — so you find the right fit.",
+    title: "Recruit to your roster needs",
+    body: "Lay out who you need at each spot — position, class, the numbers — and we'll put it in front of players who fit.",
   },
   {
     screen: "inbox",
