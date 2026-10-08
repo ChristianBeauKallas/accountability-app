@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Film } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
@@ -63,6 +64,20 @@ function Finishing({ label }: { label: string }) {
   );
 }
 
+// Normalize a pasted highlight link: add https:// if missing, and only return
+// it if it looks like a real URL. Returns "" when it doesn't.
+function normalizeUrl(raw: string): string {
+  const v = raw.trim();
+  if (!v) return "";
+  const withProto = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+  try {
+    const u = new URL(withProto);
+    return u.hostname.includes(".") ? u.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
 /* ---------------------- Player onboarding wizard ------------------------ */
 
 type PKey =
@@ -77,6 +92,7 @@ type PKey =
   | "hitting"
   | "pitching"
   | "prefs"
+  | "media"
   | "about"
   | "done";
 
@@ -93,6 +109,7 @@ const PLAYER_STEP_ORDER: PKey[] = [
   "hitting",
   "pitching",
   "prefs",
+  "media",
   "about",
   "done",
 ];
@@ -250,9 +267,36 @@ function PlayerWizard({
   const [prefStates, setPrefStates] = useState<string[]>([]);
   const [prefClimates, setPrefClimates] = useState<string[]>([]);
   const [prefSizes, setPrefSizes] = useState<string[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [highlightUrl, setHighlightUrl] = useState("");
   const [matchCount, setMatchCount] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  async function onAvatarPick(file: File | null) {
+    if (!file) return;
+    setError("");
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Photo is over 10MB — try a smaller image.");
+      return;
+    }
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${userId}/avatar/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("player-media")
+      .upload(path, file, { upsert: true });
+    if (upErr) {
+      setUploadingAvatar(false);
+      setError(upErr.message);
+      return;
+    }
+    setAvatarUrl(
+      supabase.storage.from("player-media").getPublicUrl(path).data.publicUrl
+    );
+    setUploadingAvatar(false);
+  }
 
   const primary = picked[0] ?? null;
   // Detect roles across ALL picked positions so a two-way player (or a
@@ -425,7 +469,11 @@ function PlayerWizard({
 
     const { error: pErr } = await supabase
       .from("profiles")
-      .update({ full_name: name.trim(), onboarded: true })
+      .update({
+        full_name: name.trim(),
+        onboarded: true,
+        avatar_url: avatarUrl || null,
+      })
       .eq("id", userId);
 
     const { error: plErr } = await supabase
@@ -464,6 +512,18 @@ function PlayerWizard({
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
+
+    // Save a highlight link as the player's first highlight post so it shows
+    // on their profile. Fire-and-forget — never block finishing onboarding.
+    const hl = normalizeUrl(highlightUrl);
+    if (hl) {
+      void supabase.from("player_posts").insert({
+        player_id: userId,
+        kind: "highlight",
+        media_type: "video",
+        media_url: hl,
+      });
+    }
 
     setSaving(false);
     if (pErr || plErr) {
@@ -949,6 +1009,71 @@ function PlayerWizard({
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {step === "media" && (
+          <div className="space-y-7">
+            <QHead
+              title="Add a photo and your highlights"
+              sub="Optional — but a face and a highlight link get you noticed faster."
+            />
+            <div>
+              <p className="mb-2 text-sm font-semibold text-body-2">
+                Profile photo
+              </p>
+              <div className="flex items-center gap-4">
+                <Avatar name={name || "You"} src={avatarUrl || null} size={72} />
+                <div>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink">
+                    <Camera size={16} strokeWidth={2} aria-hidden />
+                    {uploadingAvatar
+                      ? "Uploading…"
+                      : avatarUrl
+                        ? "Change photo"
+                        : "Add photo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) =>
+                        onAvatarPick(e.target.files?.[0] ?? null)
+                      }
+                    />
+                  </label>
+                  {avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setAvatarUrl("")}
+                      className="ml-3 text-sm font-semibold text-danger"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <Field
+              label="Highlight video"
+              hint="Paste a link — Hudl, YouTube, X, Instagram…"
+              htmlFor="hl"
+            >
+              <Input
+                id="hl"
+                value={highlightUrl}
+                onChange={(e) => setHighlightUrl(e.target.value)}
+                placeholder="hudl.com/… or youtube.com/…"
+                inputMode="url"
+                autoCapitalize="off"
+                autoComplete="off"
+              />
+            </Field>
+
+            <p className="flex items-center gap-1.5 text-xs text-muted-2">
+              <Film size={14} strokeWidth={2} aria-hidden />
+              You can add more photos and clips anytime from your profile.
+            </p>
           </div>
         )}
 
