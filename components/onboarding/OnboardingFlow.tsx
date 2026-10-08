@@ -455,9 +455,38 @@ function PlayerWizard({
     setSaving(true);
     const totalHeight =
       heightFt || heightIn
-        ? Number(heightFt || 0) * 12 + Number(heightIn || 0)
+        ? Math.round(Number(heightFt || 0) * 12 + Number(heightIn || 0))
         : null;
-    const num = (v: string) => (v === "" ? null : Number(v));
+
+    const toNum = (v: string) => {
+      const n = Number(v);
+      return v.trim() === "" || Number.isNaN(n) ? null : n;
+    };
+    const toInt = (v: string) => {
+      const n = toNum(v);
+      return n == null ? null : Math.round(n);
+    };
+
+    // Decimal metrics: validate sane ranges so a mistyped value (like a
+    // missing decimal point on a 60 time) shows a friendly message instead
+    // of a database error.
+    const sixtyN = hasHit ? toNum(sixty) : null;
+    const popN = hasHit && catcherAny ? toNum(popTime) : null;
+    const avgN = hasHit ? toNum(battingAvg) : null;
+    const eraN = hasPitch ? toNum(era) : null;
+    const ranges: [number | null, number, number, string][] = [
+      [sixtyN, 3, 30, "Enter your 60 time in seconds — like 6.85."],
+      [popN, 1, 5, "Enter your pop time in seconds — like 1.95."],
+      [avgN, 0, 1, "Batting average should be between 0 and 1 — like .380."],
+      [eraN, 0, 99.99, "Double-check your ERA — like 3.45."],
+    ];
+    for (const [val, min, max, msg] of ranges) {
+      if (val != null && (val < min || val > max)) {
+        setError(msg);
+        setSaving(false);
+        return;
+      }
+    }
 
     const { error: pErr } = await supabase
       .from("profiles")
@@ -473,24 +502,24 @@ function PlayerWizard({
         bats: bats || null,
         throws: throws || null,
         height_in: totalHeight,
-        weight_lb: num(weight),
-        gpa: num(gpa),
+        weight_lb: toInt(weight),
+        gpa: toNum(gpa),
         city: city.trim() || null,
         state: state || null,
         lat,
         lng,
         is_transfer: isTransfer,
         current_school: isTransfer ? currentSchool.trim() || null : null,
-        sixty_yd: hasHit ? num(sixty) : null,
-        exit_velo: hasHit ? num(exitVelo) : null,
-        batting_avg: hasHit ? num(battingAvg) : null,
+        sixty_yd: sixtyN,
+        exit_velo: hasHit ? toInt(exitVelo) : null,
+        batting_avg: avgN,
         inf_velo:
-          hasHit && !catcherAny && !outfielderAny ? num(throwVelo) : null,
-        of_velo: hasHit && outfielderAny && !catcherAny ? num(throwVelo) : null,
-        fastball_velo: hasPitch ? num(fastball) : null,
-        spin_rate: hasPitch ? num(spinRate) : null,
-        era: hasPitch ? num(era) : null,
-        pop_time: hasHit && catcherAny ? num(popTime) : null,
+          hasHit && !catcherAny && !outfielderAny ? toInt(throwVelo) : null,
+        of_velo: hasHit && outfielderAny && !catcherAny ? toInt(throwVelo) : null,
+        fastball_velo: hasPitch ? toInt(fastball) : null,
+        spin_rate: hasPitch ? toInt(spinRate) : null,
+        era: eraN,
+        pop_time: popN,
         pitches: hasPitch ? pitches : [],
         bio: bio.trim() || null,
         pref_divisions: prefDivisions,
@@ -775,13 +804,13 @@ function PlayerWizard({
                   onChange={(e) => setExitVelo(e.target.value)}
                 />
               </Field>
-              <Field label="60 time (sec)" htmlFor="sixty">
+              <Field label="60 time (sec)" htmlFor="sixty" hint="In seconds">
                 <Input
                   id="sixty"
                   type="number"
                   step="0.01"
                   inputMode="decimal"
-                  placeholder="6.8"
+                  placeholder="6.85"
                   value={sixty}
                   onChange={(e) => setSixty(e.target.value)}
                 />
