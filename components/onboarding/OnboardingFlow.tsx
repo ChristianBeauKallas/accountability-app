@@ -23,6 +23,8 @@ import {
 import { CLIMATES } from "@/lib/climate";
 import { isEligible } from "@/lib/fit";
 import { CitySearch } from "@/components/onboarding/CitySearch";
+import { SchoolSearch } from "@/components/onboarding/SchoolSearch";
+import { ConferenceSearch } from "@/components/onboarding/ConferenceSearch";
 import { MockScreen, type ScreenKey } from "@/components/tour/MockScreens";
 import type { UserRole, Player, Need } from "@/lib/types";
 
@@ -1091,6 +1093,7 @@ function CoachWizard({
   const [state, setState] = useState("");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const [schoolPicked, setSchoolPicked] = useState(false);
   const [about, setAbout] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -1170,6 +1173,34 @@ function CoachWizard({
       setSaving(false);
       setError(progErr?.message ?? "Couldn't create your program. Try again.");
       return;
+    }
+
+    // Crowdsource the school + conference into the shared reference tables so
+    // the next coach can pick them. Fire-and-forget — never block onboarding,
+    // and duplicates are ignored at the DB level.
+    const schoolName = programName.trim();
+    if (schoolName) {
+      void supabase
+        .from("schools")
+        .upsert(
+          {
+            name: schoolName,
+            city: city.trim() || null,
+            state: state || null,
+            lat,
+            lng,
+          },
+          { onConflict: "name_key,state_key", ignoreDuplicates: true }
+        );
+    }
+    const confName = conference.trim();
+    if (confName && division) {
+      void supabase
+        .from("conferences")
+        .upsert(
+          { name: confName, division },
+          { onConflict: "name_key,division", ignoreDuplicates: true }
+        );
     }
 
     const { error: staffErr } = await supabase.from("program_staff").insert({
@@ -1260,14 +1291,29 @@ function CoachWizard({
               sub="This is the name players see on your page."
             />
             <Field label="School / institution" htmlFor="pname">
-              <Input
-                id="pname"
-                autoFocus
+              <SchoolSearch
                 value={programName}
-                onChange={(e) => setProgramName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && goNext()}
-                placeholder="e.g. Cowley College"
+                onChange={(v) => {
+                  setProgramName(v);
+                  setSchoolPicked(false);
+                }}
+                onPick={(s) => {
+                  setProgramName(s.name);
+                  if (s.state) {
+                    setCity(s.city ?? "");
+                    setState(s.state);
+                    setLat(s.lat);
+                    setLng(s.lng);
+                    setSchoolPicked(true);
+                  }
+                }}
               />
+              {schoolPicked && state && (
+                <p className="mt-2 text-sm text-muted-2">
+                  We&rsquo;ll prefill your location
+                  {city ? ` — ${city}, ${state}` : ` — ${state}`}.
+                </p>
+              )}
             </Field>
           </div>
         )}
@@ -1287,11 +1333,10 @@ function CoachWizard({
               ))}
             </div>
             <Field label="Conference" htmlFor="conf">
-              <Input
-                id="conf"
+              <ConferenceSearch
+                division={division}
                 value={conference}
-                onChange={(e) => setConference(e.target.value)}
-                placeholder="e.g. KJCCC"
+                onChange={setConference}
               />
             </Field>
           </div>
