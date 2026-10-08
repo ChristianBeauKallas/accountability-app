@@ -2,7 +2,12 @@
 
 export type UserRole = "player" | "coach";
 export type Division = "D2" | "D3" | "NAIA" | "JUCO";
-export type StaffRole = "head" | "assistant" | "recruiting_coordinator";
+export type StaffRole =
+  | "head"
+  | "assistant"
+  | "recruiting_coordinator"
+  | "team_admin"
+  | "athletic_director";
 export type NeedStatus = "open" | "closed";
 export type ApplicationStatus = "new" | "viewed" | "interested" | "closed";
 export type Bats = "L" | "R" | "S";
