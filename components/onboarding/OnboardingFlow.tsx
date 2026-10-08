@@ -996,7 +996,7 @@ const COACH_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
   {
     screen: "needs",
     title: "Post the spots you need",
-    body: "List the roster spots you're recruiting for — position, class, and the bar you expect.",
+    body: "List the positions you're recruiting for with as much detail as possible — so you find the right fit.",
   },
   {
     screen: "inbox",
@@ -1006,7 +1006,7 @@ const COACH_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
   {
     screen: "inbox-mutual",
     title: "Reach out on your terms",
-    body: "You only see a player once they show interest. Mark interest back and the two of you connect — recruits never get browsed.",
+    body: "You only see a player once they show interest in your opportunity. Once you mark interest back, the two of you connect and contact information is exchanged.",
   },
 ];
 
@@ -1056,8 +1056,8 @@ type CKey =
 const COACH_STEPS: CKey[] = [
   "intro",
   "name",
-  "role",
   "program",
+  "role",
   "level",
   "location",
   "about",
@@ -1232,7 +1232,13 @@ function CoachWizard({
 
         {step === "role" && (
           <div className="space-y-6">
-            <QHead title="What's your role?" />
+            <QHead
+              title={
+                programName.trim()
+                  ? `What's your role on ${programName.trim()}'s staff?`
+                  : "What's your role?"
+              }
+            />
             <div className="flex flex-wrap gap-2">
               {STAFF_ROLES.map((r) => (
                 <OptionPill
