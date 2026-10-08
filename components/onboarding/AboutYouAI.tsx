@@ -14,6 +14,7 @@ export function AboutYouAI({
   programName,
   division,
   conference,
+  generateFields,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -23,12 +24,18 @@ export function AboutYouAI({
   programName?: string | null;
   division?: string | null;
   conference?: string | null;
+  // When provided (player mode), enables "Generate from my profile" — writes
+  // a bio from the structured onboarding data even if nothing's typed.
+  generateFields?: Record<string, unknown> | null;
 }) {
   const isProgram = mode === "program";
+  const canGenerate = !isProgram && !!generateFields;
   const [listening, setListening] = useState(false);
   const [polishing, setPolishing] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [note, setNote] = useState("");
   const [prev, setPrev] = useState<string | null>(null);
+  const busy = polishing || generating;
 
   const recRef = useRef<any>(null);
   const valueRef = useRef(value);
@@ -119,6 +126,42 @@ export function AboutYouAI({
     }
   }
 
+  async function generate() {
+    if (busy || !generateFields) return;
+    setGenerating(true);
+    setNote("");
+    try {
+      const res = await fetch("/api/ai/bio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "player",
+          generate: true,
+          fields: generateFields,
+          text: value.trim() || undefined,
+        }),
+      });
+      if (res.status === 503) {
+        setNote("AI isn't set up yet — write your own below.");
+        return;
+      }
+      if (!res.ok) {
+        setNote("Couldn't generate — try again, or write your own.");
+        return;
+      }
+      const data = (await res.json()) as { text?: string };
+      if (data.text) {
+        setPrev(value);
+        onChange(data.text);
+        setNote("Drafted from your profile ✨ — edit anything you want.");
+      }
+    } catch {
+      setNote("Couldn't generate — try again, or write your own.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   function undo() {
     if (prev == null) return;
     onChange(prev);
@@ -161,16 +204,41 @@ export function AboutYouAI({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={polish}
-          disabled={!value.trim() || polishing}
-          className="inline-flex items-center gap-2 rounded-btn bg-ink px-3.5 py-2 text-sm font-semibold text-ground disabled:opacity-50"
-        >
-          <Sparkles size={16} strokeWidth={2} aria-hidden />
-          {polishing ? "Polishing…" : isProgram ? "Polish" : "Polish for recruiting"}
-        </button>
+      <div className="flex flex-wrap items-center gap-2">
+        {canGenerate ? (
+          <>
+            <button
+              type="button"
+              onClick={generate}
+              disabled={busy}
+              className="inline-flex items-center gap-2 rounded-btn bg-ink px-3.5 py-2 text-sm font-semibold text-ground disabled:opacity-50"
+            >
+              <Sparkles size={16} strokeWidth={2} aria-hidden />
+              {generating ? "Writing…" : "Generate from my profile"}
+            </button>
+            {value.trim() && (
+              <button
+                type="button"
+                onClick={polish}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-btn border border-border px-3 py-2 text-sm font-semibold text-body-2 disabled:opacity-50"
+              >
+                <Sparkles size={15} strokeWidth={2} aria-hidden />
+                {polishing ? "Polishing…" : "Polish"}
+              </button>
+            )}
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={polish}
+            disabled={!value.trim() || busy}
+            className="inline-flex items-center gap-2 rounded-btn bg-ink px-3.5 py-2 text-sm font-semibold text-ground disabled:opacity-50"
+          >
+            <Sparkles size={16} strokeWidth={2} aria-hidden />
+            {polishing ? "Polishing…" : isProgram ? "Polish" : "Polish for recruiting"}
+          </button>
+        )}
         {prev != null && (
           <button
             type="button"
@@ -185,13 +253,15 @@ export function AboutYouAI({
 
       <p className="text-xs text-muted-2">
         {note ||
-          (speechSupported
-            ? `Type it, or tap the mic to say it — then we'll tighten it up for ${
-                isProgram ? "recruits" : "coaches"
-              }.`
-            : `Write it in your own words — then we'll tighten it up for ${
-                isProgram ? "recruits" : "coaches"
-              }.`)}
+          (canGenerate
+            ? "Tap generate and we'll draft it from your profile — then edit anything. Or write your own."
+            : speechSupported
+              ? `Type it, or tap the mic to say it — then we'll tighten it up for ${
+                  isProgram ? "recruits" : "coaches"
+                }.`
+              : `Write it in your own words — then we'll tighten it up for ${
+                  isProgram ? "recruits" : "coaches"
+                }.`)}
       </p>
     </div>
   );
