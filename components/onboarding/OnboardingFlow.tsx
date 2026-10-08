@@ -220,6 +220,7 @@ function PlayerWizard({
   const supabase = createClient();
   const [i, setI] = useState(0);
   const [introSlide, setIntroSlide] = useState(0);
+  const [settingUp, setSettingUp] = useState(false);
   const [name, setName] = useState(initialName);
   const [picked, setPicked] = useState<string[]>([]);
   const [gradYear, setGradYear] = useState("");
@@ -367,8 +368,18 @@ function PlayerWizard({
   // Intro is a 3-slide carousel before the questions start.
   function introNext() {
     if (introSlide < PLAYER_INTRO.length - 1) setIntroSlide((s) => s + 1);
-    else goNext();
+    else setSettingUp(true); // hand off to profile setup with a beat
   }
+  // After the carousel, a short "Let's set up your profile" transition
+  // before the first question, so it's obvious we've switched to setup.
+  useEffect(() => {
+    if (!settingUp) return;
+    const t = setTimeout(() => {
+      setSettingUp(false);
+      goNext();
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [settingUp]); // eslint-disable-line react-hooks/exhaustive-deps
   function handleBack() {
     if (step === "intro" && introSlide > 0) setIntroSlide((s) => s - 1);
     else goBack();
@@ -463,6 +474,7 @@ function PlayerWizard({
   }
 
   if (step === "done") return <Finishing label="Getting things ready…" />;
+  if (settingUp) return <Finishing label="Let's set up your profile" />;
 
   const isIntro = step === "intro";
   const isAbout = step === "about";
@@ -1084,6 +1096,7 @@ function CoachWizard({
   const supabase = createClient();
   const [i, setI] = useState(0);
   const [introSlide, setIntroSlide] = useState(0);
+  const [settingUp, setSettingUp] = useState(false);
   const [name, setName] = useState(initialName);
   const [staffRole, setStaffRole] = useState("head");
   const [programName, setProgramName] = useState("");
@@ -1138,8 +1151,18 @@ function CoachWizard({
   }
   function introNext() {
     if (introSlide < COACH_INTRO.length - 1) setIntroSlide((s) => s + 1);
-    else goNext();
+    else setSettingUp(true); // hand off to profile setup with a beat
   }
+  // After the carousel, a short "Let's set up your profile" transition
+  // before the first question, so it's obvious we've switched to setup.
+  useEffect(() => {
+    if (!settingUp) return;
+    const t = setTimeout(() => {
+      setSettingUp(false);
+      goNext();
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [settingUp]); // eslint-disable-line react-hooks/exhaustive-deps
   function handleBack() {
     if (step === "intro" && introSlide > 0) setIntroSlide((s) => s - 1);
     else goBack();
@@ -1218,6 +1241,7 @@ function CoachWizard({
   }
 
   if (step === "done") return <Finishing label="Getting things ready…" />;
+  if (settingUp) return <Finishing label="Let's set up your profile" />;
 
   const isIntro = step === "intro";
   const isAbout = step === "about";
