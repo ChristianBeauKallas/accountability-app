@@ -275,7 +275,7 @@ export function AboutYouAI({
         {note ||
           (canGenerate
             ? isProgram
-              ? "Pick the facilities that apply, then tap generate — we'll draft your description. Edit anything, or write your own."
+              ? "Pick what applies above, then tap generate — we'll draft your description. Edit anything, or write your own."
               : "Tap generate and we'll draft it from your profile — then edit anything. Or write your own."
             : speechSupported
               ? `Type it, or tap the mic to say it — then we'll tighten it up for ${
