@@ -6,7 +6,12 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
 // Refreshes the Supabase auth session on every request and keeps cookies in
 // sync between the browser and server. Called from the root middleware.
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  // Expose the pathname to server components (the root layout uses it to drop
+  // the 480px app frame on full-width marketing routes like /coaches).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,7 +27,7 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         );
-        response = NextResponse.next({ request });
+        response = NextResponse.next({ request: { headers: requestHeaders } });
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options)
         );

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Manrope } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
@@ -49,6 +50,11 @@ const themeInit = `(function(){try{var t=localStorage.getItem('athletx-theme');i
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Marketing routes (e.g. /coaches) render full-width; the app itself stays
+  // inside the mobile-first 480px frame.
+  const pathname = headers().get("x-pathname") ?? "";
+  const fullWidth = pathname.startsWith("/coaches");
+
   return (
     <html
       lang="en"
@@ -59,7 +65,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body>
-        <div className="app-frame">{children}</div>
+        {fullWidth ? children : <div className="app-frame">{children}</div>}
         <ServiceWorkerRegister />
       </body>
     </html>
