@@ -1355,15 +1355,16 @@ function CoachWizard({
   useEffect(() => {
     if (step !== "done") return;
     try {
+      // Let both the program walkthrough and the inbox tour run.
       localStorage.removeItem("athletx-tour-coach");
+      localStorage.removeItem("athletx-tour-coach-program");
     } catch {
       /* ignore */
     }
-    // Finish on the first-need form — a coach's inbox is empty until they
-    // post a need, so posting one is the real finale. From there they land
-    // in the inbox with the welcome tour.
+    // Land on their freshly-built program page first so they see what they
+    // made; the program walkthrough then leads into posting their first need.
     const t = setTimeout(() => {
-      window.location.href = "/needs/new?welcome=1";
+      window.location.href = "/program?welcome=1";
     }, 1400);
     return () => clearTimeout(t);
   }, [step]);
@@ -1997,10 +1998,21 @@ function CoachWizard({
 
       <div className="mt-4">
         {isMedia ? (
-          <Button size="lg" full onClick={finish} disabled={saving}>
-            {saving ? "Saving…" : "Finish & open my inbox"}
-            {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
-          </Button>
+          <div className="space-y-2">
+            <Button size="lg" full onClick={finish} disabled={saving}>
+              {saving ? "Saving…" : "Finish & see my page"}
+              {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
+            </Button>
+            {!saving && (
+              <button
+                type="button"
+                onClick={finish}
+                className="w-full py-1 text-center text-sm font-semibold text-muted-2"
+              >
+                Skip for now — add these after the tour
+              </button>
+            )}
+          </div>
         ) : isIntro ? (
           <Button size="lg" full onClick={introNext}>
             {introSlide < COACH_INTRO.length - 1 ? "Next" : "Get started"}
