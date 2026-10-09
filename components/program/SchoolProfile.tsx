@@ -96,7 +96,6 @@ export function SchoolProfile({
       /* ignore */
     }
     if (seen) return;
-    setWelcome(true);
     // If they already added facility photos in onboarding, skip that step.
     (async () => {
       const { count } = await supabase
@@ -106,6 +105,9 @@ export function SchoolProfile({
         .eq("kind", "facility");
       if ((count ?? 0) > 0) setSkipFac(true);
     })();
+    // Let them see their page for a beat before the walkthrough pops up.
+    const t = setTimeout(() => setWelcome(true), 500);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -116,7 +118,8 @@ export function SchoolProfile({
       /* ignore */
     }
     setWelcome(false);
-    router.push("/needs/new?welcome=1");
+    // Continue into the rest of the app (inbox + its walkthrough).
+    router.push("/inbox?welcome=1");
   }
 
   async function toggleFollow() {
@@ -162,7 +165,7 @@ export function SchoolProfile({
         />
       </div>
 
-      <div className="mt-3 flex items-center gap-4">
+      <div className="mt-3 flex items-center gap-4" data-tour="pg-header">
         <Avatar name={program.name} src={program.logo_url} size={64} />
         <div className="min-w-0">
           <h1 className="flex items-center gap-1.5 text-2xl font-display font-bold leading-tight">
@@ -221,7 +224,7 @@ export function SchoolProfile({
         ]}
       />
 
-      <div className="mt-5">
+      <div className="mt-5" data-tour="pg-content">
         {tab === "about" && (
           <AboutTab program={program} stats={stats} staff={staff} editable={editable} />
         )}
