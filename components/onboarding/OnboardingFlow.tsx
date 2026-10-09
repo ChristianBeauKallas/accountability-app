@@ -1703,7 +1703,7 @@ function CoachWizard({
 
             <div>
               <p className="mb-2 text-sm font-semibold text-body-2">
-                What does your program have?
+                What makes your program stand out?
               </p>
               <FacilityPicker value={facilities} onChange={setFacilities} />
             </div>
