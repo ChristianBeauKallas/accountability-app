@@ -10,6 +10,7 @@ import {
   BadgeCheck,
   Bookmark,
   BookmarkCheck,
+  Plus,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
@@ -226,7 +227,13 @@ export function SchoolProfile({
 
       <div className="mt-5" data-tour="pg-content">
         {tab === "about" && (
-          <AboutTab program={program} stats={stats} staff={staff} editable={editable} />
+          <AboutTab
+            program={program}
+            stats={stats}
+            staff={staff}
+            editable={editable}
+            onEdit={editable ? () => setEditing(true) : undefined}
+          />
         )}
         {tab === "updates" && (
           <ProgramFeed
@@ -264,15 +271,21 @@ function AboutTab({
   stats,
   staff,
   editable,
+  onEdit,
 }: {
   program: Program;
   stats: ProgramStats;
   staff: StaffMember[];
   editable: boolean;
+  onEdit?: () => void;
 }) {
   const climate = climateDisplay(program.state);
   const minGpa = program.min_gpa ?? stats.minGpa;
-  const pct = programCompleteness(program);
+  const checklist = programChecklist(program);
+  const pct = Math.round(
+    (checklist.filter((c) => c.done).length / checklist.length) * 100
+  );
+  const missing = checklist.filter((c) => !c.done);
 
   // Headline numbers a recruit weighs before applying.
   const tiles: Metric[] = [
@@ -310,15 +323,30 @@ function AboutTab({
   return (
     <div>
       {editable && pct < 100 && (
-        <Card className="mb-6 space-y-2">
+        <Card className="mb-6 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="font-semibold text-ink">Page strength</span>
             <span className="tabular-nums text-muted">{pct}%</span>
           </div>
           <ProgressBar value={pct} />
           <p className="text-xs text-body-2">
-            A complete page gives recruits confidence. Add what&rsquo;s missing.
+            A complete page gives recruits confidence. Add these to strengthen it:
           </p>
+          <ul className="space-y-2">
+            {missing.map((m) => (
+              <li key={m.label} className="flex items-center gap-2.5 text-sm text-ink">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-pill border border-border text-muted-2">
+                  <Plus size={12} strokeWidth={2.5} aria-hidden />
+                </span>
+                {m.label}
+              </li>
+            ))}
+          </ul>
+          {onEdit && (
+            <Button variant="secondary" full onClick={onEdit}>
+              Edit page
+            </Button>
+          )}
         </Card>
       )}
 
@@ -392,18 +420,19 @@ function AboutTab({
   );
 }
 
-function programCompleteness(p: Program): number {
-  const checks = [
-    !!p.about,
-    !!p.conference,
-    !!p.website,
-    !!p.record_last_season,
-    p.enrollment != null,
-    p.min_gpa != null,
-    !!p.recruiting_pitch,
-    !!p.logo_url,
+// Each item is both a completeness check and a concrete "do this next" the
+// coach sees on the Page strength card, ordered by impact on a recruit.
+function programChecklist(p: Program): { done: boolean; label: string }[] {
+  return [
+    { done: !!p.about, label: "Write a short program bio" },
+    { done: !!p.recruiting_pitch, label: "Add what you recruit (your pitch)" },
+    { done: !!p.logo_url, label: "Upload your program logo" },
+    { done: !!p.record_last_season, label: "Add last season's record" },
+    { done: p.enrollment != null, label: "Add your school's enrollment" },
+    { done: p.min_gpa != null, label: "Set a minimum GPA" },
+    { done: !!p.website, label: "Add your website" },
+    { done: !!p.conference, label: "Add your conference" },
   ];
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
