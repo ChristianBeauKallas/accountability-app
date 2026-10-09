@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import {
   ArrowRight,
   Check,
@@ -688,17 +689,46 @@ function ValueSection({ audience }: { audience: "coach" | "player" }) {
   );
 }
 
-function JoinSection({ audience }: { audience: "coach" | "player" }) {
-  const c = CONTENT[audience];
+const TEST_GROUP_CAP = 10;
+
+async function JoinSection({ audience }: { audience: "coach" | "player" }) {
+  // Count signups to switch the copy once the founding group is full. The form
+  // itself never closes — we keep collecting for the next wave.
+  let count = 0;
+  try {
+    const supabase = createClient();
+    const { data } = await supabase.rpc("waitlist_count", { p_kind: audience });
+    if (typeof data === "number") count = data;
+  } catch {
+    /* function not available yet → show the open state */
+  }
+  const full = count >= TEST_GROUP_CAP;
+  const spotsLeft = Math.max(0, TEST_GROUP_CAP - count);
+
+  const openBody =
+    audience === "coach"
+      ? "The first 10 coaches to join become our founding test group — early access to Athletx, and a direct hand in shaping it with your feedback. Drop your info and we’ll reach out personally to get you set up."
+      : "The first 10 players to join become our founding test group — early access to build your profile, and a direct hand in shaping the player side with your feedback. Drop your info and we’ll reach out personally to get you set up.";
+  const fullBody =
+    "Our founding test group is full — thank you! Join the waitlist for the next wave and we’ll reach out as soon as spots open up.";
+
   return (
     <section id="join" className="scroll-mt-20 border-t border-divider/60 bg-surface/40">
       <div className="mx-auto max-w-2xl px-6 py-16 md:py-24">
         <div className="text-center">
-          <p className="eyebrow text-accent">Early access</p>
+          <p className="eyebrow text-accent">{full ? "Next wave" : "Founding test group"}</p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            {c.joinHeading}
+            Join the waitlist
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-body-2">{c.joinBody}</p>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-body-2">
+            {full ? fullBody : openBody}
+          </p>
+          {!full && (
+            <p className="mt-4 inline-flex items-center gap-2 rounded-pill bg-accent-soft px-3.5 py-1.5 text-sm font-semibold text-accent">
+              <span className="h-1.5 w-1.5 rounded-pill bg-accent" />
+              {spotsLeft} of {TEST_GROUP_CAP} founding spots left
+            </p>
+          )}
         </div>
         <div className="mt-10 rounded-card border border-border bg-ground p-6 sm:p-8">
           <WaitlistForm kind={audience} />
