@@ -14,6 +14,7 @@ import {
   BellRing,
 } from "lucide-react";
 import { WaitlistForm } from "@/components/marketing/WaitlistForm";
+import { BaseballIcon } from "@/components/ui/BaseballIcon";
 
 type Audience = "both" | "coach" | "player" | "parent";
 type PageAudience = "coach" | "player" | "parent";
@@ -39,7 +40,6 @@ export function SalesPage({ audience = "both" }: { audience?: Audience }) {
         <>
           <BothHero />
           <SplitSection />
-          <ParentLink />
           <Founder />
           <PickYourSide />
         </>
@@ -221,7 +221,7 @@ function BothHero() {
 function SplitSection() {
   return (
     <section id="pick" className="scroll-mt-20 border-t border-divider/60 bg-surface/40">
-      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-16 md:grid-cols-2 md:py-20">
+      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-16 md:grid-cols-3 md:py-20">
         <SideCard
           href="/coaches"
           eyebrow="For coaches"
@@ -245,6 +245,21 @@ function SplitSection() {
             "Show interest with a tap. The coaches who want you reach out.",
           ]}
           cta="How it works for players"
+        />
+        <SideCard
+          href="/parents"
+          eyebrow="For parents"
+          phone={{
+            src: "/marketing/player-profile.png",
+            alt: "A fully built player profile on Athletx",
+          }}
+          title="Make the money and miles count"
+          points={[
+            "One profile — metrics, video, academics and what they want.",
+            "Seen only by the programs that actually fit your player.",
+            "Every opportunity visible to you — and always a response.",
+          ]}
+          cta="How it works for parents"
         />
       </div>
     </section>
@@ -273,11 +288,11 @@ function SideCard({
       <div className="mt-6 flex justify-center">
         <PhoneFrame src={phone.src} alt={phone.alt} />
       </div>
-      <ul className="mt-6 space-y-3">
+      <ul className="mt-6 flex-1 space-y-3">
         {points.map((p) => (
           <li key={p} className="flex gap-3 text-[15px] leading-relaxed text-body-2">
             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-pill bg-accent-soft text-accent">
-              <Star size={12} strokeWidth={2.5} aria-hidden />
+              <BaseballIcon size={12} strokeWidth={2} aria-hidden />
             </span>
             {p}
           </li>
@@ -285,7 +300,7 @@ function SideCard({
       </ul>
       <Link
         href={href}
-        className="mt-7 inline-flex h-[52px] items-center justify-center gap-2 rounded-cta bg-accent px-6 text-base font-semibold text-surface transition-colors hover:bg-accent-dark"
+        className="mt-7 flex h-[52px] w-full items-center justify-center gap-2 rounded-cta bg-accent px-6 text-base font-semibold text-surface transition-colors hover:bg-accent-dark"
       >
         {cta}
         <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
