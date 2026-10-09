@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Camera, Film } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Film, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
@@ -1250,6 +1250,7 @@ type CKey =
   | "program"
   | "level"
   | "about"
+  | "media"
   | "done";
 
 const COACH_STEPS: CKey[] = [
@@ -1259,6 +1260,7 @@ const COACH_STEPS: CKey[] = [
   "role",
   "level",
   "about",
+  "media",
   "done",
 ];
 
@@ -1296,6 +1298,49 @@ function CoachWizard({
   const [schoolChosen, setSchoolChosen] = useState(false);
   const [about, setAbout] = useState("");
   const [facilities, setFacilities] = useState<string[]>([]);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [facilityPhotos, setFacilityPhotos] = useState<string[]>([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  // Program media reuses the public player-media bucket (per migration 0007).
+  async function uploadImage(file: File, kind: string): Promise<string | null> {
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image is over 10MB — try a smaller one.");
+      return null;
+    }
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${userId}/${kind}/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 7)}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("player-media")
+      .upload(path, file, { upsert: true });
+    if (upErr) {
+      setError(upErr.message);
+      return null;
+    }
+    return supabase.storage.from("player-media").getPublicUrl(path).data
+      .publicUrl;
+  }
+
+  async function onLogoPick(file: File | null) {
+    if (!file) return;
+    setError("");
+    setUploadingLogo(true);
+    const url = await uploadImage(file, "logo");
+    if (url) setLogoUrl(url);
+    setUploadingLogo(false);
+  }
+
+  async function onFacilityPhotoPick(file: File | null) {
+    if (!file) return;
+    setError("");
+    setUploadingPhoto(true);
+    const url = await uploadImage(file, "facility");
+    if (url) setFacilityPhotos((cur) => [...cur, url]);
+    setUploadingPhoto(false);
+  }
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -1393,6 +1438,7 @@ function CoachWizard({
           lng,
           conference: conference.trim() || null,
           about: about.trim() || null,
+          logo_url: logoUrl || null,
         })
         .select("id")
         .single();
@@ -1455,6 +1501,18 @@ function CoachWizard({
       { onConflict: "program_id,profile_id", ignoreDuplicates: true }
     );
 
+    // Post facility photos to the program page (RLS needs staff, set above).
+    if (!staffErr && facilityPhotos.length) {
+      void supabase.from("program_posts").insert(
+        facilityPhotos.map((url) => ({
+          program_id: programId,
+          kind: "facility",
+          media_url: url,
+          media_type: "image",
+        }))
+      );
+    }
+
     setSaving(false);
     if (pErr || staffErr) {
       setError((pErr ?? staffErr)?.message ?? "Something went wrong.");
@@ -1467,7 +1525,7 @@ function CoachWizard({
   if (settingUp) return <Finishing label="Let's set up your profile" />;
 
   const isIntro = step === "intro";
-  const isAbout = step === "about";
+  const isMedia = step === "media"; // last input step — holds the finish CTA
 
   return (
     <main
@@ -1654,12 +1712,110 @@ function CoachWizard({
           </div>
         )}
 
+        {step === "media" && (
+          <div className="space-y-7">
+            <QHead
+              title="Make your program page stand out"
+              sub="This is the page recruits see. Add your logo and a few facility photos so they can picture themselves there."
+            />
+
+            <div>
+              <p className="mb-2 text-sm font-semibold text-body-2">
+                Program logo
+              </p>
+              <div className="flex items-center gap-4">
+                <Avatar name={programName || "Program"} src={logoUrl || null} size={72} />
+                <div>
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-btn border border-border bg-surface px-3 py-2 text-sm font-semibold text-ink">
+                    <Camera size={16} strokeWidth={2} aria-hidden />
+                    {uploadingLogo
+                      ? "Uploading…"
+                      : logoUrl
+                        ? "Change logo"
+                        : "Add logo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) =>
+                        onLogoPick(e.target.files?.[0] ?? null)
+                      }
+                    />
+                  </label>
+                  {logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl("")}
+                      className="ml-3 text-sm font-semibold text-danger"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-sm font-semibold text-body-2">
+                Facility photos
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                {facilityPhotos.map((url, k) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <div key={url} className="relative h-20 w-20">
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-20 w-20 rounded-input object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFacilityPhotos((cur) =>
+                          cur.filter((_, i) => i !== k)
+                        )
+                      }
+                      className="absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-pill bg-ink text-ground"
+                      aria-label="Remove photo"
+                    >
+                      <X size={13} strokeWidth={2.5} aria-hidden />
+                    </button>
+                  </div>
+                ))}
+                <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-input border border-dashed border-border bg-surface text-muted-2">
+                  {uploadingPhoto ? (
+                    <span className="text-xs">Uploading…</span>
+                  ) : (
+                    <>
+                      <Camera size={18} strokeWidth={2} aria-hidden />
+                      <span className="text-xs font-semibold">Add</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) =>
+                      onFacilityPhotoPick(e.target.files?.[0] ?? null)
+                    }
+                  />
+                </label>
+              </div>
+            </div>
+
+            <p className="flex items-center gap-1.5 text-xs text-muted-2">
+              <Film size={14} strokeWidth={2} aria-hidden />
+              Optional — you can add more anytime from your Program page.
+            </p>
+          </div>
+        )}
+
       </div>
 
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
 
       <div className="mt-4">
-        {isAbout ? (
+        {isMedia ? (
           <Button size="lg" full onClick={finish} disabled={saving}>
             {saving ? "Saving…" : "Finish & open my inbox"}
             {!saving && <ArrowRight size={18} strokeWidth={2} aria-hidden />}
