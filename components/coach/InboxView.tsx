@@ -32,7 +32,7 @@ export type InboxRow = Application & {
   need: Need | null;
 };
 
-type Filter = "all" | "new" | "interested";
+type Filter = "all" | "new" | "interested" | "passed";
 
 export function InboxView({
   rows: initialRows,
@@ -48,12 +48,14 @@ export function InboxView({
 
   const newCount = rows.filter((r) => r.status === "new").length;
   const interestedCount = rows.filter((r) => r.status === "interested").length;
+  const passedCount = rows.filter((r) => r.status === "closed").length;
 
   const visible = useMemo(
     () =>
       rows.filter((r) => {
         if (filter === "new") return r.status === "new";
         if (filter === "interested") return r.status === "interested";
+        if (filter === "passed") return r.status === "closed";
         return r.status !== "closed";
       }),
     [rows, filter]
@@ -95,6 +97,10 @@ export function InboxView({
               value: "interested",
               label: interestedCount ? `★ ${interestedCount}` : "Interested",
             },
+            {
+              value: "passed",
+              label: passedCount ? `Passed ${passedCount}` : "Passed",
+            },
           ]}
         />
       )}
@@ -105,10 +111,18 @@ export function InboxView({
             <InboxIcon size={22} strokeWidth={2} aria-hidden />
           </span>
           <p className="font-display text-lg font-semibold text-ink">
-            {filter === "new" ? "No one new yet" : "Nothing here yet"}
+            {filter === "new"
+              ? "No one new yet"
+              : filter === "passed"
+                ? "No one passed yet"
+                : filter === "interested"
+                  ? "No one here yet"
+                  : "Nothing here yet"}
           </p>
           <p className="max-w-xs text-sm text-body-2">
-            Post a need and players who fit show up here, best first.
+            {filter === "passed"
+              ? "Players you pass on land here, so you can always revisit them."
+              : "Post a need and players who fit show up here, best first."}
           </p>
         </div>
       ) : (
