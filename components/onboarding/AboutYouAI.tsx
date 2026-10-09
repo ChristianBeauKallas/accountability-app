@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Mic, Square, Sparkles, Undo2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Textarea } from "@/components/ui/Field";
+import { BaseballIcon } from "@/components/ui/BaseballIcon";
 
 export function AboutYouAI({
   value,
@@ -229,11 +230,17 @@ export function AboutYouAI({
               disabled={busy}
               className="inline-flex items-center gap-2 rounded-btn bg-ink px-3.5 py-2 text-sm font-semibold text-ground disabled:opacity-50"
             >
-              <Sparkles size={16} strokeWidth={2} aria-hidden />
+              {isProgram ? (
+                <BaseballIcon size={16} strokeWidth={2} aria-hidden />
+              ) : (
+                <Sparkles size={16} strokeWidth={2} aria-hidden />
+              )}
               {generating
-                ? "Writing…"
+                ? isProgram
+                  ? "Regenerating…"
+                  : "Writing…"
                 : isProgram
-                  ? "Generate with AI"
+                  ? "Regenerate based on responses"
                   : "Generate from my profile"}
             </button>
             {value.trim() && (
