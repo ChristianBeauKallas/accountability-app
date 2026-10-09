@@ -1848,6 +1848,28 @@ function CoachWizard({
                     </button>
                   );
                 })}
+                {/* Custom tags the coach added (not in any built-in group). */}
+                {facilities
+                  .filter(
+                    (f) =>
+                      !FACILITY_GROUPS.some((g) =>
+                        g.items.some(
+                          (i) =>
+                            i.toLowerCase() === f.trim().toLowerCase()
+                        )
+                      )
+                  )
+                  .map((name) => (
+                    <button
+                      key={`custom-${name}`}
+                      type="button"
+                      onClick={() => toggleFacility(name)}
+                      className="inline-flex items-center gap-1.5 rounded-pill bg-accent px-3.5 py-2 text-sm font-semibold text-surface"
+                    >
+                      <Check size={14} strokeWidth={2.5} aria-hidden />
+                      {name}
+                    </button>
+                  ))}
               </div>
             </div>
             <div className="flex items-center gap-2">
