@@ -178,6 +178,29 @@ function PhonePreview({ screen, height }: { screen: ScreenKey; height: number })
   );
 }
 
+// Two overlapping phones — e.g. the coach inbox with a player's profile in
+// front of it, to show "tap a player, see their whole profile".
+function DualPhonePreview({
+  back,
+  front,
+  height,
+}: {
+  back: ScreenKey;
+  front: ScreenKey;
+  height: number;
+}) {
+  return (
+    <div className="flex items-start justify-center">
+      <div className="mt-8 -mr-12 opacity-95">
+        <PhonePreview screen={back} height={height * 0.84} />
+      </div>
+      <div className="relative z-10 drop-shadow-[0_12px_30px_rgba(0,0,0,0.5)]">
+        <PhonePreview screen={front} height={height} />
+      </div>
+    </div>
+  );
+}
+
 const PLAYER_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
   {
     screen: "profile",
@@ -1158,7 +1181,12 @@ function PlayerWizard({
 
 /* -------------------- Coach intro carousel (3 steps) -------------------- */
 
-const COACH_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
+const COACH_INTRO: {
+  screen: ScreenKey;
+  screen2?: ScreenKey;
+  title: string;
+  body: string;
+}[] = [
   {
     screen: "needs",
     title: "Recruit to your roster needs",
@@ -1171,6 +1199,7 @@ const COACH_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
   },
   {
     screen: "inbox-mutual",
+    screen2: "profile",
     title: "Reach out on your terms",
     body: "Review every player in your inbox and mark interest in only the ones you want to connect with.",
   },
@@ -1189,7 +1218,11 @@ function CoachIntro({ slide }: { slide: number }) {
       </div>
       <div className="relative mt-5 flex flex-1 items-start justify-center">
         <div key={`p-${slide}`} className="animate-tour-screen">
-          <PhonePreview screen={s.screen} height={436} />
+          {s.screen2 ? (
+            <DualPhonePreview back={s.screen} front={s.screen2} height={404} />
+          ) : (
+            <PhonePreview screen={s.screen} height={436} />
+          )}
         </div>
       </div>
       <div className="mt-4 flex justify-center gap-2">
