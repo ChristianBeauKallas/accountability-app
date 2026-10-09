@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { BaseballIcon } from "@/components/ui/BaseballIcon";
@@ -8,27 +8,31 @@ import { BaseballIcon } from "@/components/ui/BaseballIcon";
 type Stop = {
   key: string;
   path: string;
+  selector: string;
   eyebrow: string;
   title: string;
   body: string;
 };
+type Rect = { top: number; left: number; width: number; height: number };
 
-// The cross-app leg of the coach walkthrough, continuing from the program
-// page. Each stop is a real page; "Next" navigates to the next one via a
-// ?tour= param, and the final stop offers to walk them through their first
-// need. Activates only when the ?tour param is present (set by the flow),
-// so players and normal visits never see it.
+// The cross-app leg of the coach walkthrough. Each stop is a real page: the
+// whole screen stays visible, the relevant bottom-tab icon is highlighted,
+// and "Next" navigates to the next page via a ?tour= param. The final stop
+// offers to walk them through their first need. Activates only when the ?tour
+// param is present (set by the flow), so players and normal visits never see it.
 const STOPS: Stop[] = [
   {
     key: "inbox",
     path: "/inbox",
+    selector: '[data-tour="tab-inbox"]',
     eyebrow: "Inbox",
     title: "Where players land",
-    body: "Once a player shows interest in one of your open needs, they'll show up here — ranked best-fit first.",
+    body: "You'll connect with players who show interest in your open roster needs — they land here, ranked best-fit first.",
   },
   {
     key: "following",
     path: "/following",
+    selector: '[data-tour="tab-following"]',
     eyebrow: "Following",
     title: "Your shortlist",
     body: "Players you mark interested get saved here, so you can keep tabs on the ones you want.",
@@ -36,6 +40,7 @@ const STOPS: Stop[] = [
   {
     key: "needs",
     path: "/needs",
+    selector: '[data-tour="tab-needs"]',
     eyebrow: "Needs",
     title: "Where it all starts",
     body: "This is where you create your specific, targeted opportunities for players to see.",
@@ -47,6 +52,7 @@ export function AppTour() {
   const pathname = usePathname();
   const [tourKey, setTourKey] = useState<string | null>(null);
   const [finalPrompt, setFinalPrompt] = useState(false);
+  const [rect, setRect] = useState<Rect | null>(null);
 
   // Re-read the ?tour param on every navigation (each stop is its own path).
   useEffect(() => {
@@ -60,18 +66,37 @@ export function AppTour() {
 
   const stopIndex = STOPS.findIndex((s) => s.key === tourKey);
   const stop = stopIndex >= 0 ? STOPS[stopIndex] : null;
-  const active = !!stop && pathname === stop!.path;
+  const active = !!stop && pathname === stop!.path && !finalPrompt;
 
-  if (!active || !stop) return null;
+  // Measure the bottom-tab icon to ring it.
+  useLayoutEffect(() => {
+    if (!active || !stop) {
+      setRect(null);
+      return;
+    }
+    const measure = () => {
+      const el = document.querySelector(stop.selector);
+      if (!el) return setRect(null);
+      const r = el.getBoundingClientRect();
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+    };
+    const t1 = setTimeout(measure, 60);
+    const t2 = setTimeout(measure, 300);
+    window.addEventListener("resize", measure);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener("resize", measure);
+    };
+  }, [active, stop?.selector]);
+
+  if ((!active || !stop) && !finalPrompt) return null;
   const last = stopIndex === STOPS.length - 1;
 
-  function go(to: string) {
-    router.push(to);
-  }
   function next() {
     if (!last) {
       const n = STOPS[stopIndex + 1];
-      go(`${n.path}?tour=${n.key}`);
+      router.push(`${n.path}?tour=${n.key}`);
     } else {
       setFinalPrompt(true);
     }
@@ -79,7 +104,7 @@ export function AppTour() {
   function back() {
     if (stopIndex > 0) {
       const p = STOPS[stopIndex - 1];
-      go(`${p.path}?tour=${p.key}`);
+      router.push(`${p.path}?tour=${p.key}`);
     }
   }
   function endTour(startNeed: boolean) {
@@ -129,14 +154,31 @@ export function AppTour() {
     );
   }
 
+  if (!stop) return null;
+
   return (
-    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true">
+    <div className="pointer-events-none fixed inset-0 z-[70]" role="dialog" aria-modal="true">
+      {/* Ring the relevant bottom-tab icon — whole screen stays visible. */}
+      {rect && (
+        <div
+          className="pointer-events-none fixed rounded-[14px] ring-2 ring-accent transition-all duration-300"
+          style={{
+            top: rect.top - 4,
+            left: rect.left + 2,
+            width: rect.width - 4,
+            height: rect.height - 8,
+            boxShadow: "0 0 0 9999px rgba(0,0,0,0.04)",
+          }}
+          aria-hidden
+        />
+      )}
+
       {/* soft scrim so the card reads over the real page without hiding it */}
       <div
         className="pointer-events-none fixed inset-x-0 bottom-0 h-60 bg-gradient-to-t from-black/55 to-transparent"
         aria-hidden
       />
-      <div className="fixed inset-x-0 bottom-0 flex justify-center px-4 pb-[calc(16px+env(safe-area-inset-bottom)+84px)]">
+      <div className="pointer-events-auto fixed inset-x-0 bottom-0 flex justify-center px-4 pb-[calc(16px+env(safe-area-inset-bottom)+84px)]">
         <div className="relative w-full max-w-app animate-tour-screen rounded-card border border-border bg-surface p-4 shadow-sheet">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-eyebrow text-muted-2">
