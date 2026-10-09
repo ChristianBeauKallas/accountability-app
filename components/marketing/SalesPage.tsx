@@ -198,9 +198,9 @@ function BothHero() {
           <span className="text-accent">find each other.</span>
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-body-2">
-          Athletx connects small-college coaches with the high school and
-          transfer players who fit their roster needs — ranked by fit, driven by
-          the players.
+          Athletx connects college coaches with the high school and transfer
+          players who fit their roster needs — ranked by fit, driven by the
+          players.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
@@ -639,7 +639,7 @@ function AudienceHero({ audience }: { audience: PageAudience }) {
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-body-2">{c.sub}</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
-              href="#how"
+              href="#problem"
               className="inline-flex h-[54px] items-center gap-2 rounded-cta bg-accent px-6 text-base font-semibold text-surface transition-colors hover:bg-accent-dark"
             >
               See how it works
@@ -661,7 +661,7 @@ function AudienceHero({ audience }: { audience: PageAudience }) {
 function Problem({ audience }: { audience: PageAudience }) {
   const c = CONTENT[audience];
   return (
-    <section className="border-t border-divider/60 bg-surface/40">
+    <section id="problem" className="scroll-mt-20 border-t border-divider/60 bg-surface/40">
       <div className="mx-auto max-w-5xl px-6 py-16 md:py-20">
         <h2 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
           {c.problemHeading}

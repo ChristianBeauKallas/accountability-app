@@ -64,6 +64,11 @@
     overscroll-behavior-x: none;
     max-width: 100%;
   }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   body {
     @apply bg-ground text-ink font-sans antialiased;
     font-size: 16px;
