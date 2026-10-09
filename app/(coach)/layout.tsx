@@ -2,6 +2,7 @@ import { requireProfile } from "@/lib/auth";
 import { TabBar } from "@/components/ui/TabBar";
 import { NotificationNudge } from "@/components/NotificationNudge";
 import { AppTour } from "@/components/tour/AppTour";
+import { FeedbackNudge } from "@/components/FeedbackNudge";
 
 export default async function CoachLayout({
   children,
@@ -18,6 +19,7 @@ export default async function CoachLayout({
       <TabBar role="coach" />
       <NotificationNudge />
       <AppTour />
+      <FeedbackNudge />
     </div>
   );
 }
