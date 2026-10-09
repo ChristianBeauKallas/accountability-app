@@ -1726,8 +1726,8 @@ function CoachWizard({
         {step === "media" && (
           <div className="space-y-7">
             <QHead
-              title="Make your program page stand out"
-              sub="This is the page recruits see. Add your logo and a few facility photos so they can picture themselves there."
+              title="Finish up with your branding and facility photos"
+              sub="Add your logo and a few facility photos so recruits can picture themselves there — or add them later from your Program page."
             />
 
             <div>
