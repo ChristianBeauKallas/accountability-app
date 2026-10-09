@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Plus, Sparkles, X } from "lucide-react";
 import { HeaderActions } from "@/components/HeaderActions";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -11,7 +11,18 @@ import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { StepProgress } from "@/components/ui/ProgressBar";
 import { BaseballIcon } from "@/components/ui/BaseballIcon";
-import { POSITIONS, PITCHES, isPitcher, isCatcher } from "@/lib/constants";
+import {
+  POSITIONS,
+  PITCHES,
+  PITCHER_ROLES,
+  PITCHER_TRAITS,
+  CATCHER_TRAITS,
+  HITTER_TRAITS,
+  PLAYER_LEVELS,
+  KNOWN_PITCHER_ROLES,
+  isPitcher,
+  isCatcher,
+} from "@/lib/constants";
 import type { Need } from "@/lib/types";
 
 // A suggested, editable title for each position the coach can pick.
@@ -35,8 +46,14 @@ const PITCH_SET = new Set<string>(PITCHES as readonly string[]);
 
 // The wizard advances through these. "generating" is a full-screen spinner
 // shown while the AI drafts the post, then it lands on "review".
-type Phase = "position" | "metrics" | "qualify" | "generating" | "review";
-const STEP_LABELS = ["Position", "Details", "Who qualifies", "Review"];
+type Phase =
+  | "position"
+  | "player"
+  | "academics"
+  | "skills"
+  | "generating"
+  | "review";
+const STEP_LABELS = ["Position", "Player type", "Academics", "Details", "Review"];
 
 export function NeedForm({
   programId,
@@ -51,8 +68,16 @@ export function NeedForm({
   const router = useRouter();
   const editing = !!need;
 
-  // Editing an existing need drops straight into review (everything's filled);
-  // a new need starts at position and walks forward.
+  // Split an edited need's must_have bag back into its structured chips.
+  const initialMust = need?.must_have ?? [];
+  const pitchesInit = initialMust.filter((m) => PITCH_SET.has(m));
+  const rolesInit = initialMust.filter((m) => KNOWN_PITCHER_ROLES.has(m));
+  const traitsInit = initialMust.filter(
+    (m) => !PITCH_SET.has(m) && !KNOWN_PITCHER_ROLES.has(m)
+  );
+
+  // Editing an existing need drops straight into review; a new need walks
+  // forward from position.
   const [phase, setPhase] = useState<Phase>(editing ? "review" : "position");
 
   // A need is one position at a time.
@@ -60,29 +85,30 @@ export function NeedForm({
   const [title, setTitle] = useState(need?.title ?? "");
   // Once the coach edits the title we stop auto-suggesting it.
   const [titleEdited, setTitleEdited] = useState(!!need?.title);
+
+  // Who the need targets.
+  const [playerTypes, setPlayerTypes] = useState<string[]>(
+    need?.player_types ?? []
+  );
   const [gradMin, setGradMin] = useState(need?.grad_year_min?.toString() ?? "");
   const [gradMax, setGradMax] = useState(need?.grad_year_max?.toString() ?? "");
-  const [acceptsTransfer, setAcceptsTransfer] = useState(
-    need?.accepts_transfer ?? false
-  );
   const [minGpa, setMinGpa] = useState(need?.min_gpa?.toString() ?? "");
-  // "Pitches you're looking for" live in must_have (shown to players as
-  // "what they're looking for"); keep them separate in the UI from free-text
-  // keywords by splitting on the known pitch names.
-  const [pitchesWanted, setPitchesWanted] = useState<string[]>(
-    (need?.must_have ?? []).filter((m) => PITCH_SET.has(m))
-  );
-  const [mustHave, setMustHave] = useState(
-    (need?.must_have ?? []).filter((m) => !PITCH_SET.has(m)).join(", ")
-  );
+
+  // Skill-specific.
+  const [pitchesWanted, setPitchesWanted] = useState<string[]>(pitchesInit);
+  const [rolesWanted, setRolesWanted] = useState<string[]>(rolesInit);
+  const [traits, setTraits] = useState<string[]>(traitsInit);
+  const [customDraft, setCustomDraft] = useState("");
   const [minExit, setMinExit] = useState(need?.min_exit_velo?.toString() ?? "");
   const [minFb, setMinFb] = useState(need?.min_fastball_velo?.toString() ?? "");
   const [minSixty, setMinSixty] = useState(need?.min_sixty?.toString() ?? "");
   const [minPop, setMinPop] = useState(need?.min_pop_time?.toString() ?? "");
+
   const [description, setDescription] = useState(need?.description ?? "");
   const [genNote, setGenNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [regenerating, setRegenerating] = useState(false);
 
   const num = (v: string) => (v === "" ? null : Number(v));
   const valid = !!title.trim() && !!position;
@@ -90,15 +116,23 @@ export function NeedForm({
   const pitcher = isPitcher(position);
   const catcher = isCatcher(position);
   const hitter = !!position && !pitcher; // catcher counts as a hitter here
+  const wantsHS = playerTypes.includes("high_school");
+
+  const presetTraits = pitcher
+    ? PITCHER_TRAITS
+    : catcher
+      ? CATCHER_TRAITS
+      : HITTER_TRAITS;
+  const presetSet = new Set<string>(presetTraits as readonly string[]);
+  const customTraits = traits.filter((t) => !presetSet.has(t));
 
   function pickPosition(pos: string) {
     setPosition(pos);
-    // Auto-suggest the title until the coach has customized it.
     if (!titleEdited || title.trim() === "") {
       setTitle(POSITION_TITLE[pos] ?? "");
       setTitleEdited(false);
     }
-    // Drop metric values that don't apply to the new position's bucket.
+    // Drop metric/role values that don't apply to the new position's bucket.
     if (isPitcher(pos)) {
       setMinExit("");
       setMinSixty("");
@@ -106,38 +140,60 @@ export function NeedForm({
     } else {
       setMinFb("");
       setPitchesWanted([]);
+      setRolesWanted([]);
       if (!isCatcher(pos)) setMinPop("");
     }
   }
 
-  function togglePitch(p: string) {
-    setPitchesWanted((cur) =>
-      cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]
+  const toggleIn =
+    (setter: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
+      setter((cur) =>
+        cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]
+      );
+  const togglePitch = toggleIn(setPitchesWanted);
+  const toggleRole = toggleIn(setRolesWanted);
+  const toggleTrait = toggleIn(setTraits);
+  const togglePlayerType = toggleIn(setPlayerTypes);
+
+  function addCustomTrait() {
+    const v = customDraft.trim();
+    if (!v) return;
+    if (!traits.some((t) => t.toLowerCase() === v.toLowerCase())) {
+      setTraits((cur) => [...cur, v]);
+    }
+    setCustomDraft("");
+  }
+
+  // Build the must_have bag from every structured chip, de-duplicated.
+  function buildMustHave(): string[] {
+    return Array.from(
+      new Set([
+        ...(pitcher ? pitchesWanted : []),
+        ...(pitcher ? rolesWanted : []),
+        ...traits,
+      ])
     );
   }
 
   // Ask the AI to write a headline + short description from what's entered.
-  // Falls back gracefully — the coach can always type their own on review.
   async function generate() {
     if (!position) return;
     setGenNote("");
     try {
-      const keywords = mustHave
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
       const res = await fetch("/api/ai/need", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           programId,
           position,
+          playerTypes,
           gradMin,
           gradMax,
-          acceptsTransfer,
+          acceptsTransfer: playerTypes.some((t) => t !== "high_school"),
           minGpa,
           pitches: pitcher ? pitchesWanted : [],
-          mustHave: keywords,
+          pitcherRoles: pitcher ? rolesWanted : [],
+          mustHave: traits,
           minExit,
           minFb,
           minSixty,
@@ -152,10 +208,7 @@ export function NeedForm({
         setGenNote("Couldn't generate — try again, or write your own.");
         return;
       }
-      const data = (await res.json()) as {
-        title?: string;
-        description?: string;
-      };
+      const data = (await res.json()) as { title?: string; description?: string };
       if (data.title) {
         setTitle(data.title);
         setTitleEdited(true);
@@ -167,15 +220,13 @@ export function NeedForm({
     }
   }
 
-  // Qualify → "Generate post": show the spinner, draft, then land on review.
+  // Skills → "Generate post": show the spinner, draft, then land on review.
   async function generateAndReview() {
     setPhase("generating");
     await generate();
     setPhase("review");
   }
 
-  // Review → "Regenerate": redraft in place without leaving review.
-  const [regenerating, setRegenerating] = useState(false);
   async function regenerate() {
     if (regenerating) return;
     setRegenerating(true);
@@ -191,24 +242,18 @@ export function NeedForm({
     }
     setSaving(true);
 
-    // Combine pitcher pitch chips with free-text keywords, de-duplicated.
-    const keywords = mustHave
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const mustHaveAll = Array.from(
-      new Set([...(pitcher ? pitchesWanted : []), ...keywords])
-    );
-
     const payload = {
       program_id: programId,
       title: title.trim(),
       positions: [position],
-      grad_year_min: num(gradMin),
-      grad_year_max: num(gradMax),
-      accepts_transfer: acceptsTransfer,
+      player_types: playerTypes,
+      // Grad-year window only matters when HS recruits are in the pool.
+      grad_year_min: wantsHS ? num(gradMin) : null,
+      grad_year_max: wantsHS ? num(gradMax) : null,
+      // Legacy flag mirrors "any transfer type selected" for older readers.
+      accepts_transfer: playerTypes.some((t) => t !== "high_school"),
       min_gpa: minGpa === "" ? 0 : Number(minGpa),
-      must_have: mustHaveAll,
+      must_have: buildMustHave(),
       // Only keep the thresholds that apply to this position's bucket.
       min_exit_velo: hitter ? num(minExit) : null,
       min_fastball_velo: pitcher ? num(minFb) : null,
@@ -226,7 +271,6 @@ export function NeedForm({
       setError(err.message);
       return;
     }
-    // After the very first need, drop into the inbox.
     router.push(firstNeed ? "/inbox" : "/needs");
     router.refresh();
   }
@@ -236,11 +280,11 @@ export function NeedForm({
     return Array.from({ length: 7 }, (_, i) => now + i - 2);
   })();
 
-  // Walk back a phase; from the first step, leave the form entirely.
   function goBack() {
-    if (phase === "metrics") setPhase("position");
-    else if (phase === "qualify") setPhase("metrics");
-    else if (phase === "review") setPhase(editing ? "position" : "qualify");
+    if (phase === "player") setPhase("position");
+    else if (phase === "academics") setPhase("player");
+    else if (phase === "skills") setPhase("academics");
+    else if (phase === "review") setPhase(editing ? "position" : "skills");
     else router.push(firstNeed ? "/inbox" : "/needs");
   }
 
@@ -259,14 +303,27 @@ export function NeedForm({
   }
 
   const stepNum =
-    phase === "position" ? 1 : phase === "metrics" ? 2 : phase === "qualify" ? 3 : 4;
+    phase === "position"
+      ? 1
+      : phase === "player"
+        ? 2
+        : phase === "academics"
+          ? 3
+          : phase === "skills"
+            ? 4
+            : 5;
 
-  // Metric prompt copy per bucket.
-  const metricHeading = pitcher
+  const skillHeading = pitcher
     ? "What you want on the mound"
     : catcher
       ? "What you want behind the plate"
-      : "Set the bar at the plate";
+      : "What you want at the plate";
+
+  const chip = (active: boolean) =>
+    cn(
+      "h-9 rounded-pill px-3.5 text-sm font-semibold transition-colors",
+      active ? "bg-accent text-surface" : "bg-chip text-body-2 hover:bg-accent-soft"
+    );
 
   return (
     <main
@@ -293,9 +350,9 @@ export function NeedForm({
       </div>
 
       {/* Progress */}
-      <StepProgress total={4} current={stepNum} className="mt-5" />
+      <StepProgress total={5} current={stepNum} className="mt-5" />
       <p className="mt-2 text-[11px] font-bold uppercase tracking-eyebrow text-muted-2">
-        Step {stepNum} of 4 · {STEP_LABELS[stepNum - 1]}
+        Step {stepNum} of 5 · {STEP_LABELS[stepNum - 1]}
       </p>
 
       {/* ---- Step 1: Position ---- */}
@@ -309,33 +366,25 @@ export function NeedForm({
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {POSITIONS.map((pos) => {
-              const active = position === pos;
-              return (
-                <button
-                  key={pos}
-                  type="button"
-                  onClick={() => pickPosition(pos)}
-                  className={cn(
-                    "h-11 rounded-pill px-4 text-sm font-semibold transition-colors",
-                    active
-                      ? "bg-accent text-surface"
-                      : "bg-chip text-body-2 hover:bg-accent-soft"
-                  )}
-                >
-                  {pos}
-                </button>
-              );
-            })}
+            {POSITIONS.map((pos) => (
+              <button
+                key={pos}
+                type="button"
+                onClick={() => pickPosition(pos)}
+                className={cn(
+                  "h-11 rounded-pill px-4 text-sm font-semibold transition-colors",
+                  position === pos
+                    ? "bg-accent text-surface"
+                    : "bg-chip text-body-2 hover:bg-accent-soft"
+                )}
+              >
+                {pos}
+              </button>
+            ))}
           </div>
 
           <div className="mt-auto pt-8">
-            <Button
-              size="lg"
-              full
-              onClick={() => setPhase("metrics")}
-              disabled={!position}
-            >
+            <Button size="lg" full onClick={() => setPhase("player")} disabled={!position}>
               Continue
               <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
             </Button>
@@ -343,11 +392,129 @@ export function NeedForm({
         </div>
       )}
 
-      {/* ---- Step 2: Position-specific details ---- */}
-      {phase === "metrics" && (
+      {/* ---- Step 2: Player type ---- */}
+      {phase === "player" && (
         <div className="mt-5 flex flex-1 flex-col">
           <h1 className="text-2xl font-display font-bold tracking-tight">
-            {metricHeading}
+            Who are you recruiting?
+          </h1>
+          <p className="mt-1 text-[15px] text-body-2">
+            Pick every type of player who fits — tap more than one if it does.
+          </p>
+
+          <div className="mt-6 space-y-2">
+            {PLAYER_LEVELS.map((lvl) => {
+              const active = playerTypes.includes(lvl.value);
+              return (
+                <button
+                  key={lvl.value}
+                  type="button"
+                  onClick={() => togglePlayerType(lvl.value)}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-input border p-4 text-left transition-colors",
+                    active
+                      ? "border-accent bg-accent-soft"
+                      : "border-border bg-surface hover:bg-chip"
+                  )}
+                >
+                  <span className="text-[15px] font-semibold text-ink">
+                    {lvl.label}
+                  </span>
+                  <span
+                    className={cn(
+                      "flex h-5 w-5 items-center justify-center rounded-md border",
+                      active ? "border-accent bg-accent text-surface" : "border-border"
+                    )}
+                  >
+                    {active && <span className="text-xs font-bold">✓</span>}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {wantsHS && (
+            <div className="mt-6">
+              <p className="eyebrow mb-2">High school grad years</p>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="From" htmlFor="gmin">
+                  <Select id="gmin" value={gradMin} onChange={(e) => setGradMin(e.target.value)}>
+                    <option value="">Any</option>
+                    {years.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="To" htmlFor="gmax">
+                  <Select id="gmax" value={gradMax} onChange={(e) => setGradMax(e.target.value)}>
+                    <option value="">Any</option>
+                    {years.map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-auto pt-8">
+            <Button size="lg" full onClick={() => setPhase("academics")}>
+              Continue
+              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+            </Button>
+            {playerTypes.length === 0 && (
+              <p className="mt-2 text-center text-xs text-muted-2">
+                Pick none and it&rsquo;s open to every type of player.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ---- Step 3: Academics ---- */}
+      {phase === "academics" && (
+        <div className="mt-5 flex flex-1 flex-col">
+          <h1 className="text-2xl font-display font-bold tracking-tight">
+            Academics
+          </h1>
+          <p className="mt-1 text-[15px] text-body-2">
+            Set a GPA floor so you only hear from players who can get in.
+          </p>
+
+          <div className="mt-6">
+            <Field label="Minimum GPA" htmlFor="gpa" hint="Leave blank for no floor.">
+              <Input
+                id="gpa"
+                type="number"
+                step="0.01"
+                min="0"
+                max="4"
+                inputMode="decimal"
+                placeholder="2.5"
+                value={minGpa}
+                onChange={(e) => setMinGpa(e.target.value)}
+              />
+            </Field>
+          </div>
+
+          <div className="mt-auto pt-8">
+            <Button size="lg" full onClick={() => setPhase("skills")}>
+              Continue
+              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ---- Step 4: Skill-specific ---- */}
+      {phase === "skills" && (
+        <div className="mt-5 flex flex-1 flex-col">
+          <h1 className="text-2xl font-display font-bold tracking-tight">
+            {skillHeading}
           </h1>
           <p className="mt-1 text-[15px] text-body-2">
             Set the bar so only players who clear it see this. All optional.
@@ -355,31 +522,42 @@ export function NeedForm({
 
           <div className="mt-6 space-y-5">
             {pitcher && (
-              <div>
-                <p className="mb-2 text-sm font-medium text-body-2">
-                  Pitches you&rsquo;re looking for
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {PITCHES.map((p) => {
-                    const active = pitchesWanted.includes(p);
-                    return (
+              <>
+                <div>
+                  <p className="mb-2 text-sm font-medium text-body-2">
+                    Role you need
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {PITCHER_ROLES.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => toggleRole(r)}
+                        className={chip(rolesWanted.includes(r))}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-2 text-sm font-medium text-body-2">
+                    Pitches you&rsquo;re looking for
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {PITCHES.map((p) => (
                       <button
                         key={p}
                         type="button"
                         onClick={() => togglePitch(p)}
-                        className={cn(
-                          "h-9 rounded-pill px-3.5 text-sm font-semibold transition-colors",
-                          active
-                            ? "bg-accent text-surface"
-                            : "bg-chip text-body-2 hover:bg-accent-soft"
-                        )}
+                        className={chip(pitchesWanted.includes(p))}
                       >
                         {p}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             <div className="grid grid-cols-2 gap-3">
@@ -435,98 +613,57 @@ export function NeedForm({
               )}
             </div>
 
-            <Field
-              label="Must-haves"
-              hint={
-                pitcher
-                  ? "Other keywords (command, strike thrower…)."
-                  : "Comma-separated keywords (framing, power, command…)."
-              }
-              htmlFor="mh"
-            >
-              <Input
-                id="mh"
-                value={mustHave}
-                onChange={(e) => setMustHave(e.target.value)}
-                placeholder={pitcher ? "command, strike thrower" : "framing, power"}
-              />
-            </Field>
-          </div>
-
-          <div className="mt-auto pt-8">
-            <Button size="lg" full onClick={() => setPhase("qualify")}>
-              Continue
-              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* ---- Step 3: Who qualifies ---- */}
-      {phase === "qualify" && (
-        <div className="mt-5 flex flex-1 flex-col">
-          <h1 className="text-2xl font-display font-bold tracking-tight">
-            Who qualifies?
-          </h1>
-          <p className="mt-1 text-[15px] text-body-2">
-            Narrow it to the players you can actually take. All optional.
-          </p>
-
-          <div className="mt-6 space-y-5">
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Grad year from" htmlFor="gmin">
-                <Select
-                  id="gmin"
-                  value={gradMin}
-                  onChange={(e) => setGradMin(e.target.value)}
+            {/* Traits — tap presets, or add your own. */}
+            <div>
+              <p className="mb-2 text-sm font-medium text-body-2">
+                Traits you value
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {presetTraits.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => toggleTrait(t)}
+                    className={chip(traits.includes(t))}
+                  >
+                    {t}
+                  </button>
+                ))}
+                {customTraits.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => toggleTrait(t)}
+                    className="inline-flex h-9 items-center gap-1 rounded-pill bg-accent px-3.5 text-sm font-semibold text-surface"
+                  >
+                    {t}
+                    <X size={14} strokeWidth={2.5} aria-hidden />
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2 flex gap-2">
+                <Input
+                  value={customDraft}
+                  onChange={(e) => setCustomDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addCustomTrait();
+                    }
+                  }}
+                  placeholder="Add your own…"
+                />
+                <button
+                  type="button"
+                  onClick={addCustomTrait}
+                  disabled={!customDraft.trim()}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-btn border border-border px-3 text-sm font-semibold text-body-2 disabled:opacity-50"
                 >
-                  <option value="">Any</option>
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Grad year to" htmlFor="gmax">
-                <Select
-                  id="gmax"
-                  value={gradMax}
-                  onChange={(e) => setGradMax(e.target.value)}
-                >
-                  <option value="">Any</option>
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
+                  <Plus size={16} strokeWidth={2.5} aria-hidden />
+                  Add
+                </button>
+              </div>
             </div>
-
-            <label className="flex items-center gap-3 rounded-input border border-border bg-surface p-3">
-              <input
-                type="checkbox"
-                checked={acceptsTransfer}
-                onChange={(e) => setAcceptsTransfer(e.target.checked)}
-                className="h-5 w-5 accent-accent"
-              />
-              <span className="text-[15px] text-ink">Open to transfers</span>
-            </label>
-
-            <Field label="Minimum GPA" htmlFor="gpa" hint="Leave blank for no floor.">
-              <Input
-                id="gpa"
-                type="number"
-                step="0.01"
-                min="0"
-                max="4"
-                inputMode="decimal"
-                placeholder="2.5"
-                value={minGpa}
-                onChange={(e) => setMinGpa(e.target.value)}
-              />
-            </Field>
           </div>
 
           <div className="mt-auto pt-8">
@@ -541,7 +678,7 @@ export function NeedForm({
         </div>
       )}
 
-      {/* ---- Step 4: Review & post ---- */}
+      {/* ---- Step 5: Review & post ---- */}
       {phase === "review" && (
         <div className="mt-5 flex flex-1 flex-col">
           <div className="flex items-center justify-between gap-3">
