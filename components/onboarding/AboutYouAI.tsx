@@ -15,6 +15,7 @@ export function AboutYouAI({
   division,
   conference,
   generateFields,
+  facilities,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -27,9 +28,13 @@ export function AboutYouAI({
   // When provided (player mode), enables "Generate from my profile" — writes
   // a bio from the structured onboarding data even if nothing's typed.
   generateFields?: Record<string, unknown> | null;
+  // Program-mode facility tags that feed "Generate with AI".
+  facilities?: string[];
 }) {
   const isProgram = mode === "program";
-  const canGenerate = !isProgram && !!generateFields;
+  // Player generates from structured fields; program generates from its
+  // name/level/conference plus the selected facility tags.
+  const canGenerate = isProgram ? true : !!generateFields;
   const [listening, setListening] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -127,19 +132,30 @@ export function AboutYouAI({
   }
 
   async function generate() {
-    if (busy || !generateFields) return;
+    if (busy || !canGenerate) return;
     setGenerating(true);
     setNote("");
     try {
+      const payload = isProgram
+        ? {
+            mode: "program",
+            generate: true,
+            programName,
+            division,
+            conference,
+            facilities,
+            text: value.trim() || undefined,
+          }
+        : {
+            mode: "player",
+            generate: true,
+            fields: generateFields,
+            text: value.trim() || undefined,
+          };
       const res = await fetch("/api/ai/bio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "player",
-          generate: true,
-          fields: generateFields,
-          text: value.trim() || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       if (res.status === 503) {
         setNote("AI isn't set up yet — write your own below.");
@@ -214,7 +230,11 @@ export function AboutYouAI({
               className="inline-flex items-center gap-2 rounded-btn bg-ink px-3.5 py-2 text-sm font-semibold text-ground disabled:opacity-50"
             >
               <Sparkles size={16} strokeWidth={2} aria-hidden />
-              {generating ? "Writing…" : "Generate from my profile"}
+              {generating
+                ? "Writing…"
+                : isProgram
+                  ? "Generate with AI"
+                  : "Generate from my profile"}
             </button>
             {value.trim() && (
               <button
@@ -254,7 +274,9 @@ export function AboutYouAI({
       <p className="text-xs text-muted-2">
         {note ||
           (canGenerate
-            ? "Tap generate and we'll draft it from your profile — then edit anything. Or write your own."
+            ? isProgram
+              ? "Pick the facilities that apply, then tap generate — we'll draft your description. Edit anything, or write your own."
+              : "Tap generate and we'll draft it from your profile — then edit anything. Or write your own."
             : speechSupported
               ? `Type it, or tap the mic to say it — then we'll tighten it up for ${
                   isProgram ? "recruits" : "coaches"
