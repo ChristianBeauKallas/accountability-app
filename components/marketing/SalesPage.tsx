@@ -449,7 +449,7 @@ const CONTENT = {
         <span className="text-accent">actually fit you.</span>
       </>
     ),
-    sub: "Stop emailing coaches who never write back. Build one profile, see every open spot ranked by how well you fit, and show interest with a tap. The coaches who want you reach out.",
+    sub: "Stop emailing coaches who never write back. Build one profile, see every open spot ranked by how well you fit, and show interest with one tap. The coaches who reach out are genuinely interested in what you bring to their program.",
     tagline: "HS recruits · JUCO · four-year transfers",
     phone: {
       src: "/marketing/player-fits.png",
