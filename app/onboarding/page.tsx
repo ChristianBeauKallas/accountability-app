@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { FeedbackNudge } from "@/components/FeedbackNudge";
 
 export default async function OnboardingPage() {
   const supabase = createClient();
@@ -19,10 +20,13 @@ export default async function OnboardingPage() {
   if (profile.onboarded) redirect("/");
 
   return (
-    <OnboardingFlow
-      userId={user.id}
-      role={profile.role}
-      initialName={profile.full_name ?? ""}
-    />
+    <>
+      <OnboardingFlow
+        userId={user.id}
+        role={profile.role}
+        initialName={profile.full_name ?? ""}
+      />
+      <FeedbackNudge context="onboarding" />
+    </>
   );
 }
