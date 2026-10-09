@@ -47,6 +47,7 @@ const PITCH_SET = new Set<string>(PITCHES as readonly string[]);
 // The wizard advances through these. "generating" is a full-screen spinner
 // shown while the AI drafts the post, then it lands on "review".
 type Phase =
+  | "intro"
   | "position"
   | "player"
   | "academics"
@@ -76,9 +77,11 @@ export function NeedForm({
     (m) => !PITCH_SET.has(m) && !KNOWN_PITCHER_ROLES.has(m)
   );
 
-  // Editing an existing need drops straight into review; a new need walks
-  // forward from position.
-  const [phase, setPhase] = useState<Phase>(editing ? "review" : "position");
+  // Editing drops straight into review. A brand-new first need opens with a
+  // short "here's what we'll do" intro; any other new need starts at position.
+  const [phase, setPhase] = useState<Phase>(
+    editing ? "review" : firstNeed ? "intro" : "position"
+  );
 
   // A need is one position at a time.
   const [position, setPosition] = useState<string>(need?.positions?.[0] ?? "");
@@ -281,11 +284,45 @@ export function NeedForm({
   })();
 
   function goBack() {
-    if (phase === "player") setPhase("position");
+    if (phase === "position" && firstNeed && !editing) setPhase("intro");
+    else if (phase === "player") setPhase("position");
     else if (phase === "academics") setPhase("player");
     else if (phase === "skills") setPhase("academics");
     else if (phase === "review") setPhase(editing ? "position" : "skills");
     else router.push(firstNeed ? "/inbox" : "/needs");
+  }
+
+  // ---- First-need intro: set expectations before the questions. ----
+  if (phase === "intro") {
+    return (
+      <main
+        className="flex min-h-dvh flex-col items-center justify-center px-6 text-center"
+        style={{ paddingBottom: "calc(84px + env(safe-area-inset-bottom))" }}
+      >
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-pill bg-accent-soft text-accent">
+          <BaseballIcon size={30} strokeWidth={2} aria-hidden />
+        </div>
+        <h1 className="font-display text-[26px] font-bold leading-tight tracking-tight">
+          Let&rsquo;s post your first need
+        </h1>
+        <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-body-2">
+          We&rsquo;ll walk you through a few quick questions to shape the post and
+          make sure it reaches exactly the players it&rsquo;s meant for.
+        </p>
+        <div className="mt-7 w-full max-w-xs">
+          <Button size="lg" full onClick={() => setPhase("position")}>
+            Let&rsquo;s do it
+            <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+          </Button>
+          <Link
+            href="/inbox"
+            className="mt-3 block text-sm font-semibold text-muted-2"
+          >
+            Skip for now
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   // ---- Full-screen spinner while the AI drafts the post. ----
@@ -328,7 +365,7 @@ export function NeedForm({
   return (
     <main
       className="flex min-h-dvh flex-col px-5 pt-12"
-      style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+      style={{ paddingBottom: "calc(84px + 1.5rem + env(safe-area-inset-bottom))" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -668,8 +705,8 @@ export function NeedForm({
 
           <div className="mt-auto pt-8">
             <Button size="lg" full onClick={generateAndReview}>
-              <Sparkles size={18} strokeWidth={2} aria-hidden />
-              Generate post
+              <BaseballIcon size={18} strokeWidth={2} aria-hidden />
+              Create roster need
             </Button>
             <p className="mt-2 text-center text-xs text-muted-2">
               We&rsquo;ll draft a headline and description — you can edit everything next.
