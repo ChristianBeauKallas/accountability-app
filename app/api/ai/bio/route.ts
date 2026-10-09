@@ -140,6 +140,7 @@ export async function POST(req: NextRequest) {
     programName?: string;
     division?: string;
     conference?: string;
+    facilities?: string[];
   };
   try {
     body = await req.json();
@@ -148,38 +149,73 @@ export async function POST(req: NextRequest) {
   }
 
   const isProgram = body.mode === "program";
-  // Player generate mode: write a bio from the structured profile, even with
-  // no notes typed. Polish mode (the default) rewrites what they wrote.
-  const isGenerate = body.generate === true && !isProgram;
+  // Generate mode writes from scratch (player profile, or a program's
+  // name/level/facilities). Polish (the default) rewrites typed notes.
+  const isGenerate = body.generate === true;
+  const isPlayerGenerate = isGenerate && !isProgram;
+  const isProgramGenerate = isGenerate && isProgram;
 
   const text = (body.text ?? "").trim();
   if (text.length > 1200) {
     return NextResponse.json({ error: "too_long" }, { status: 400 });
   }
-  const playerFacts = isGenerate ? playerFactsFrom(body.fields ?? {}) : "";
-  if (!isGenerate && !text) {
-    return NextResponse.json({ error: "empty" }, { status: 400 });
-  }
-  if (isGenerate && !playerFacts) {
-    return NextResponse.json({ error: "no_fields" }, { status: 400 });
-  }
 
-  const context = isProgram
+  const playerFacts = isPlayerGenerate ? playerFactsFrom(body.fields ?? {}) : "";
+
+  const facilityList = (body.facilities ?? [])
+    .map((s) => (s ?? "").trim())
+    .filter(Boolean);
+  const programFacts = isProgramGenerate
     ? [
         body.programName ? `Program: ${body.programName}.` : null,
         body.division ? `Level: ${body.division}.` : null,
         body.conference ? `Conference: ${body.conference}.` : null,
+        facilityList.length ? `Facilities: ${facilityList.join(", ")}.` : null,
       ]
         .filter(Boolean)
-        .join(" ")
-    : isGenerate
-      ? playerFacts
-      : [
-          body.position ? `Primary position: ${body.position}.` : null,
-          body.gradYear ? `Class of ${body.gradYear}.` : null,
+        .join("\n")
+    : "";
+
+  if (!isGenerate && !text) {
+    return NextResponse.json({ error: "empty" }, { status: 400 });
+  }
+  if (isPlayerGenerate && !playerFacts) {
+    return NextResponse.json({ error: "no_fields" }, { status: 400 });
+  }
+  if (isProgramGenerate && !body.programName && !facilityList.length) {
+    return NextResponse.json({ error: "no_fields" }, { status: 400 });
+  }
+
+  const context = isProgramGenerate
+    ? programFacts
+    : isProgram
+      ? [
+          body.programName ? `Program: ${body.programName}.` : null,
+          body.division ? `Level: ${body.division}.` : null,
+          body.conference ? `Conference: ${body.conference}.` : null,
         ]
           .filter(Boolean)
-          .join(" ");
+          .join(" ")
+      : isPlayerGenerate
+        ? playerFacts
+        : [
+            body.position ? `Primary position: ${body.position}.` : null,
+            body.gradYear ? `Class of ${body.gradYear}.` : null,
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+  const programGenerateSystem =
+    "You write a college baseball program's 'About' description from scratch for " +
+    "recruits on a college-recruiting app, using the structured details provided " +
+    "(the program name, level, conference, and the facilities/amenities the coach " +
+    "selected). Lead with what makes the program worth choosing and work the real " +
+    "facilities in naturally. Rules: 3-5 sentences, under ~500 characters. Use ONLY " +
+    "the facts provided — never invent or inflate records, pipelines, rankings, " +
+    "results, or facilities that weren't listed, and don't just list the facilities " +
+    "mechanically; weave them into real sentences. Keep it confident and genuine — " +
+    "not arrogant, generic, or cliché. No hashtags, no emojis, no quotation marks " +
+    "around the result. Return ONLY the description text.";
 
   const playerGenerateSystem =
     "You write a high-school or transfer baseball player's recruiting bio from " +
@@ -193,7 +229,9 @@ export async function POST(req: NextRequest) {
     "sentences. Keep it confident and genuine — not arrogant, generic, or cliché. No " +
     "hashtags, no emojis, no quotation marks around the result. Return ONLY the bio text.";
 
-  const system = isProgram
+  const system = isProgramGenerate
+    ? programGenerateSystem
+    : isProgram
     ? "You polish a college baseball program's 'About' blurb for recruits on a college-recruiting app. " +
       "A coach wrote rough notes about their program; your job is to turn them into a confident, authentic " +
       "description a recruit would want to read — leading with what makes the program worth choosing (culture, " +
@@ -213,13 +251,17 @@ export async function POST(req: NextRequest) {
         "real details persuasively. Keep it confident and genuine — not arrogant, generic, or cliché. No hashtags, no " +
         "emojis, no quotation marks around the result. Return ONLY the rewritten bio text.";
 
-  const task = isProgram
-    ? `Coach's notes:\n${text}\n\nRewrite as the program's About blurb.`
-    : isGenerate
-      ? `Player profile:\n${playerFacts}${
-          text ? `\n\nTheir own words (optional, weave in if useful):\n${text}` : ""
-        }\n\nWrite the recruiting bio.`
-      : `Player's notes:\n${text}\n\nRewrite as a recruiting bio.`;
+  const task = isProgramGenerate
+    ? `Program details:\n${programFacts}${
+        text ? `\n\nTheir own words (optional, weave in if useful):\n${text}` : ""
+      }\n\nWrite the program's About description.`
+    : isProgram
+      ? `Coach's notes:\n${text}\n\nRewrite as the program's About blurb.`
+      : isPlayerGenerate
+        ? `Player profile:\n${playerFacts}${
+            text ? `\n\nTheir own words (optional, weave in if useful):\n${text}` : ""
+          }\n\nWrite the recruiting bio.`
+        : `Player's notes:\n${text}\n\nRewrite as a recruiting bio.`;
 
   try {
     const client = new Anthropic();
