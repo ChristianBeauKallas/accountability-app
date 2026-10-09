@@ -1191,7 +1191,7 @@ const COACH_INTRO: {
   {
     screen: "needs",
     title: "Recruit to your roster needs",
-    body: "Create a post for the exact spot you need — and it lands in front of the players who actually fit it.",
+    body: "Create specific, targeted posts for the exact positions your roster needs — they land in front of the players who actually fit.",
   },
   {
     screen: "inbox",
