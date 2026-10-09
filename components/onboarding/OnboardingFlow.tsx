@@ -562,6 +562,13 @@ function PlayerWizard({
 
   const isIntro = step === "intro";
   const isAbout = step === "about";
+  // Progress bar: the intro carousel gets its own 3-part track; once profile
+  // setup begins it resets to count the real setup steps.
+  const pSetupSteps = PLAYER_STEPS.filter((s) => s !== "intro" && s !== "done");
+  const progressTotal = isIntro ? PLAYER_INTRO.length : pSetupSteps.length;
+  const progressCurrent = isIntro
+    ? introSlide + 1
+    : Math.max(pSetupSteps.indexOf(step) + 1, 1);
 
   return (
     <main
@@ -577,8 +584,8 @@ function PlayerWizard({
           <span className="w-[22px]" />
         )}
         <StepProgress
-          total={PLAYER_STEPS.length}
-          current={i + 1}
+          total={progressTotal}
+          current={progressCurrent}
           className="flex-1"
         />
       </div>
@@ -1196,7 +1203,7 @@ const COACH_INTRO: {
   {
     screen: "inbox",
     title: "See who fits, first",
-    body: "Players who fit what you're looking for show up as they show interest — no need to filter through the noise.",
+    body: "You'll connect with players who show interest in your open roster needs — no need to filter through the noise.",
   },
   {
     screen: "inbox-mutual",
@@ -1631,6 +1638,12 @@ function CoachWizard({
   const isIntro = step === "intro";
   const isAbout = step === "about";
   const isMedia = step === "media"; // last input step — holds the finish CTA
+  // Intro carousel gets its own 3-part track; profile setup resets it.
+  const cSetupSteps = COACH_STEPS.filter((s) => s !== "intro" && s !== "done");
+  const progressTotal = isIntro ? COACH_INTRO.length : cSetupSteps.length;
+  const progressCurrent = isIntro
+    ? introSlide + 1
+    : Math.max(cSetupSteps.indexOf(step) + 1, 1);
 
   return (
     <main
@@ -1646,8 +1659,8 @@ function CoachWizard({
           <span className="w-[22px]" />
         )}
         <StepProgress
-          total={COACH_STEPS.length}
-          current={i + 1}
+          total={progressTotal}
+          current={progressCurrent}
           className="flex-1"
         />
       </div>

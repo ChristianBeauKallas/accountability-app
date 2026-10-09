@@ -1,47 +1,40 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { BaseballIcon } from "@/components/ui/BaseballIcon";
 
 export type ProgramTab = "about" | "updates" | "facilities";
 
-type Step = { tab: ProgramTab; selector: string; title: string; body: string };
-type Rect = { top: number; left: number; width: number; height: number };
+type Step = { tab: ProgramTab; title: string; body: string };
 
 const STEPS: Step[] = [
   {
     tab: "about",
-    selector: '[data-tour="pg-header"]',
     title: "This is your program's profile ⚾️",
     body: "Everything you just built — this is exactly what a player sees when they're interested in you.",
   },
   {
     tab: "about",
-    selector: '[data-tour="pg-content"]',
-    title: "Your program's pitch",
-    body: "Your bio and the value-adds we drafted live in About. Tap Edit anytime to change them.",
+    title: "Your program's highlights",
+    body: "Your bio and all the value-adds we talked about live in the About section. Tap Edit anytime to change them.",
   },
   {
     tab: "updates",
-    selector: '[data-tour="pg-content"]',
     title: "Post updates",
     body: "Keep recruits in the loop — share camp dates, commitments, wins, and any other important updates here. Players following your program will see them.",
   },
   {
     tab: "facilities",
-    selector: '[data-tour="pg-content"]',
     title: "Show off your facilities",
     body: "Athletx is built for small-college programs that can't fly every recruit out. Showcase your facilities — field, cages, weight room, academic centers — so recruits can picture themselves there without visiting first.",
   },
 ];
 
-const PAD = 8;
-
 /**
  * Guided walkthrough of the coach's own, freshly-built program page. An intro
- * card, then it drives the real tabs and spotlights the real section being
- * described, then hands off to the rest of the app.
+ * card, then it drives the real tabs (showing the actual content) with a card
+ * describing each, then hands off to the rest of the app.
  */
 export function ProgramWelcome({
   onTab,
@@ -57,53 +50,16 @@ export function ProgramWelcome({
     : STEPS;
   const [phase, setPhase] = useState<"intro" | "steps">("intro");
   const [index, setIndex] = useState(0);
-  const [rect, setRect] = useState<Rect | null>(null);
   const step = steps[index];
   const last = index >= steps.length - 1;
 
-  // Switch to the step's tab as we advance.
+  // Switch to the step's tab and bring the top of the content into view.
   useEffect(() => {
-    if (phase === "steps") onTab(step.tab);
+    if (phase !== "steps") return;
+    onTab(step.tab);
+    window.scrollTo({ top: 0, behavior: "smooth" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, index]);
-
-  // Lock scroll while the tour runs.
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
-
-  // Scroll the target into view and measure it (re-measure on scroll/resize).
-  useLayoutEffect(() => {
-    if (phase !== "steps") {
-      setRect(null);
-      return;
-    }
-    const measure = () => {
-      const el = document.querySelector(step.selector);
-      if (!el) {
-        setRect(null);
-        return;
-      }
-      const r = el.getBoundingClientRect();
-      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-    };
-    const el = document.querySelector(step.selector) as HTMLElement | null;
-    el?.scrollIntoView({ block: "center", behavior: "smooth" });
-    const t1 = setTimeout(measure, 60);
-    const t2 = setTimeout(measure, 420);
-    window.addEventListener("scroll", measure, true);
-    window.addEventListener("resize", measure);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      window.removeEventListener("scroll", measure, true);
-      window.removeEventListener("resize", measure);
-    };
-  }, [phase, index, step.selector]);
 
   // ---- Intro (centered) ----
   if (phase === "intro") {
@@ -142,40 +98,14 @@ export function ProgramWelcome({
     );
   }
 
-  // ---- Steps (spotlight + bottom card) ----
-  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-  const vw = typeof window !== "undefined" ? window.innerWidth : 390;
-  const t = rect ? Math.max(rect.top - PAD, 0) : 0;
-  const l = rect ? Math.max(rect.left - PAD, 0) : 0;
-  const w = rect ? rect.width + PAD * 2 : 0;
-  const h = rect ? rect.height + PAD * 2 : 0;
-  const dim = "fixed bg-black/55 transition-all duration-300 ease-out";
-
+  // ---- Steps (whole page visible; a card describes each tab) ----
   return (
-    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true">
-      {rect ? (
-        <>
-          <div className={dim} style={{ top: 0, left: 0, width: "100%", height: t }} />
-          <div
-            className={dim}
-            style={{ top: t + h, left: 0, width: "100%", height: Math.max(vh - (t + h), 0) }}
-          />
-          <div className={dim} style={{ top: t, left: 0, width: l, height: h }} />
-          <div
-            className={dim}
-            style={{ top: t, left: l + w, width: Math.max(vw - (l + w), 0), height: h }}
-          />
-          <div
-            className="pointer-events-none fixed rounded-[16px] ring-2 ring-accent transition-all duration-300 ease-out"
-            style={{ top: t, left: l, width: w, height: h }}
-          />
-        </>
-      ) : (
-        <div className="fixed inset-0 bg-black/55" />
-      )}
-
-      {/* Bottom card */}
-      <div className="fixed inset-x-0 bottom-0 flex justify-center px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+    <div className="pointer-events-none fixed inset-0 z-[70]" role="dialog" aria-modal="true">
+      <div
+        className="pointer-events-none fixed inset-x-0 bottom-0 h-60 bg-gradient-to-t from-black/55 to-transparent"
+        aria-hidden
+      />
+      <div className="pointer-events-auto fixed inset-x-0 bottom-0 flex justify-center px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
         <div className="relative w-full max-w-app animate-tour-screen rounded-card border border-border bg-surface p-4 shadow-sheet">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-eyebrow text-muted-2">
