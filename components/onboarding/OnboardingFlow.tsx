@@ -1957,6 +1957,11 @@ function CoachWizard({
               title="Here's your program description"
               sub="Drafted from your answers — edit it, polish it, or write your own."
             />
+            {genNote && (
+              <p className="rounded-input bg-chip px-3 py-2 text-sm text-body-2">
+                {genNote}
+              </p>
+            )}
             <AboutYouAI
               mode="program"
               value={about}
