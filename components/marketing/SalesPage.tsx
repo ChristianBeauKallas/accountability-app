@@ -162,10 +162,22 @@ function Footer() {
   );
 }
 
-function PhoneFrame({ src, alt }: { src: string; alt: string }) {
+function PhoneFrame({
+  src,
+  alt,
+  compact = false,
+}: {
+  src: string;
+  alt: string;
+  compact?: boolean;
+}) {
   return (
-    <div className="w-[240px] rounded-[42px] bg-black p-2.5 shadow-[0_30px_70px_rgba(0,0,0,0.5)] sm:w-[280px]">
-      <div className="overflow-hidden rounded-[34px]">
+    <div
+      className={`rounded-[38px] bg-black p-2 shadow-[0_30px_70px_rgba(0,0,0,0.5)] ${
+        compact ? "w-[220px] md:w-[172px]" : "w-[240px] p-2.5 sm:w-[280px]"
+      }`}
+    >
+      <div className="overflow-hidden rounded-[32px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} className="block w-full" />
       </div>
@@ -221,16 +233,16 @@ function BothHero() {
 function SplitSection() {
   return (
     <section id="pick" className="scroll-mt-20 border-t border-divider/60 bg-surface/40">
-      <div className="mx-auto grid max-w-6xl gap-6 px-6 py-16 md:grid-cols-3 md:py-20">
+      <div className="mx-auto grid max-w-6xl gap-5 px-6 py-10 md:grid-cols-3 md:py-14">
         <SideCard
           href="/coaches"
           eyebrow="For coaches"
           phone={{ src: "/marketing/coach-inbox.png", alt: "Coach inbox ranked by fit" }}
           title="Recruit to your roster needs"
           points={[
-            "Post the exact spot you need — position, metrics, who qualifies.",
+            "Post the roster spots you actually need to fill — position, metrics, academics and the type of player you're looking for.",
             "Only players who fit see it. The interested ones land in your inbox.",
-            "Ranked best-fit first. You pick with one tap.",
+            "Ranked best-fit first. You show interest with one tap.",
           ]}
           cta="How it works for coaches"
         />
@@ -240,9 +252,9 @@ function SplitSection() {
           phone={{ src: "/marketing/player-fits.png", alt: "Player fits feed ranked by fit" }}
           title="Get recruited by the right schools"
           points={[
-            "Build one profile — metrics, video, academics, what you want.",
-            "See every open spot, ranked by how well you fit it.",
-            "Show interest with a tap. The coaches who want you reach out.",
+            "Build your player profile — bio, metrics, video, academics and the type of program you want to play for.",
+            "See every spot that fits your profile, ranked by how well you fit it.",
+            "Show interest with one tap.",
           ]}
           cta="How it works for players"
         />
@@ -255,9 +267,9 @@ function SplitSection() {
           }}
           title="Make the money and miles count"
           points={[
-            "One profile — metrics, video, academics and what they want.",
-            "Seen only by the programs that actually fit your player.",
-            "Every opportunity visible to you — and always a response.",
+            "Stop guessing which showcase to pay for — reach the right programs directly.",
+            "Hear from programs that are actually interested in your player.",
+            "Full visibility and control over the recruiting process.",
           ]}
           cta="How it works for parents"
         />
@@ -282,15 +294,15 @@ function SideCard({
   cta: string;
 }) {
   return (
-    <div className="flex flex-col rounded-card border border-border bg-ground p-6 sm:p-8">
+    <div className="flex flex-col rounded-card border border-border bg-ground p-5 sm:p-6">
       <p className="eyebrow text-accent">{eyebrow}</p>
-      <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
-      <div className="mt-6 flex justify-center">
-        <PhoneFrame src={phone.src} alt={phone.alt} />
+      <h2 className="mt-2 text-2xl font-bold tracking-tight">{title}</h2>
+      <div className="mt-5 flex justify-center">
+        <PhoneFrame src={phone.src} alt={phone.alt} compact />
       </div>
-      <ul className="mt-6 flex-1 space-y-3">
+      <ul className="mt-5 flex-1 space-y-2.5">
         {points.map((p) => (
-          <li key={p} className="flex gap-3 text-[15px] leading-relaxed text-body-2">
+          <li key={p} className="flex gap-2.5 text-sm leading-relaxed text-body-2">
             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-pill bg-accent-soft text-accent">
               <BaseballIcon size={12} strokeWidth={2} aria-hidden />
             </span>
@@ -300,7 +312,7 @@ function SideCard({
       </ul>
       <Link
         href={href}
-        className="mt-7 flex h-[52px] w-full items-center justify-center gap-2 rounded-cta bg-accent px-6 text-base font-semibold text-surface transition-colors hover:bg-accent-dark"
+        className="mt-5 flex h-[50px] w-full items-center justify-center gap-2 rounded-cta bg-accent px-6 text-[15px] font-semibold text-surface transition-colors hover:bg-accent-dark"
       >
         {cta}
         <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
