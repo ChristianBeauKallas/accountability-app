@@ -1,5 +1,6 @@
 import { requireProfile } from "@/lib/auth";
 import { TabBar } from "@/components/ui/TabBar";
+import { AppTour } from "@/components/tour/AppTour";
 
 export default async function FollowingLayout({
   children,
@@ -14,6 +15,7 @@ export default async function FollowingLayout({
     >
       {children}
       <TabBar role={profile.role} />
+      <AppTour />
     </div>
   );
 }
