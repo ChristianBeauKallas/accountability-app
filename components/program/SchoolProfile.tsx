@@ -118,8 +118,8 @@ export function SchoolProfile({
       /* ignore */
     }
     setWelcome(false);
-    // Continue into the rest of the app (inbox + its walkthrough).
-    router.push("/inbox?welcome=1");
+    // Continue into the cross-app walkthrough (inbox → following → needs).
+    router.push("/inbox?tour=inbox");
   }
 
   async function toggleFollow() {

@@ -203,8 +203,8 @@ export function NeedForm({
       setError(err.message);
       return;
     }
-    // After the very first need, drop into the inbox with the welcome tour.
-    router.push(firstNeed ? "/inbox?welcome=1" : "/needs");
+    // After the very first need, drop into the inbox.
+    router.push(firstNeed ? "/inbox" : "/needs");
     router.refresh();
   }
 
@@ -217,10 +217,7 @@ export function NeedForm({
     <main className="px-5 pt-12 pb-6">
       <div className="flex items-center justify-between">
         {firstNeed ? (
-          <Link
-            href="/inbox?welcome=1"
-            className="text-sm font-semibold text-muted"
-          >
+          <Link href="/inbox" className="text-sm font-semibold text-muted">
             Skip for now
           </Link>
         ) : (
