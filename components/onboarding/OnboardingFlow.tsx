@@ -1162,17 +1162,17 @@ const COACH_INTRO: { screen: ScreenKey; title: string; body: string }[] = [
   {
     screen: "needs",
     title: "Recruit to your roster needs",
-    body: "Lay out who you need at each spot — position, class, the numbers — and we'll put it in front of players who fit.",
+    body: "Create a post for the exact spot you need — and it lands in front of the players who actually fit it.",
   },
   {
     screen: "inbox",
     title: "See who fits, first",
-    body: "Players who actually fit show up ranked best first. No cold DMs to dig through.",
+    body: "Players who fit what you're looking for show up as they show interest — no need to filter through the noise.",
   },
   {
     screen: "inbox-mutual",
     title: "Reach out on your terms",
-    body: "You only see a player once they show interest in your opportunity. Once you mark interest back, the two of you connect and contact information is exchanged.",
+    body: "Review every player in your inbox and mark interest in only the ones you want to connect with.",
   },
 ];
 

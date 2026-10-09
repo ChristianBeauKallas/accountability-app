@@ -79,8 +79,8 @@ export const COACH_TOUR: TourStep[] = [
   {
     screen: "program",
     selector: '[data-tour="tab-program"]',
-    title: "Sell your program",
-    body: "Program is your public page — add facilities and updates so recruits can picture the fit.",
+    title: "Showcase your program",
+    body: "Program is your public page — add your logo, facility photos and updates so recruits can picture the fit.",
   },
   {
     screen: "program",
