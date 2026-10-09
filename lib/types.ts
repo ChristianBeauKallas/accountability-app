@@ -1,5 +1,7 @@
 // Athletx — database types (hand-maintained to match supabase/migrations).
 
+import type { PlayerLevel } from "@/lib/constants";
+
 export type UserRole = "player" | "coach";
 export type Division = "D2" | "D3" | "NAIA" | "JUCO";
 export type StaffRole =
@@ -46,6 +48,7 @@ export type Player = {
   lat: number | null;
   lng: number | null;
   is_transfer: boolean;
+  level: PlayerLevel | null;
   current_school: string | null;
   sixty_yd: number | null;
   exit_velo: number | null;
@@ -104,6 +107,7 @@ export type Need = {
   grad_year_min: number | null;
   grad_year_max: number | null;
   accepts_transfer: boolean;
+  player_types: string[];
   min_gpa: number;
   must_have: string[];
   min_exit_velo: number | null;

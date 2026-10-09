@@ -17,6 +17,7 @@ import {
   BATS,
   THROWS,
   PITCHES,
+  PLAYER_LEVELS,
   isPitcher,
   isCatcher,
   isOutfielder,
@@ -265,8 +266,10 @@ function PlayerWizard({
   const [name, setName] = useState(initialName);
   const [picked, setPicked] = useState<string[]>([]);
   const [gradYear, setGradYear] = useState("");
-  const [isTransfer, setIsTransfer] = useState(false);
+  // Where the player currently is: "high_school" | "juco" | "four_year".
+  const [level, setLevel] = useState<string>("high_school");
   const [currentSchool, setCurrentSchool] = useState("");
+  const isTransfer = level !== "high_school";
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [lat, setLat] = useState<number | null>(null);
@@ -354,7 +357,7 @@ function PlayerWizard({
         const { data } = await supabase
           .from("needs")
           .select(
-            "positions, grad_year_min, grad_year_max, accepts_transfer, min_gpa"
+            "positions, grad_year_min, grad_year_max, accepts_transfer, player_types, min_gpa"
           )
           .eq("status", "open");
         needs = (data ?? []) as unknown as Need[];
@@ -364,6 +367,7 @@ function PlayerWizard({
         positions: picked,
         grad_year: gradYear ? Number(gradYear) : null,
         is_transfer: isTransfer,
+        level,
         gpa: gpa ? Number(gpa) : null,
       } as Player;
       const n = needs.filter((nd) => isEligible(me, nd)).length;
@@ -516,6 +520,7 @@ function PlayerWizard({
         lat,
         lng,
         is_transfer: isTransfer,
+        level,
         current_school: isTransfer ? currentSchool.trim() || null : null,
         sixty_yd: sixtyN,
         exit_velo: hasHit ? toInt(exitVelo) : null,
@@ -637,29 +642,58 @@ function PlayerWizard({
 
         {step === "class" && (
           <div className="space-y-6">
-            <QHead title="What's your class?" sub="Your graduation year." />
-            <div className="flex flex-wrap gap-2">
-              {years.map((y) => (
-                <OptionPill
-                  key={y}
-                  active={gradYear === String(y)}
-                  onClick={() => setGradYear(String(y))}
-                >
-                  {y}
-                </OptionPill>
-              ))}
+            <QHead
+              title="Where are you now?"
+              sub="This is how coaches know who they're recruiting."
+            />
+            <div className="space-y-2">
+              {PLAYER_LEVELS.map((lvl) => {
+                const active = level === lvl.value;
+                return (
+                  <button
+                    key={lvl.value}
+                    type="button"
+                    onClick={() => setLevel(lvl.value)}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-input border p-4 text-left transition-colors",
+                      active
+                        ? "border-accent bg-accent-soft"
+                        : "border-border bg-surface hover:bg-chip"
+                    )}
+                  >
+                    <span className="text-[15px] font-semibold text-ink">
+                      {lvl.self}
+                    </span>
+                    <span
+                      className={cn(
+                        "flex h-5 w-5 items-center justify-center rounded-full border",
+                        active ? "border-accent bg-accent text-surface" : "border-border"
+                      )}
+                    >
+                      {active && <span className="text-xs font-bold">✓</span>}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <label className="flex items-center gap-3 rounded-input border border-border bg-surface p-3">
-              <input
-                type="checkbox"
-                checked={isTransfer}
-                onChange={(e) => setIsTransfer(e.target.checked)}
-                className="h-5 w-5 accent-accent"
-              />
-              <span className="text-[15px] text-ink">
-                I&rsquo;m a transfer (currently in college)
-              </span>
-            </label>
+
+            <div>
+              <p className="eyebrow mb-2">
+                {isTransfer ? "Graduation year" : "Your class"}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {years.map((y) => (
+                  <OptionPill
+                    key={y}
+                    active={gradYear === String(y)}
+                    onClick={() => setGradYear(String(y))}
+                  >
+                    {y}
+                  </OptionPill>
+                ))}
+              </div>
+            </div>
+
             {isTransfer && (
               <Field label="Current school" htmlFor="cs">
                 <Input

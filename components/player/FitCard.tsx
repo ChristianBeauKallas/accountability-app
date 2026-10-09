@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { SaveButton } from "@/components/SaveButton";
 import { distanceMiles, fitReasons } from "@/lib/fit";
-import { formatMiles, poolLabel } from "@/lib/format";
+import { formatMiles, needPoolLabel } from "@/lib/format";
 import type { Need, Player, Program } from "@/lib/types";
 
 export type FeedItem = {
@@ -94,13 +94,7 @@ export function FitCard({
             {p}
           </Chip>
         ))}
-        <Chip>
-          {poolLabel(
-            need.grad_year_min,
-            need.grad_year_max,
-            need.accepts_transfer
-          )}
-        </Chip>
+        <Chip>{needPoolLabel(need)}</Chip>
         {need.min_gpa > 0 && <Chip tone="metric">GPA {need.min_gpa}+</Chip>}
         {need.min_exit_velo != null && (
           <Chip tone="metric">EV {need.min_exit_velo}+</Chip>

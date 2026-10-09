@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { Button } from "@/components/ui/Button";
-import { poolLabel } from "@/lib/format";
+import { needPoolLabel } from "@/lib/format";
 import type { Need } from "@/lib/types";
 
 export type NeedWithCount = Need & { applicant_count: number };
@@ -69,11 +69,7 @@ export function NeedsView({ needs: initial }: { needs: NeedWithCount[] }) {
                       {need.title}
                     </p>
                     <p className="mt-0.5 text-sm text-muted">
-                      {poolLabel(
-                        need.grad_year_min,
-                        need.grad_year_max,
-                        need.accepts_transfer
-                      )}
+                      {needPoolLabel(need)}
                     </p>
                   </div>
                   <Chip
