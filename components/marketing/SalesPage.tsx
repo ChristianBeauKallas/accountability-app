@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  Check,
   ClipboardList,
   Inbox,
   Star,
@@ -44,8 +45,10 @@ export function SalesPage({ audience = "both" }: { audience?: Audience }) {
         <>
           <AudienceHero audience={audience} />
           <Problem audience={audience} />
+          <ShowcaseSection audience={audience} />
           <HowItWorks audience={audience} />
           <ValueSection audience={audience} />
+          {audience === "player" && <ParentsSection />}
           <Founder />
           <JoinSection audience={audience} />
         </>
@@ -379,6 +382,15 @@ const CONTENT = {
       src: "/marketing/player-fits.png",
       alt: "Athletx player fits feed — spots ranked by fit",
     },
+    showcase: {
+      heading: "The player who fits you isn't always at the big showcase.",
+      body: "The showcase circuit is expensive, and plenty of players who'd be perfect for your program can't afford to be seen on it. On Athletx, players come to you by fit — whatever camps they could or couldn't pay for — so you find the right ones, not just the well-funded ones.",
+      stats: [
+        { n: "By fit", label: "players matched to your exact needs — not a showcase roster" },
+        { n: "No travel", label: "they come to you; no camp circuit to work to find them" },
+        { n: "Every level", label: "HS, JUCO and transfers who fit, all in one place" },
+      ],
+    },
     joinHeading: "Join the waitlist",
     joinBody:
       "Drop your info and a member of our team will reach out personally with a link to get your account set up. We're onboarding small-college coaches in small waves.",
@@ -446,6 +458,25 @@ const CONTENT = {
     featurePhone: {
       src: "/marketing/coach-inbox.png",
       alt: "A coach's inbox — your interest, ranked by fit",
+    },
+    showcase: {
+      heading: "You're already paying for exposure. It's just not working.",
+      body: "Families spend thousands every year on showcases, camps and travel ball — and still have no idea which college programs actually want their player. The schools that would be the perfect fit are often the ones that were never at that showcase.",
+      stats: [
+        { n: "$2,000+", label: "a year on showcases, camps and travel — with no guarantee a fitting coach ever sees you" },
+        { n: "Right-fit", label: "programs that were never at the showcase you paid for" },
+        { n: "One profile", label: "seen by every coach whose needs you match — free in the test group" },
+      ],
+    },
+    parents: {
+      heading: "Built for parents, too.",
+      body: "You want to know your time and money are going somewhere real. Athletx gives your player one profile that does the work — in front of the coaches who actually need them, with every opportunity visible and a response every time.",
+      bullets: [
+        "One profile, not a hundred emails — metrics, video, academics and what they're looking for, all in one place.",
+        "Real exposure, by fit — your player is seen by the programs whose needs they match, not lost in a pile.",
+        "You see everything — every open spot and every program that shows interest, so you're never in the dark.",
+        "Always a response — no more silence after camps and cold emails.",
+      ],
     },
     joinHeading: "Join the waitlist",
     joinBody:
@@ -537,6 +568,55 @@ function Problem({ audience }: { audience: "coach" | "player" }) {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+function ShowcaseSection({ audience }: { audience: "coach" | "player" }) {
+  const s = CONTENT[audience].showcase;
+  return (
+    <section>
+      <div className="mx-auto max-w-5xl px-6 py-16 md:py-20">
+        <p className="eyebrow text-accent">The real cost</p>
+        <h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
+          {s.heading}
+        </h2>
+        <p className="mt-4 max-w-2xl text-lg text-body-2">{s.body}</p>
+        <div className="mt-10 grid gap-5 sm:grid-cols-3">
+          {s.stats.map((x) => (
+            <div key={x.label} className="rounded-card border border-border bg-surface/60 p-5">
+              <div className="font-display text-3xl font-bold text-accent">{x.n}</div>
+              <p className="mt-1 text-sm leading-relaxed text-body-2">{x.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ParentsSection() {
+  const p = CONTENT.player.parents;
+  return (
+    <section className="border-t border-divider/60 bg-surface/40">
+      <div className="mx-auto max-w-4xl px-6 py-16 md:py-20">
+        <p className="eyebrow text-accent">For parents</p>
+        <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{p.heading}</h2>
+        <p className="mt-4 max-w-2xl text-lg text-body-2">{p.body}</p>
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+          {p.bullets.map((b) => (
+            <li
+              key={b}
+              className="flex gap-3 rounded-card border border-border bg-ground p-4 text-[15px] leading-relaxed text-body-2"
+            >
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-pill bg-accent text-surface">
+                <Check size={14} strokeWidth={3} aria-hidden />
+              </span>
+              {b}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
