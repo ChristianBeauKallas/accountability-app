@@ -2,8 +2,6 @@ import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { InboxView, type InboxRow } from "@/components/coach/InboxView";
 import { HeaderActions } from "@/components/HeaderActions";
-import { WelcomeTour } from "@/components/tour/WelcomeTour";
-import { COACH_TOUR } from "@/components/tour/steps";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +36,6 @@ export default async function InboxPage() {
           : "Players who want your spots show up here, best fit first."}
       </p>
       <InboxView rows={rows} />
-      <WelcomeTour steps={COACH_TOUR} storageKey="athletx-tour-coach" />
     </main>
   );
 }
