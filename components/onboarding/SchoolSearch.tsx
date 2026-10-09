@@ -10,6 +10,8 @@ export type SchoolRow = {
   state: string | null;
   lat: number | null;
   lng: number | null;
+  division: string | null;
+  conference: string | null;
 };
 
 /**
@@ -58,7 +60,7 @@ export function SchoolSearch({
     const esc = term.replace(/[%_\\]/g, (m) => `\\${m}`);
     const { data } = await supabase
       .from("schools")
-      .select("name, city, state, lat, lng")
+      .select("name, city, state, lat, lng, division, conference")
       .or(`name.ilike.${esc}%,name.ilike.%${esc}%`)
       .order("name")
       .limit(8);
