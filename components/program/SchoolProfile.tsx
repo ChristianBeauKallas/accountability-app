@@ -21,6 +21,7 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
 import { HeaderActions } from "@/components/HeaderActions";
 import { ProgramFeed } from "@/components/program/ProgramFeed";
+import { ProgramWelcome } from "@/components/tour/ProgramWelcome";
 import {
   MetricTiles,
   StatRow,
@@ -75,6 +76,48 @@ export function SchoolProfile({
   const [editing, setEditing] = useState(false);
   const [following, setFollowing] = useState(isFollowing);
   const [followBusy, setFollowBusy] = useState(false);
+  // Post-onboarding walkthrough of the coach's own, freshly-built page.
+  const [welcome, setWelcome] = useState(false);
+  const [skipFac, setSkipFac] = useState(false);
+
+  useEffect(() => {
+    if (!editable) return;
+    let params: URLSearchParams;
+    try {
+      params = new URLSearchParams(window.location.search);
+    } catch {
+      return;
+    }
+    if (params.get("welcome") !== "1") return;
+    let seen = false;
+    try {
+      seen = localStorage.getItem("athletx-tour-coach-program") === "1";
+    } catch {
+      /* ignore */
+    }
+    if (seen) return;
+    setWelcome(true);
+    // If they already added facility photos in onboarding, skip that step.
+    (async () => {
+      const { count } = await supabase
+        .from("program_posts")
+        .select("id", { count: "exact", head: true })
+        .eq("program_id", program.id)
+        .eq("kind", "facility");
+      if ((count ?? 0) > 0) setSkipFac(true);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function finishWelcome() {
+    try {
+      localStorage.setItem("athletx-tour-coach-program", "1");
+    } catch {
+      /* ignore */
+    }
+    setWelcome(false);
+    router.push("/needs/new?welcome=1");
+  }
 
   async function toggleFollow() {
     setFollowBusy(true);
@@ -199,6 +242,14 @@ export function SchoolProfile({
           />
         )}
       </div>
+
+      {welcome && (
+        <ProgramWelcome
+          onTab={(t) => setTab(t)}
+          onDone={finishWelcome}
+          skipFacilities={skipFac}
+        />
+      )}
     </main>
   );
 }
