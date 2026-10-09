@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   ArrowRight,
-  Check,
   ClipboardList,
   Inbox,
   Star,
@@ -16,7 +15,8 @@ import {
 } from "lucide-react";
 import { WaitlistForm } from "@/components/marketing/WaitlistForm";
 
-type Audience = "both" | "coach" | "player";
+type Audience = "both" | "coach" | "player" | "parent";
+type PageAudience = "coach" | "player" | "parent";
 
 function Wordmark({ className = "" }: { className?: string }) {
   return (
@@ -39,6 +39,7 @@ export function SalesPage({ audience = "both" }: { audience?: Audience }) {
         <>
           <BothHero />
           <SplitSection />
+          <ParentLink />
           <Founder />
           <PickYourSide />
         </>
@@ -49,7 +50,7 @@ export function SalesPage({ audience = "both" }: { audience?: Audience }) {
           <ShowcaseSection audience={audience} />
           <HowItWorks audience={audience} />
           <ValueSection audience={audience} />
-          {audience === "player" && <ParentsSection />}
+          {audience === "player" && <ParentLink />}
           <Founder />
           <JoinSection audience={audience} />
         </>
@@ -69,17 +70,14 @@ function Nav({ audience }: { audience: Audience }) {
           <Wordmark className="text-2xl" />
         </Link>
         <nav className="flex items-center gap-1 sm:gap-2">
-          <Link
-            href="/coaches"
-            className={navLink(audience === "coach")}
-          >
+          <Link href="/coaches" className={navLink(audience === "coach")}>
             For coaches
           </Link>
-          <Link
-            href="/players"
-            className={navLink(audience === "player")}
-          >
+          <Link href="/players" className={navLink(audience === "player")}>
             For players
+          </Link>
+          <Link href="/parents" className={navLink(audience === "parent")}>
+            For parents
           </Link>
           <a
             href={audience === "both" ? "#pick" : "#join"}
@@ -153,6 +151,9 @@ function Footer() {
           </Link>
           <Link href="/players" className="hover:text-ink">
             For players
+          </Link>
+          <Link href="/parents" className="hover:text-ink">
+            For parents
           </Link>
         </div>
         <p className="text-sm text-muted-2">College baseball, matched by fit.</p>
@@ -413,13 +414,13 @@ const CONTENT = {
       src: "/marketing/player-fits.png",
       alt: "Athletx fits feed — open spots ranked by how well you fit",
     },
-    problemHeading: "Recruiting shouldn't be a shot in the dark.",
+    problemHeading: "Recruiting feels like shouting into the void.",
     problemBody:
-      "You send dozens of emails to schools that never respond, with no idea who actually wants you or where you'd even fit. The programs that would love to have you are out there — you just can't see them.",
+      "You send email after email to schools that never write back, with no idea who actually wants you — or where you'd even fit. The clock keeps ticking, and the programs that would love to have you are out there. You just can't see them.",
     stats: [
       { n: "Dozens", label: "of emails that never get a reply" },
       { n: "?", label: "no idea which schools actually want you" },
-      { n: "The fit", label: "program you'd thrive at, unseen" },
+      { n: "The fit", label: "program you'd thrive at — unseen" },
     ],
     howHeading: "Build your profile. See where you fit. Get recruited.",
     steps: [
@@ -472,19 +473,86 @@ const CONTENT = {
         { n: "One profile", label: "seen by every coach whose needs you match — free in the test group" },
       ],
     },
-    parents: {
-      heading: "Built for parents, too.",
-      body: "You want to know your time and money are going somewhere real. Athletx gives your player one profile that does the work — in front of the coaches who actually need them, with every opportunity visible and a response every time.",
-      bullets: [
-        "One profile, not a hundred emails — metrics, video, academics and what they're looking for, all in one place.",
-        "Real exposure, by fit — your player is seen by the programs whose needs they match, not lost in a pile.",
-        "You see everything — every open spot and every program that shows interest, so you're never in the dark.",
-        "Always a response — no more silence after camps and cold emails.",
-      ],
-    },
     joinHeading: "Join the waitlist",
     joinBody:
       "Drop your info and a member of our team will reach out personally with a link to set up your profile. We're onboarding players in small waves.",
+  },
+  parent: {
+    eyebrow: "For parents",
+    headline: (
+      <>
+        Get your player in front of the coaches who{" "}
+        <span className="text-accent">actually want them.</span>
+      </>
+    ),
+    sub: "You've put in the money and the miles. Athletx makes it count — one profile that puts your player in front of the programs that truly fit, with every opportunity visible to you and a response every time.",
+    tagline: "For families of HS recruits, JUCO & transfers",
+    phone: {
+      src: "/marketing/player-fits.png",
+      alt: "What your player sees — college spots ranked by how well they fit",
+    },
+    problemHeading: "You're doing everything right. It still feels like a black box.",
+    problemBody:
+      "Showcases, camps, travel ball, lessons — thousands of dollars and countless weekends. But you still don't know which programs actually want your player, and the emails you send vanish. The schools that would be perfect are out there; you just can't see them.",
+    stats: [
+      { n: "$2,000+", label: "a year on showcases, camps, travel and lessons" },
+      { n: "Weekends", label: "of tournaments with no clear return" },
+      { n: "Silence", label: "from most of the coaches you email" },
+    ],
+    howHeading: "How it works for your player.",
+    steps: [
+      {
+        icon: "user",
+        title: "Build one profile",
+        body: "Metrics, video, academics and what they're looking for — all in one place. We even draft the bio. It takes about 15 minutes.",
+      },
+      {
+        icon: "compass",
+        title: "See where they fit",
+        body: "Every open college spot, ranked by how well your player matches — position, metrics, academics, and distance from home.",
+      },
+      {
+        icon: "hand",
+        title: "They show interest — one tap",
+        body: "Your player tells the coaches they're interested. Only the programs they choose see the profile, and the coaches respond.",
+      },
+    ],
+    valueHeading: "Peace of mind, not guesswork.",
+    valueBody:
+      "You want to know your time and money are going somewhere real — and that your player lands where they'll actually play and earn a degree. Athletx keeps the whole process in the open.",
+    features: [
+      {
+        icon: "shield",
+        title: "You're never in the dark",
+        body: "See every open spot and every program that shows interest. The whole process is visible to you, not hidden in your player's inbox.",
+      },
+      {
+        icon: "map",
+        title: "The right fit, not just the biggest name",
+        body: "Academics, level and distance shape the matches — so your player lands somewhere they'll play, learn and belong.",
+      },
+      {
+        icon: "bell",
+        title: "Always a response",
+        body: "Every program your player shows interest in gets their profile and responds. No more silence after camps and emails.",
+      },
+    ],
+    featurePhone: {
+      src: "/marketing/coach-inbox.png",
+      alt: "A coach's inbox — your player's interest, ranked by fit",
+    },
+    showcase: {
+      heading: "Exposure you've already paid for — finally pointed at the right programs.",
+      body: "The big showcase isn't where every right-fit coach is looking, and it rewards the families who can afford to be everywhere. Athletx gets your player seen by the programs whose needs they actually match — by fit, not by budget — so the money you spend turns into real conversations.",
+      stats: [
+        { n: "By fit", label: "seen by the coaches who need exactly what your player brings" },
+        { n: "Every level", label: "D2, D3, NAIA and JUCO programs — not just the big names" },
+        { n: "Free", label: "to get your player on the list in the test group" },
+      ],
+    },
+    joinHeading: "Get your player on the list",
+    joinBody:
+      "Drop your player's info and a member of our team will reach out personally with a link to set up their profile.",
   },
 } as const;
 
@@ -516,7 +584,7 @@ function icon(name: string) {
   }
 }
 
-function AudienceHero({ audience }: { audience: "coach" | "player" }) {
+function AudienceHero({ audience }: { audience: PageAudience }) {
   const c = CONTENT[audience];
   return (
     <section className="relative overflow-hidden">
@@ -555,7 +623,7 @@ function AudienceHero({ audience }: { audience: "coach" | "player" }) {
   );
 }
 
-function Problem({ audience }: { audience: "coach" | "player" }) {
+function Problem({ audience }: { audience: PageAudience }) {
   const c = CONTENT[audience];
   return (
     <section className="border-t border-divider/60 bg-surface/40">
@@ -577,7 +645,7 @@ function Problem({ audience }: { audience: "coach" | "player" }) {
   );
 }
 
-function ShowcaseSection({ audience }: { audience: "coach" | "player" }) {
+function ShowcaseSection({ audience }: { audience: PageAudience }) {
   const s = CONTENT[audience].showcase;
   return (
     <section>
@@ -600,33 +668,35 @@ function ShowcaseSection({ audience }: { audience: "coach" | "player" }) {
   );
 }
 
-function ParentsSection() {
-  const p = CONTENT.player.parents;
+function ParentLink() {
   return (
-    <section className="border-t border-divider/60 bg-surface/40">
-      <div className="mx-auto max-w-4xl px-6 py-16 md:py-20">
-        <p className="eyebrow text-accent">For parents</p>
-        <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{p.heading}</h2>
-        <p className="mt-4 max-w-2xl text-lg text-body-2">{p.body}</p>
-        <ul className="mt-8 grid gap-4 sm:grid-cols-2">
-          {p.bullets.map((b) => (
-            <li
-              key={b}
-              className="flex gap-3 rounded-card border border-border bg-ground p-4 text-[15px] leading-relaxed text-body-2"
-            >
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-pill bg-accent text-surface">
-                <Check size={14} strokeWidth={3} aria-hidden />
-              </span>
-              {b}
-            </li>
-          ))}
-        </ul>
+    <section>
+      <div className="mx-auto max-w-5xl px-6 py-10 md:py-12">
+        <Link
+          href="/parents"
+          className="flex flex-col items-start justify-between gap-4 rounded-card border border-border bg-surface/60 p-6 transition-colors hover:bg-surface sm:flex-row sm:items-center sm:p-7"
+        >
+          <div className="min-w-0">
+            <p className="eyebrow text-accent">For parents</p>
+            <p className="mt-1.5 text-xl font-bold tracking-tight text-ink">
+              Helping your player get recruited?
+            </p>
+            <p className="mt-1 text-[15px] leading-relaxed text-body-2">
+              See how Athletx turns the money and miles you&rsquo;re already
+              spending into real conversations with the right programs.
+            </p>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-cta bg-accent px-5 py-3 text-sm font-semibold text-surface">
+            See how it works
+            <ArrowRight size={16} strokeWidth={2.5} aria-hidden />
+          </span>
+        </Link>
       </div>
     </section>
   );
 }
 
-function HowItWorks({ audience }: { audience: "coach" | "player" }) {
+function HowItWorks({ audience }: { audience: PageAudience }) {
   const c = CONTENT[audience];
   return (
     <section id="how" className="scroll-mt-20">
@@ -656,7 +726,7 @@ function HowItWorks({ audience }: { audience: "coach" | "player" }) {
   );
 }
 
-function ValueSection({ audience }: { audience: "coach" | "player" }) {
+function ValueSection({ audience }: { audience: PageAudience }) {
   const c = CONTENT[audience];
   return (
     <section className="border-y border-divider/60 bg-surface/40">
@@ -691,13 +761,16 @@ function ValueSection({ audience }: { audience: "coach" | "player" }) {
 
 const TEST_GROUP_CAP = 10;
 
-async function JoinSection({ audience }: { audience: "coach" | "player" }) {
+async function JoinSection({ audience }: { audience: PageAudience }) {
+  // Parents sign their player up, so they share the player waitlist + count.
+  const kind = audience === "coach" ? "coach" : "player";
+
   // Count signups to switch the copy once the founding group is full. The form
   // itself never closes — we keep collecting for the next wave.
   let count = 0;
   try {
     const supabase = createClient();
-    const { data } = await supabase.rpc("waitlist_count", { p_kind: audience });
+    const { data } = await supabase.rpc("waitlist_count", { p_kind: kind });
     if (typeof data === "number") count = data;
   } catch {
     /* function not available yet → show the open state */
@@ -705,10 +778,13 @@ async function JoinSection({ audience }: { audience: "coach" | "player" }) {
   const full = count >= TEST_GROUP_CAP;
   const spotsLeft = Math.max(0, TEST_GROUP_CAP - count);
 
+  const heading = audience === "parent" ? "Get your player on the list" : "Join the waitlist";
   const openBody =
     audience === "coach"
       ? "The first 10 coaches to join become our founding test group — early access to Athletx, and a direct hand in shaping it with your feedback. Drop your info and we’ll reach out personally to get you set up."
-      : "The first 10 players to join become our founding test group — early access to build your profile, and a direct hand in shaping the player side with your feedback. Drop your info and we’ll reach out personally to get you set up.";
+      : audience === "parent"
+        ? "The first 10 players to join become our founding test group. Get your player on the list — drop their info and a member of our team will reach out personally with a link to set up their profile."
+        : "The first 10 players to join become our founding test group — early access to build your profile, and a direct hand in shaping the player side with your feedback. Drop your info and we’ll reach out personally to get you set up.";
   const fullBody =
     "Our founding test group is full — thank you! Join the waitlist for the next wave and we’ll reach out as soon as spots open up.";
 
@@ -718,7 +794,7 @@ async function JoinSection({ audience }: { audience: "coach" | "player" }) {
         <div className="text-center">
           <p className="eyebrow text-accent">{full ? "Next wave" : "Founding test group"}</p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Join the waitlist
+            {heading}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-body-2">
             {full ? fullBody : openBody}
@@ -731,7 +807,7 @@ async function JoinSection({ audience }: { audience: "coach" | "player" }) {
           )}
         </div>
         <div className="mt-10 rounded-card border border-border bg-ground p-6 sm:p-8">
-          <WaitlistForm kind={audience} />
+          <WaitlistForm kind={kind} />
         </div>
       </div>
     </section>
