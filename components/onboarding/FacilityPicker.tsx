@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 // Recruiting value-adds a program can showcase, grouped so a coach thinks
 // across facilities, development, academics and results. The picker always
 // shows these; crowdsourced/custom tags land in a "More" group.
-const FACILITY_GROUPS: { label: string; items: string[] }[] = [
+export const FACILITY_GROUPS: { label: string; items: string[] }[] = [
   {
     label: "Facilities & tech",
     items: [
