@@ -576,8 +576,20 @@ function InboxScreen({ mutual = false }: { mutual?: boolean }) {
         <ApplicantCard
           name="Marcus Reed"
           meta="RHP · 2026 · Tulsa, OK"
-          want="Weekend starter"
+          want="Friday-night starter"
           fit={89}
+        />
+        <ApplicantCard
+          name="Diego Ramirez"
+          meta="2B / SS · 2027 · Mesa, AZ"
+          want="Middle infield — 2026/27"
+          fit={84}
+        />
+        <ApplicantCard
+          name="Tyler Nguyen"
+          meta="RHP · 2026 · Frisco, TX"
+          want="Friday-night starter"
+          fit={81}
         />
       </div>
     </Shell>
@@ -587,16 +599,20 @@ function InboxScreen({ mutual = false }: { mutual?: boolean }) {
 function NeedCard({
   title,
   level,
+  desc,
   positions,
+  metrics,
   count,
 }: {
   title: string;
   level: string;
+  desc?: string;
   positions: string[];
+  metrics?: string[];
   count: number;
 }) {
   return (
-    <Card className="space-y-3">
+    <Card className="space-y-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="eyebrow">{level}</p>
@@ -606,10 +622,16 @@ function NeedCard({
           Open
         </Chip>
       </div>
-      <div className="flex flex-wrap gap-2">
+      {desc && <p className="text-[13px] leading-snug text-body-2">{desc}</p>}
+      <div className="flex flex-wrap gap-1.5">
         {positions.map((p) => (
-          <Chip key={p} tone="accent">
+          <Chip key={p} tone="accent" size="sm">
             {p}
+          </Chip>
+        ))}
+        {(metrics ?? []).map((m) => (
+          <Chip key={m} tone="metric" size="sm">
+            {m}
           </Chip>
         ))}
       </div>
@@ -627,18 +649,22 @@ function NeedsScreen() {
         title="Needs"
         sub="Who you need, spot by spot — only players who fit see them."
       />
-      <div className="space-y-3.5">
+      <div className="space-y-3">
+        <NeedCard
+          title="RHP — Friday-night starter"
+          level="JUCO · KJCCC"
+          desc="Sitting 88+ with a breaker he can land. Bulldog on the mound."
+          positions={["RHP"]}
+          metrics={["FB 88+", "GPA 2.5+"]}
+          count={7}
+        />
         <NeedCard
           title="Middle infield — 2026/27"
           level="JUCO · KJCCC"
+          desc="Glove-first SS/2B with range and a quick exchange. Can run."
           positions={["SS", "2B"]}
-          count={6}
-        />
-        <NeedCard
-          title="Weekend starter — 2026"
-          level="JUCO · KJCCC"
-          positions={["RHP", "LHP"]}
-          count={4}
+          metrics={["EV 90+", "60 ≤ 6.9"]}
+          count={5}
         />
       </div>
     </Shell>
