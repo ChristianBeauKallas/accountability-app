@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Camera, Film, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Check, Film, Plus, X } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
@@ -26,7 +26,7 @@ import { isEligible } from "@/lib/fit";
 import { CitySearch } from "@/components/onboarding/CitySearch";
 import { SchoolSearch } from "@/components/onboarding/SchoolSearch";
 import { ConferenceSearch } from "@/components/onboarding/ConferenceSearch";
-import { FacilityPicker } from "@/components/onboarding/FacilityPicker";
+import { FACILITY_GROUPS } from "@/components/onboarding/FacilityPicker";
 import { MockScreen, type ScreenKey } from "@/components/tour/MockScreens";
 import type { UserRole, Player, Need } from "@/lib/types";
 
@@ -1296,6 +1296,14 @@ function CoachWizard({
   const [schoolChosen, setSchoolChosen] = useState(false);
   const [about, setAbout] = useState("");
   const [facilities, setFacilities] = useState<string[]>([]);
+  // The "about" step is a mini questionnaire: intro → spinner → one category
+  // of value-adds per screen → spinner → generated description to review.
+  const [aboutPhase, setAboutPhase] = useState<
+    "intro" | "spinQ" | "cats" | "spinGen" | "review"
+  >("intro");
+  const [catIndex, setCatIndex] = useState(0);
+  const [customTag, setCustomTag] = useState("");
+  const [genNote, setGenNote] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [facilityPhotos, setFacilityPhotos] = useState<string[]>([]);
@@ -1395,9 +1403,102 @@ function CoachWizard({
     }, 1500);
     return () => clearTimeout(t);
   }, [settingUp]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ---- "About" questionnaire helpers ----
+  const facKey = (s: string) => s.trim().toLowerCase();
+  function toggleFacility(name: string) {
+    const k = facKey(name);
+    setFacilities((cur) =>
+      cur.some((v) => facKey(v) === k)
+        ? cur.filter((v) => facKey(v) !== k)
+        : [...cur, name]
+    );
+  }
+  function addCustomTag() {
+    const parts = customTag
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!parts.length) return;
+    setFacilities((cur) => {
+      const have = new Set(cur.map(facKey));
+      const next = [...cur];
+      for (const p of parts)
+        if (!have.has(facKey(p))) {
+          have.add(facKey(p));
+          next.push(p);
+        }
+      return next;
+    });
+    setCustomTag("");
+  }
+  async function generateProgram() {
+    try {
+      const res = await fetch("/api/ai/bio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "program",
+          generate: true,
+          programName,
+          division,
+          conference,
+          facilities,
+          text: about.trim() || undefined,
+        }),
+      });
+      if (res.status === 503) {
+        setGenNote("AI isn't set up yet — write your own below.");
+        return;
+      }
+      if (!res.ok) {
+        setGenNote("Couldn't draft that — add or edit below.");
+        return;
+      }
+      const data = (await res.json()) as { text?: string };
+      if (data.text) {
+        setAbout(data.text);
+        setGenNote("Drafted from your answers ✨ — edit anything.");
+      }
+    } catch {
+      setGenNote("Couldn't draft that — add or edit below.");
+    }
+  }
+  // "Getting questions ready" beat → first category.
+  useEffect(() => {
+    if (aboutPhase !== "spinQ") return;
+    const t = setTimeout(() => {
+      setCatIndex(0);
+      setAboutPhase("cats");
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [aboutPhase]);
+  // "Developing your profile" → fire the generator, then show the draft.
+  useEffect(() => {
+    if (aboutPhase !== "spinGen") return;
+    let active = true;
+    (async () => {
+      setGenNote("");
+      await generateProgram();
+      if (active) setAboutPhase("review");
+    })();
+    return () => {
+      active = false;
+    };
+  }, [aboutPhase]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleBack() {
     if (step === "intro" && introSlide > 0) setIntroSlide((s) => s - 1);
-    else goBack();
+    else if (step === "about") {
+      if (aboutPhase === "review") {
+        setCatIndex(FACILITY_GROUPS.length - 1);
+        setAboutPhase("cats");
+      } else if (aboutPhase === "cats") {
+        if (catIndex > 0) setCatIndex((i) => i - 1);
+        else setAboutPhase("intro");
+      } else if (aboutPhase === "intro") goBack();
+      // spinners have no back
+    } else goBack();
   }
 
   async function finish() {
@@ -1521,8 +1622,13 @@ function CoachWizard({
 
   if (step === "done") return <Finishing label="Getting things ready…" />;
   if (settingUp) return <Finishing label="Let's set up your profile" />;
+  if (step === "about" && aboutPhase === "spinQ")
+    return <Finishing label="Getting questions ready…" />;
+  if (step === "about" && aboutPhase === "spinGen")
+    return <Finishing label="Developing your profile…" />;
 
   const isIntro = step === "intro";
+  const isAbout = step === "about";
   const isMedia = step === "media"; // last input step — holds the finish CTA
 
   return (
@@ -1691,26 +1797,90 @@ function CoachWizard({
           </div>
         )}
 
-        {step === "about" && (
+        {step === "about" && aboutPhase === "intro" && (
+          <div className="space-y-6">
+            <QHead
+              title="Let's build your recruiting page"
+              sub="We'll ask a few quick questions about your program, then draft your description for you — you can edit it or write your own."
+            />
+          </div>
+        )}
+
+        {step === "about" && aboutPhase === "cats" && (
+          <div className="space-y-6">
+            <QHead
+              title="What makes your program stand out?"
+              sub="Tap all that apply — or add your own. These help us draft your description."
+            />
+            <div className="flex justify-center gap-2">
+              {FACILITY_GROUPS.map((_, k) => (
+                <span
+                  key={k}
+                  className={
+                    "h-1.5 rounded-pill transition-all " +
+                    (k === catIndex ? "w-6 bg-accent" : "w-1.5 bg-border")
+                  }
+                />
+              ))}
+            </div>
+            <div>
+              <p className="eyebrow mb-2">{FACILITY_GROUPS[catIndex].label}</p>
+              <div className="flex flex-wrap gap-2">
+                {FACILITY_GROUPS[catIndex].items.map((name) => {
+                  const active = facilities.some(
+                    (v) => v.trim().toLowerCase() === name.toLowerCase()
+                  );
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => toggleFacility(name)}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-pill px-3.5 py-2 text-sm font-semibold transition-colors",
+                        active
+                          ? "bg-accent text-surface"
+                          : "bg-chip text-body-2 hover:bg-accent-soft"
+                      )}
+                    >
+                      {active && <Check size={14} strokeWidth={2.5} aria-hidden />}
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                value={customTag}
+                onChange={(e) => setCustomTag(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    addCustomTag();
+                  }
+                }}
+                placeholder="Add your own…"
+                autoCapitalize="words"
+              />
+              <button
+                type="button"
+                onClick={addCustomTag}
+                disabled={!customTag.trim()}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-input bg-accent-soft text-accent disabled:opacity-50"
+                aria-label="Add"
+              >
+                <Plus size={18} strokeWidth={2.5} aria-hidden />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "about" && aboutPhase === "review" && (
           <div className="space-y-5">
-            <div>
-              <h1 className="text-2xl font-display font-bold leading-snug tracking-tight">
-                Tell recruits what makes your program worth choosing — your
-                culture, how you develop players, and where you send them.
-              </h1>
-              <p className="mt-3 text-[15px] text-body-2">
-                Click the facilities that apply — we&rsquo;ll use them to draft
-                your description. Then edit it, or write your own.
-              </p>
-            </div>
-
-            <div>
-              <p className="mb-2 text-sm font-semibold text-body-2">
-                What makes your program stand out?
-              </p>
-              <FacilityPicker value={facilities} onChange={setFacilities} />
-            </div>
-
+            <QHead
+              title="Here's your program description"
+              sub="Drafted from your answers — edit it, polish it, or write your own."
+            />
             <AboutYouAI
               mode="program"
               value={about}
@@ -1836,6 +2006,33 @@ function CoachWizard({
             {introSlide < COACH_INTRO.length - 1 ? "Next" : "Get started"}
             <ArrowRight size={18} strokeWidth={2} aria-hidden />
           </Button>
+        ) : isAbout ? (
+          aboutPhase === "intro" ? (
+            <Button size="lg" full onClick={() => setAboutPhase("spinQ")}>
+              Next
+              <ArrowRight size={18} strokeWidth={2} aria-hidden />
+            </Button>
+          ) : aboutPhase === "cats" ? (
+            <Button
+              size="lg"
+              full
+              onClick={() =>
+                catIndex < FACILITY_GROUPS.length - 1
+                  ? setCatIndex((i) => i + 1)
+                  : setAboutPhase("spinGen")
+              }
+            >
+              {catIndex < FACILITY_GROUPS.length - 1
+                ? "Next"
+                : "Build my page"}
+              <ArrowRight size={18} strokeWidth={2} aria-hidden />
+            </Button>
+          ) : (
+            <Button size="lg" full onClick={goNext}>
+              I like it
+              <ArrowRight size={18} strokeWidth={2} aria-hidden />
+            </Button>
+          )
         ) : (
           <Button size="lg" full onClick={goNext} disabled={!canContinue()}>
             Continue
