@@ -274,7 +274,8 @@ export function NeedForm({
       setError(err.message);
       return;
     }
-    router.push(firstNeed ? "/inbox" : "/needs");
+    // Land on Needs so the coach sees the post they just created.
+    router.push("/needs");
     router.refresh();
   }
 
@@ -772,7 +773,7 @@ export function NeedForm({
                 : editing
                   ? "Save changes"
                   : firstNeed
-                    ? "Post need & open my inbox"
+                    ? "Post my first need"
                     : "Post need"}
             </Button>
           </div>
