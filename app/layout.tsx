@@ -55,7 +55,10 @@ export default function RootLayout({
   const pathname = headers().get("x-pathname") ?? "";
   // Full-width marketing: the public sales page (root + /coaches). The app and
   // the /qa testing flow stay inside the mobile-first 480px frame.
-  const fullWidth = pathname === "/" || pathname.startsWith("/coaches");
+  const fullWidth =
+    pathname === "/" ||
+    pathname.startsWith("/coaches") ||
+    pathname.startsWith("/players");
 
   return (
     <html
