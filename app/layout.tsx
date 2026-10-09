@@ -58,7 +58,8 @@ export default function RootLayout({
   const fullWidth =
     pathname === "/" ||
     pathname.startsWith("/coaches") ||
-    pathname.startsWith("/players");
+    pathname.startsWith("/players") ||
+    pathname.startsWith("/parents");
 
   return (
     <html
