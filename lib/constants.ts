@@ -47,6 +47,79 @@ export const PITCHES = [
   "Knuckleball",
 ] as const;
 
+// ---------------------------------------------------------------------------
+// Player level — where a player currently is. HS recruits vs. transfers, and
+// what kind of school a transfer is coming from. Shared by player onboarding
+// (single choice) and the need wizard (coaches target one or more).
+// ---------------------------------------------------------------------------
+export type PlayerLevel = "high_school" | "juco" | "four_year";
+
+export const PLAYER_LEVELS: {
+  value: PlayerLevel;
+  label: string; // coach-facing ("target this type")
+  self: string; // player-facing ("I'm a…")
+  short: string; // compact chip on a post
+}[] = [
+  { value: "high_school", label: "High school", self: "High schooler", short: "HS" },
+  { value: "juco", label: "JUCO", self: "JUCO player", short: "JUCO" },
+  {
+    value: "four_year",
+    label: "Four-year transfer",
+    self: "Four-year college (NCAA/NAIA)",
+    short: "4-yr",
+  },
+];
+
+export const PLAYER_LEVEL_SHORT: Record<string, string> = Object.fromEntries(
+  PLAYER_LEVELS.map((l) => [l.value, l.short])
+);
+
+// Pitcher role — the kind of arm a coach needs. Stored as keywords in a
+// need's must_have bag alongside pitches and traits.
+export const PITCHER_ROLES = ["Starter", "Reliever", "Closer", "Long relief"] as const;
+
+// Preset "trait" chips the coach can tap instead of typing must-haves. They're
+// position-aware; anything not in these presets is a custom, coach-typed trait.
+export const PITCHER_TRAITS = [
+  "Strike thrower",
+  "Plus velocity",
+  "Command",
+  "Durability",
+  "Good pickoff",
+  "Sharp breaking ball",
+  "Competitor",
+  "Projectable frame",
+] as const;
+
+export const CATCHER_TRAITS = [
+  "Framing",
+  "Blocking",
+  "Strong arm",
+  "Game-caller",
+  "Power bat",
+  "Leader",
+] as const;
+
+export const HITTER_TRAITS = [
+  "Power",
+  "Pure hitter",
+  "Speed",
+  "Plate discipline",
+  "Defense",
+  "Strong arm",
+  "Versatile",
+  "Competitor",
+] as const;
+
+// Everything the wizard recognizes as a structured chip (so an edited need can
+// be split back out of must_have into pitches / roles / traits / custom).
+export const KNOWN_PITCHER_ROLES = new Set<string>(PITCHER_ROLES);
+export const KNOWN_TRAITS = new Set<string>([
+  ...PITCHER_TRAITS,
+  ...CATCHER_TRAITS,
+  ...HITTER_TRAITS,
+]);
+
 export function isPitcher(position: string | null | undefined): boolean {
   return !!position && (PITCHER_POSITIONS as readonly string[]).includes(position);
 }

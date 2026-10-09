@@ -44,11 +44,13 @@ export async function POST(req: NextRequest) {
   let body: {
     programId?: string;
     position?: string;
+    playerTypes?: string[];
     gradMin?: string | number | null;
     gradMax?: string | number | null;
     acceptsTransfer?: boolean;
     minGpa?: string | number | null;
     pitches?: string[];
+    pitcherRoles?: string[];
     mustHave?: string[];
     minExit?: string | number | null;
     minFb?: string | number | null;
@@ -94,6 +96,21 @@ export async function POST(req: NextRequest) {
     );
   facts.push(`Position needed: ${posName} (${position}).`);
 
+  const PLAYER_TYPE_NAME: Record<string, string> = {
+    high_school: "high school recruits",
+    juco: "JUCO transfers",
+    four_year: "four-year (NCAA/NAIA) transfers",
+  };
+  const types = (body.playerTypes ?? []).filter(Boolean);
+  if (types.length) {
+    facts.push(
+      `Open to: ${types.map((t) => PLAYER_TYPE_NAME[t] ?? t).join(", ")}.`
+    );
+  }
+
+  const roles = (body.pitcherRoles ?? []).filter(Boolean);
+  if (roles.length) facts.push(`Pitching role: ${roles.join(", ")}.`);
+
   const gMin = n(body.gradMin);
   const gMax = n(body.gradMax);
   if (gMin && gMax)
@@ -104,7 +121,7 @@ export async function POST(req: NextRequest) {
     );
   else if (gMin) facts.push(`Grad year ${gMin} or later.`);
   else if (gMax) facts.push(`Grad year up to ${gMax}.`);
-  if (body.acceptsTransfer) facts.push("Open to transfers.");
+  if (body.acceptsTransfer && !types.length) facts.push("Open to transfers.");
 
   const gpa = n(body.minGpa);
   if (gpa && gpa > 0) facts.push(`Minimum GPA ${gpa}.`);

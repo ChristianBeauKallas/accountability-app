@@ -37,12 +37,37 @@ export function positionsOverlap(a: string[], b: string[]): boolean {
   return a.some((p) => b.includes(p));
 }
 
-export function inPool(player: Player, need: Need): boolean {
-  if (need.accepts_transfer && player.is_transfer) return true;
+// A player's level, falling back from the explicit column to the legacy
+// transfer flag for players who set up before levels existed.
+export function playerLevel(
+  player: Pick<Player, "level" | "is_transfer">
+): "high_school" | "juco" | "four_year" {
+  if (player.level) return player.level;
+  return player.is_transfer ? "four_year" : "high_school";
+}
+
+function gradInRange(player: Player, need: Need): boolean {
   if (player.grad_year == null) return false;
   const min = need.grad_year_min ?? -Infinity;
   const max = need.grad_year_max ?? Infinity;
   return player.grad_year >= min && player.grad_year <= max;
+}
+
+export function inPool(player: Player, need: Need): boolean {
+  const types = need.player_types ?? [];
+
+  // New model: the need targets specific player levels.
+  if (types.length > 0) {
+    const lvl = playerLevel(player);
+    if (!types.includes(lvl)) return false;
+    // High-school recruits are still gated by the grad-year window; transfers
+    // are in once their level matches.
+    return lvl === "high_school" ? gradInRange(player, need) : true;
+  }
+
+  // Legacy model: transfer flag OR grad-year window.
+  if (need.accepts_transfer && player.is_transfer) return true;
+  return gradInRange(player, need);
 }
 
 export function meetsGpa(player: Player, need: Need): boolean {

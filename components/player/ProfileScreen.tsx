@@ -24,6 +24,7 @@ import {
   BATS,
   THROWS,
   PITCHES,
+  PLAYER_LEVELS,
   isPitcher,
   isCatcher,
   isOutfielder,
@@ -125,7 +126,8 @@ function Header({
       {player.is_transfer && (
         <div className="mt-3">
           <Chip tone="status-interested">
-            Transfer{player.current_school ? ` · ${player.current_school}` : ""}
+            {player.level === "juco" ? "JUCO transfer" : "Transfer"}
+            {player.current_school ? ` · ${player.current_school}` : ""}
           </Chip>
         </div>
       )}
@@ -319,7 +321,10 @@ function EditForm({
   const [spinRate, setSpinRate] = useState(player.spin_rate?.toString() ?? "");
   const [era, setEra] = useState(player.era?.toString() ?? "");
   const [pitches, setPitches] = useState<string[]>(player.pitches ?? []);
-  const [isTransfer, setIsTransfer] = useState(player.is_transfer);
+  const [level, setLevel] = useState<string>(
+    player.level ?? (player.is_transfer ? "four_year" : "high_school")
+  );
+  const isTransfer = level !== "high_school";
   const [currentSchool, setCurrentSchool] = useState(player.current_school ?? "");
   const [bio, setBio] = useState(player.bio ?? "");
   const [contactEmail, setContactEmail] = useState("");
@@ -465,6 +470,7 @@ function EditForm({
         lat,
         lng,
         is_transfer: isTransfer,
+        level,
         current_school: isTransfer ? currentSchool.trim() || null : null,
         sixty_yd: sixtyN,
         exit_velo: hasHit ? toInt(exitVelo) : null,
@@ -795,15 +801,25 @@ function EditForm({
           </Field>
         )}
 
-        <label className="flex items-center gap-3 rounded-input border border-border bg-surface p-3">
-          <input
-            type="checkbox"
-            checked={isTransfer}
-            onChange={(e) => setIsTransfer(e.target.checked)}
-            className="h-5 w-5 accent-accent"
-          />
-          <span className="text-[15px] text-ink">I&rsquo;m a transfer</span>
-        </label>
+        <Field label="Where you are now">
+          <div className="flex flex-wrap gap-2">
+            {PLAYER_LEVELS.map((lvl) => (
+              <button
+                key={lvl.value}
+                type="button"
+                onClick={() => setLevel(lvl.value)}
+                className={cn(
+                  "h-9 rounded-pill px-4 text-sm font-semibold transition-colors",
+                  level === lvl.value
+                    ? "bg-accent text-surface"
+                    : "bg-chip text-body-2 hover:bg-accent-soft"
+                )}
+              >
+                {lvl.self}
+              </button>
+            ))}
+          </div>
+        </Field>
         {isTransfer && (
           <Field label="Current school" htmlFor="cs">
             <Input

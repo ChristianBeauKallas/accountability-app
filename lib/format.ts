@@ -1,4 +1,5 @@
-import type { ApplicationStatus, Player } from "@/lib/types";
+import type { ApplicationStatus, Need, Player } from "@/lib/types";
+import { PLAYER_LEVEL_SHORT } from "@/lib/constants";
 
 export function timeAgo(iso: string): string {
   const then = new Date(iso).getTime();
@@ -64,4 +65,28 @@ export function poolLabel(
   }
   if (acceptsTransfer) parts.push("Transfer");
   return parts.join(" · ") || "Any class";
+}
+
+// Who a need is open to, reflecting the targeted player levels when set,
+// otherwise the legacy grad-year / transfer label. A grad-year window is
+// appended when high-school recruits are included.
+export function needPoolLabel(
+  need: Pick<
+    Need,
+    "player_types" | "grad_year_min" | "grad_year_max" | "accepts_transfer"
+  >
+): string {
+  const types = need.player_types ?? [];
+  if (types.length === 0) {
+    return poolLabel(need.grad_year_min, need.grad_year_max, need.accepts_transfer);
+  }
+  const labels = types.map((t) => PLAYER_LEVEL_SHORT[t] ?? t);
+  if (types.includes("high_school") && need.grad_year_min && need.grad_year_max) {
+    const yrs =
+      need.grad_year_min === need.grad_year_max
+        ? `${need.grad_year_min}`
+        : `${need.grad_year_min}–${need.grad_year_max}`;
+    return `${labels.join(" · ")} · ${yrs}`;
+  }
+  return labels.join(" · ");
 }
