@@ -14,5 +14,5 @@ export const metadata: Metadata = {
 };
 
 export default function CoachesLanding() {
-  return <SalesPage />;
+  return <SalesPage audience="coach" />;
 }
