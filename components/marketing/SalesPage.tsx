@@ -288,7 +288,8 @@ function PickYourSide() {
           Join the waitlist
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-lg text-body-2">
-          We&rsquo;re onboarding in waves. Pick your side to get on the list.
+          We&rsquo;re onboarding in small waves. Pick your side — a member of our
+          team will reach out personally to get you set up.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
@@ -380,7 +381,7 @@ const CONTENT = {
     },
     joinHeading: "Join the waitlist",
     joinBody:
-      "We're onboarding small-college coaches now, in waves. Tell us about your program and we'll get you in.",
+      "Drop your info and a member of our team will reach out personally with a link to get your account set up. We're onboarding small-college coaches in small waves.",
   },
   player: {
     eyebrow: "For players",
@@ -448,7 +449,7 @@ const CONTENT = {
     },
     joinHeading: "Join the waitlist",
     joinBody:
-      "We're getting players ready for launch. Tell us a bit about your game and we'll let you know the moment you can build your profile.",
+      "Drop your info and a member of our team will reach out personally with a link to set up your profile. We're onboarding players in small waves.",
   },
 } as const;
 

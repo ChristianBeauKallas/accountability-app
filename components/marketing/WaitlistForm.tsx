@@ -27,6 +27,7 @@ export function WaitlistForm({ kind }: { kind: Kind }) {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [school, setSchool] = useState("");
   const [level, setLevel] = useState("");
   const [role, setRole] = useState("");
@@ -45,8 +46,8 @@ export function WaitlistForm({ kind }: { kind: Kind }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!name.trim() || !email.trim()) {
-      setError("Add your name and email so we can reach you.");
+    if (!name.trim() || !email.trim() || !phone.trim()) {
+      setError("Add your name, email and a phone number so we can reach you.");
       return;
     }
     setSaving(true);
@@ -54,6 +55,7 @@ export function WaitlistForm({ kind }: { kind: Kind }) {
       kind,
       name: name.trim(),
       email: email.trim(),
+      phone: phone.trim() || null,
       school: school.trim() || null,
       level: level || null,
       role: isCoach ? role || null : null,
@@ -79,9 +81,10 @@ export function WaitlistForm({ kind }: { kind: Kind }) {
         </span>
         <h3 className="font-display text-2xl font-bold text-ink">You&rsquo;re on the list</h3>
         <p className="mx-auto mt-2 max-w-sm text-[15px] text-body-2">
-          We&rsquo;re onboarding in small waves. We&rsquo;ll reach out at{" "}
-          <span className="font-semibold text-ink">{email}</span> with your
-          early access. Talk soon.
+          A member of our team will reach out personally to get you set up —
+          keep an eye on your phone at{" "}
+          <span className="font-semibold text-ink">{phone}</span> for a text
+          with your link. Talk soon.
         </p>
       </div>
     );
@@ -120,6 +123,21 @@ export function WaitlistForm({ kind }: { kind: Kind }) {
             autoComplete="email"
           />
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="w-phone" className="mb-1.5 block text-sm font-semibold text-ink">
+          Phone <span className="text-muted-2">(we&rsquo;ll text your setup link)</span>
+        </label>
+        <input
+          id="w-phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="(555) 123-4567"
+          className={inputCls}
+          autoComplete="tel"
+        />
       </div>
 
       {isCoach ? (
@@ -260,7 +278,7 @@ export function WaitlistForm({ kind }: { kind: Kind }) {
         {saving ? "Sending…" : "Join the waitlist"}
       </button>
       <p className="text-center text-xs text-muted-2">
-        Free for the test group. No spam — we&rsquo;ll only email about your access.
+        Free for the test group. No spam — we&rsquo;ll only reach out to get you set up.
       </p>
     </form>
   );

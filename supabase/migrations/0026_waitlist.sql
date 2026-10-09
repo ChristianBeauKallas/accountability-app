@@ -11,6 +11,7 @@ create table if not exists public.waitlist (
   kind        text not null check (kind in ('coach', 'player')),
   name        text not null,
   email       text not null,
+  phone       text,          -- primary contact: we text a setup link
   school      text,
   level       text,          -- coach: D2/D3/NAIA/JUCO; player: high_school/juco/four_year
   role        text,          -- coach: head/assistant/recruiting_coordinator/other
@@ -19,6 +20,9 @@ create table if not exists public.waitlist (
   notes       text,
   created_at  timestamptz not null default now()
 );
+
+-- Add phone to a table that was created before this column existed (re-runs).
+alter table public.waitlist add column if not exists phone text;
 
 -- One row per email per side.
 create unique index if not exists waitlist_kind_email_key
