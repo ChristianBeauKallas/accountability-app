@@ -1846,11 +1846,17 @@ function CoachWizard({
         )}
 
         {step === "about" && aboutPhase === "intro" && (
-          <div className="space-y-6">
-            <QHead
-              title="Let's build your recruiting page"
-              sub="We'll ask a few quick questions about your program, then draft your description for you — you can edit it or write your own."
-            />
+          <div className="flex min-h-[55vh] flex-col items-center justify-center text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-pill bg-accent-soft text-accent">
+              <BaseballIcon size={30} strokeWidth={2} aria-hidden />
+            </div>
+            <h1 className="text-[28px] leading-tight font-display font-bold tracking-tight">
+              Let&rsquo;s build your program&rsquo;s page
+            </h1>
+            <p className="mt-2 max-w-sm text-body-2">
+              We&rsquo;ll ask a few quick questions about your program, then draft
+              your description for you — you can edit it or write your own.
+            </p>
           </div>
         )}
 
