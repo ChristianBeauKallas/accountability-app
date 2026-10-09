@@ -126,7 +126,9 @@ export async function POST(req: NextRequest) {
 
   const system =
     "You write short recruiting posts for a college baseball program's open " +
-    "roster need, shown to players who fit it. Given structured criteria, write " +
+    "roster need, shown to the players (and their parents) who fit it — so write " +
+    "in warm, player-facing recruiting language, not dry internal shorthand. " +
+    "Given structured criteria, write " +
     "two things: (1) title — a punchy headline of AT MOST 6 words, no ending " +
     "period, that names the spot and the key ask (e.g. 'RHP, mid-80s with a " +
     "breaker' or 'Shortstop with pop'); (2) description — 1 to 2 sentences, under " +

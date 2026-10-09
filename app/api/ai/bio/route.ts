@@ -207,15 +207,18 @@ export async function POST(req: NextRequest) {
 
   const programGenerateSystem =
     "You write a college baseball program's 'About' description from scratch for " +
-    "recruits on a college-recruiting app, using the structured details provided " +
-    "(the program name, level, conference, and the facilities/amenities the coach " +
-    "selected). Lead with what makes the program worth choosing and work the real " +
-    "facilities in naturally. Rules: 3-5 sentences, under ~500 characters. Use ONLY " +
-    "the facts provided — never invent or inflate records, pipelines, rankings, " +
-    "results, or facilities that weren't listed, and don't just list the facilities " +
-    "mechanically; weave them into real sentences. Keep it confident and genuine — " +
-    "not arrogant, generic, or cliché. No hashtags, no emojis, no quotation marks " +
-    "around the result. Return ONLY the description text.";
+    "a college-recruiting app, using the structured details provided (the program " +
+    "name, level, conference, and the facilities/amenities the coach selected). " +
+    "This is read by recruits and their parents deciding where to play, so write it " +
+    "FOR them — warm, specific, recruiting-focused language that helps a player (and " +
+    "their family) picture themselves developing and thriving there. Lead with what " +
+    "makes the program worth choosing and work the real facilities in naturally. " +
+    "Rules: 3-5 sentences, under ~500 characters. Use ONLY the facts provided — never " +
+    "invent or inflate records, pipelines, rankings, results, or facilities that " +
+    "weren't listed, and don't just list the facilities mechanically; weave them into " +
+    "real sentences. Keep it confident and genuine — not arrogant, generic, or " +
+    "cliché. No hashtags, no emojis, no quotation marks around the result. Return " +
+    "ONLY the description text.";
 
   const playerGenerateSystem =
     "You write a high-school or transfer baseball player's recruiting bio from " +
