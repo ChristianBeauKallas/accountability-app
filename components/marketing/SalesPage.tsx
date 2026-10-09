@@ -118,20 +118,23 @@ function Founder() {
         <p className="eyebrow text-accent">Why I built this</p>
         <blockquote className="mt-4 space-y-4 text-lg leading-relaxed text-body-2">
           <p>
-            I almost quit baseball when the school I picked wasn&rsquo;t the
-            right fit. My coach lined me up with an NAIA program in the middle
-            of nowhere, Kansas, that I&rsquo;d never heard of. Two years later I
-            led the country in hits and made NAIA All-American.
+            I almost quit baseball when the school I chose out of high school
+            wasn&rsquo;t the right fit. My coach lined me up with an NAIA program
+            in the middle of nowhere, Kansas, that I&rsquo;d never heard of. Two
+            years later I led the country in hits, played in the NAIA World
+            Series and was an NAIA All-American. I just needed the right fit.
           </p>
           <p>
             Then I coached small-college ball and saw the other side — an inbox
-            full of players who weren&rsquo;t a fit, while the kid who&rsquo;d
-            have been perfect was emailing D1 schools that never wrote back.
+            full of players who weren&rsquo;t the right fit, while the kid
+            who&rsquo;d have been perfect was emailing NCAA schools that never
+            wrote back.
           </p>
           <p className="font-semibold text-ink">
-            The right fit is out there for almost every player. They just
-            can&rsquo;t find each other. That&rsquo;s what Athletx fixes.
+            The right fit is out there for almost every player and program. They
+            just can&rsquo;t find each other.
           </p>
+          <p className="font-semibold text-ink">That&rsquo;s what Athletx serves to fix.</p>
         </blockquote>
       </div>
     </section>
