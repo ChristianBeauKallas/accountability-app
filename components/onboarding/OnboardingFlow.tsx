@@ -1248,7 +1248,6 @@ type CKey =
   | "name"
   | "role"
   | "program"
-  | "level"
   | "about"
   | "media"
   | "done";
@@ -1258,7 +1257,6 @@ const COACH_STEPS: CKey[] = [
   "name",
   "program",
   "role",
-  "level",
   "about",
   "media",
   "done",
@@ -1367,9 +1365,9 @@ function CoachWizard({
       case "name":
         return !!name.trim();
       case "program":
-        return !!programName.trim() && !!state;
-      case "level":
-        return !!division && !!conference.trim();
+        return (
+          !!programName.trim() && !!state && !!division && !!conference.trim()
+        );
       default:
         return true;
     }
@@ -1661,30 +1659,35 @@ function CoachWizard({
                 </p>
               </div>
             )}
-          </div>
-        )}
 
-        {step === "level" && (
-          <div className="space-y-6">
-            <QHead title="What level does your team compete at?" />
-            <div className="flex flex-wrap gap-2">
-              {DIVISIONS.map((d) => (
-                <OptionPill
-                  key={d}
-                  active={division === d}
-                  onClick={() => setDivision(d)}
-                >
-                  {d}
-                </OptionPill>
-              ))}
-            </div>
-            <Field label="Conference" htmlFor="conf">
-              <ConferenceSearch
-                division={division}
-                value={conference}
-                onChange={setConference}
-              />
-            </Field>
+            {schoolChosen && (
+              <div>
+                <p className="mb-1.5 text-sm font-medium text-body-2">
+                  What level do they compete at?
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {DIVISIONS.map((d) => (
+                    <OptionPill
+                      key={d}
+                      active={division === d}
+                      onClick={() => setDivision(d)}
+                    >
+                      {d}
+                    </OptionPill>
+                  ))}
+                </div>
+                <div className="mt-4">
+                  <p className="mb-1.5 text-sm font-medium text-body-2">
+                    Conference
+                  </p>
+                  <ConferenceSearch
+                    division={division}
+                    value={conference}
+                    onChange={setConference}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
