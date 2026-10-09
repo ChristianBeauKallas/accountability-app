@@ -205,6 +205,13 @@ function BothHero() {
             I&rsquo;m a player
             <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
           </Link>
+          <Link
+            href="/parents"
+            className="inline-flex h-[54px] items-center gap-2 rounded-cta border border-border px-6 text-base font-semibold text-ink transition-colors hover:bg-surface"
+          >
+            I&rsquo;m a parent
+            <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+          </Link>
         </div>
       </div>
     </section>
@@ -312,6 +319,13 @@ function PickYourSide() {
             className="inline-flex h-[54px] items-center gap-2 rounded-cta border border-border px-6 text-base font-semibold text-ink transition-colors hover:bg-surface"
           >
             I&rsquo;m a player
+            <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+          </Link>
+          <Link
+            href="/parents#join"
+            className="inline-flex h-[54px] items-center gap-2 rounded-cta border border-border px-6 text-base font-semibold text-ink transition-colors hover:bg-surface"
+          >
+            I&rsquo;m a parent
             <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
           </Link>
         </div>
@@ -598,17 +612,11 @@ function AudienceHero({ audience }: { audience: PageAudience }) {
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-body-2">{c.sub}</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
-              href="#join"
+              href="#how"
               className="inline-flex h-[54px] items-center gap-2 rounded-cta bg-accent px-6 text-base font-semibold text-surface transition-colors hover:bg-accent-dark"
             >
-              Join the waitlist
-              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
-            </a>
-            <a
-              href="#how"
-              className="inline-flex h-[54px] items-center rounded-cta border border-border px-6 text-base font-semibold text-ink transition-colors hover:bg-surface"
-            >
               See how it works
+              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
             </a>
           </div>
           <p className="mt-6 text-sm font-semibold uppercase tracking-eyebrow text-muted-2">
