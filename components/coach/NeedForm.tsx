@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { HeaderActions } from "@/components/HeaderActions";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Field";
+import { StepProgress } from "@/components/ui/ProgressBar";
+import { BaseballIcon } from "@/components/ui/BaseballIcon";
 import { POSITIONS, PITCHES, isPitcher, isCatcher } from "@/lib/constants";
 import type { Need } from "@/lib/types";
 
@@ -31,6 +33,11 @@ const POSITION_TITLE: Record<string, string> = {
 
 const PITCH_SET = new Set<string>(PITCHES as readonly string[]);
 
+// The wizard advances through these. "generating" is a full-screen spinner
+// shown while the AI drafts the post, then it lands on "review".
+type Phase = "position" | "metrics" | "qualify" | "generating" | "review";
+const STEP_LABELS = ["Position", "Details", "Who qualifies", "Review"];
+
 export function NeedForm({
   programId,
   need,
@@ -43,6 +50,10 @@ export function NeedForm({
   const supabase = createClient();
   const router = useRouter();
   const editing = !!need;
+
+  // Editing an existing need drops straight into review (everything's filled);
+  // a new need starts at position and walks forward.
+  const [phase, setPhase] = useState<Phase>(editing ? "review" : "position");
 
   // A need is one position at a time.
   const [position, setPosition] = useState<string>(need?.positions?.[0] ?? "");
@@ -69,7 +80,6 @@ export function NeedForm({
   const [minSixty, setMinSixty] = useState(need?.min_sixty?.toString() ?? "");
   const [minPop, setMinPop] = useState(need?.min_pop_time?.toString() ?? "");
   const [description, setDescription] = useState(need?.description ?? "");
-  const [generating, setGenerating] = useState(false);
   const [genNote, setGenNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -107,10 +117,9 @@ export function NeedForm({
   }
 
   // Ask the AI to write a headline + short description from what's entered.
-  // Falls back gracefully — the coach can always type their own.
+  // Falls back gracefully — the coach can always type their own on review.
   async function generate() {
-    if (!position || generating) return;
-    setGenerating(true);
+    if (!position) return;
     setGenNote("");
     try {
       const keywords = mustHave
@@ -155,15 +164,29 @@ export function NeedForm({
       setGenNote("Generated ✨ — tweak anything you want.");
     } catch {
       setGenNote("Couldn't generate — try again, or write your own.");
-    } finally {
-      setGenerating(false);
     }
+  }
+
+  // Qualify → "Generate post": show the spinner, draft, then land on review.
+  async function generateAndReview() {
+    setPhase("generating");
+    await generate();
+    setPhase("review");
+  }
+
+  // Review → "Regenerate": redraft in place without leaving review.
+  const [regenerating, setRegenerating] = useState(false);
+  async function regenerate() {
+    if (regenerating) return;
+    setRegenerating(true);
+    await generate();
+    setRegenerating(false);
   }
 
   async function submit() {
     setError("");
     if (!valid) {
-      setError("Pick a position and add a title.");
+      setError("Pick a position and add a headline.");
       return;
     }
     setSaving(true);
@@ -213,48 +236,79 @@ export function NeedForm({
     return Array.from({ length: 7 }, (_, i) => now + i - 2);
   })();
 
+  // Walk back a phase; from the first step, leave the form entirely.
+  function goBack() {
+    if (phase === "metrics") setPhase("position");
+    else if (phase === "qualify") setPhase("metrics");
+    else if (phase === "review") setPhase(editing ? "position" : "qualify");
+    else router.push(firstNeed ? "/inbox" : "/needs");
+  }
+
+  // ---- Full-screen spinner while the AI drafts the post. ----
+  if (phase === "generating") {
+    return (
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
+        <div className="animate-spin text-accent" style={{ animationDuration: "1.3s" }}>
+          <BaseballIcon size={56} strokeWidth={2} aria-hidden />
+        </div>
+        <p className="font-display text-xl font-semibold text-ink">
+          Drafting your post…
+        </p>
+      </main>
+    );
+  }
+
+  const stepNum =
+    phase === "position" ? 1 : phase === "metrics" ? 2 : phase === "qualify" ? 3 : 4;
+
+  // Metric prompt copy per bucket.
+  const metricHeading = pitcher
+    ? "What you want on the mound"
+    : catcher
+      ? "What you want behind the plate"
+      : "Set the bar at the plate";
+
   return (
-    <main className="px-5 pt-12 pb-6">
+    <main
+      className="flex min-h-dvh flex-col px-5 pt-12"
+      style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+    >
+      {/* Header */}
       <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={goBack}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-muted"
+        >
+          <ArrowLeft size={16} strokeWidth={2} aria-hidden />
+          Back
+        </button>
         {firstNeed ? (
           <Link href="/inbox" className="text-sm font-semibold text-muted">
             Skip for now
           </Link>
         ) : (
-          <Link
-            href="/needs"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-muted"
-          >
-            <ArrowLeft size={16} strokeWidth={2} aria-hidden />
-            Needs
-          </Link>
+          <HeaderActions />
         )}
-        <HeaderActions />
       </div>
 
-      {firstNeed && <p className="eyebrow mt-4">Last step</p>}
-      <h1
-        className={cn(
-          "text-3xl font-display font-bold tracking-tight",
-          firstNeed ? "mt-1" : "mt-4"
-        )}
-      >
-        {editing
-          ? "Edit need"
-          : firstNeed
-            ? "Post your first need"
-            : "Post a need"}
-      </h1>
-      <p className="mt-1 text-[15px] text-body-2">
-        {firstNeed
-          ? "This is how players find you — only those who fit see it, and they show interest with one tap. You can post more anytime."
-          : "Only players who fit see this — and they show interest with one tap."}
+      {/* Progress */}
+      <StepProgress total={4} current={stepNum} className="mt-5" />
+      <p className="mt-2 text-[11px] font-bold uppercase tracking-eyebrow text-muted-2">
+        Step {stepNum} of 4 · {STEP_LABELS[stepNum - 1]}
       </p>
 
-      <div className="mt-6 space-y-5">
-        {/* 1. Position first — one per need. */}
-        <Field label="Position" hint="One spot per need — post another for each spot.">
-          <div className="flex flex-wrap gap-2">
+      {/* ---- Step 1: Position ---- */}
+      {phase === "position" && (
+        <div className="mt-5 flex flex-1 flex-col">
+          <h1 className="text-2xl font-display font-bold tracking-tight">
+            {firstNeed ? "Post your first need" : "What spot do you need?"}
+          </h1>
+          <p className="mt-1 text-[15px] text-body-2">
+            Pick one position — post another for each spot you&rsquo;re recruiting.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-2">
             {POSITIONS.map((pos) => {
               const active = position === pos;
               return (
@@ -263,7 +317,7 @@ export function NeedForm({
                   type="button"
                   onClick={() => pickPosition(pos)}
                   className={cn(
-                    "h-9 rounded-pill px-3.5 text-sm font-semibold transition-colors",
+                    "h-11 rounded-pill px-4 text-sm font-semibold transition-colors",
                     active
                       ? "bg-accent text-surface"
                       : "bg-chip text-body-2 hover:bg-accent-soft"
@@ -274,19 +328,34 @@ export function NeedForm({
               );
             })}
           </div>
-        </Field>
 
-        {/* 2. Position-specific bar — only the metrics that fit the spot. */}
-        {position && (
-          <div>
-            <p className="eyebrow mb-2">
-              {pitcher
-                ? "What you want on the mound (optional)"
-                : "Set the bar (optional)"}
-            </p>
+          <div className="mt-auto pt-8">
+            <Button
+              size="lg"
+              full
+              onClick={() => setPhase("metrics")}
+              disabled={!position}
+            >
+              Continue
+              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+            </Button>
+          </div>
+        </div>
+      )}
 
+      {/* ---- Step 2: Position-specific details ---- */}
+      {phase === "metrics" && (
+        <div className="mt-5 flex flex-1 flex-col">
+          <h1 className="text-2xl font-display font-bold tracking-tight">
+            {metricHeading}
+          </h1>
+          <p className="mt-1 text-[15px] text-body-2">
+            Set the bar so only players who clear it see this. All optional.
+          </p>
+
+          <div className="mt-6 space-y-5">
             {pitcher && (
-              <div className="mb-3">
+              <div>
                 <p className="mb-2 text-sm font-medium text-body-2">
                   Pitches you&rsquo;re looking for
                 </p>
@@ -365,130 +434,176 @@ export function NeedForm({
                 </Field>
               )}
             </div>
+
+            <Field
+              label="Must-haves"
+              hint={
+                pitcher
+                  ? "Other keywords (command, strike thrower…)."
+                  : "Comma-separated keywords (framing, power, command…)."
+              }
+              htmlFor="mh"
+            >
+              <Input
+                id="mh"
+                value={mustHave}
+                onChange={(e) => setMustHave(e.target.value)}
+                placeholder={pitcher ? "command, strike thrower" : "framing, power"}
+              />
+            </Field>
           </div>
-        )}
 
-        {/* 4. Who qualifies. */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Grad year from" htmlFor="gmin">
-            <Select id="gmin" value={gradMin} onChange={(e) => setGradMin(e.target.value)}>
-              <option value="">Any</option>
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Grad year to" htmlFor="gmax">
-            <Select id="gmax" value={gradMax} onChange={(e) => setGradMax(e.target.value)}>
-              <option value="">Any</option>
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          <div className="mt-auto pt-8">
+            <Button size="lg" full onClick={() => setPhase("qualify")}>
+              Continue
+              <ArrowRight size={18} strokeWidth={2.5} aria-hidden />
+            </Button>
+          </div>
         </div>
+      )}
 
-        <label className="flex items-center gap-3 rounded-input border border-border bg-surface p-3">
-          <input
-            type="checkbox"
-            checked={acceptsTransfer}
-            onChange={(e) => setAcceptsTransfer(e.target.checked)}
-            className="h-5 w-5 accent-accent"
-          />
-          <span className="text-[15px] text-ink">Open to transfers</span>
-        </label>
+      {/* ---- Step 3: Who qualifies ---- */}
+      {phase === "qualify" && (
+        <div className="mt-5 flex flex-1 flex-col">
+          <h1 className="text-2xl font-display font-bold tracking-tight">
+            Who qualifies?
+          </h1>
+          <p className="mt-1 text-[15px] text-body-2">
+            Narrow it to the players you can actually take. All optional.
+          </p>
 
-        <Field label="Minimum GPA" htmlFor="gpa" hint="Leave blank for no floor.">
-          <Input
-            id="gpa"
-            type="number"
-            step="0.01"
-            min="0"
-            max="4"
-            inputMode="decimal"
-            placeholder="2.5"
-            value={minGpa}
-            onChange={(e) => setMinGpa(e.target.value)}
-          />
-        </Field>
+          <div className="mt-6 space-y-5">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Grad year from" htmlFor="gmin">
+                <Select
+                  id="gmin"
+                  value={gradMin}
+                  onChange={(e) => setGradMin(e.target.value)}
+                >
+                  <option value="">Any</option>
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Grad year to" htmlFor="gmax">
+                <Select
+                  id="gmax"
+                  value={gradMax}
+                  onChange={(e) => setGradMax(e.target.value)}
+                >
+                  <option value="">Any</option>
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
 
-        <Field
-          label="Must-haves"
-          hint={
-            pitcher
-              ? "Other keywords (command, strike thrower…)."
-              : "Comma-separated keywords (framing, power, command…)."
-          }
-          htmlFor="mh"
-        >
-          <Input
-            id="mh"
-            value={mustHave}
-            onChange={(e) => setMustHave(e.target.value)}
-            placeholder={pitcher ? "command, strike thrower" : "framing, power"}
-          />
-        </Field>
+            <label className="flex items-center gap-3 rounded-input border border-border bg-surface p-3">
+              <input
+                type="checkbox"
+                checked={acceptsTransfer}
+                onChange={(e) => setAcceptsTransfer(e.target.checked)}
+                className="h-5 w-5 accent-accent"
+              />
+              <span className="text-[15px] text-ink">Open to transfers</span>
+            </label>
 
-        {/* 5. Headline & description — generated from everything above. */}
-        <div className="space-y-3 border-t border-divider pt-5">
+            <Field label="Minimum GPA" htmlFor="gpa" hint="Leave blank for no floor.">
+              <Input
+                id="gpa"
+                type="number"
+                step="0.01"
+                min="0"
+                max="4"
+                inputMode="decimal"
+                placeholder="2.5"
+                value={minGpa}
+                onChange={(e) => setMinGpa(e.target.value)}
+              />
+            </Field>
+          </div>
+
+          <div className="mt-auto pt-8">
+            <Button size="lg" full onClick={generateAndReview}>
+              <Sparkles size={18} strokeWidth={2} aria-hidden />
+              Generate post
+            </Button>
+            <p className="mt-2 text-center text-xs text-muted-2">
+              We&rsquo;ll draft a headline and description — you can edit everything next.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ---- Step 4: Review & post ---- */}
+      {phase === "review" && (
+        <div className="mt-5 flex flex-1 flex-col">
           <div className="flex items-center justify-between gap-3">
-            <p className="eyebrow">Headline &amp; description</p>
+            <h1 className="text-2xl font-display font-bold tracking-tight">
+              {editing ? "Edit your post" : "Review your post"}
+            </h1>
             <button
               type="button"
-              onClick={generate}
-              disabled={!position || generating}
-              className="inline-flex items-center gap-1.5 rounded-btn bg-ink px-3 py-1.5 text-sm font-semibold text-ground disabled:opacity-50"
+              onClick={regenerate}
+              disabled={regenerating}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-btn border border-border px-3 py-1.5 text-sm font-semibold text-body-2 disabled:opacity-50"
             >
               <Sparkles size={15} strokeWidth={2} aria-hidden />
-              {generating ? "Generating…" : "Generate with AI"}
+              {regenerating ? "Regenerating…" : "Regenerate"}
             </button>
           </div>
-
-          <Field label="Headline" htmlFor="t">
-            <Input
-              id="t"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                setTitleEdited(true);
-              }}
-              placeholder="e.g. RHP — mid-80s+"
-            />
-          </Field>
-
-          <Field label="Short description" htmlFor="d">
-            <Textarea
-              id="d"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="What you're looking for, role, timeline…"
-              maxLength={500}
-              rows={3}
-            />
-          </Field>
-
-          <p className="text-xs text-muted-2">
-            {genNote ||
-              "Pick a position and set the bar, then let us draft the post — edit anything."}
+          <p className="mt-1 text-[15px] text-body-2">
+            This is what players see. Tweak anything, then post it.
           </p>
+
+          <div className="mt-6 space-y-5">
+            <Field label="Headline" htmlFor="t">
+              <Input
+                id="t"
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setTitleEdited(true);
+                }}
+                placeholder="e.g. RHP — mid-80s+"
+              />
+            </Field>
+
+            <Field label="Short description" htmlFor="d">
+              <Textarea
+                id="d"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What you're looking for, role, timeline…"
+                maxLength={500}
+                rows={4}
+              />
+            </Field>
+
+            {genNote && <p className="text-xs text-muted-2">{genNote}</p>}
+          </div>
+
+          {error && <p className="mt-4 text-sm text-danger">{error}</p>}
+
+          <div className="mt-auto pt-8">
+            <Button size="lg" full onClick={submit} disabled={saving}>
+              {saving
+                ? "Posting…"
+                : editing
+                  ? "Save changes"
+                  : firstNeed
+                    ? "Post need & open my inbox"
+                    : "Post need"}
+            </Button>
+          </div>
         </div>
-
-        {error && <p className="text-sm text-danger">{error}</p>}
-
-        <Button size="lg" full onClick={submit} disabled={saving}>
-          {saving
-            ? "Saving…"
-            : editing
-              ? "Save changes"
-              : firstNeed
-                ? "Post need & open my inbox"
-                : "Post need"}
-        </Button>
-      </div>
+      )}
     </main>
   );
 }
