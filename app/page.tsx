@@ -35,5 +35,5 @@ export default async function Home() {
     redirect(profile.role === "coach" ? "/inbox" : "/fits");
   }
 
-  return <SalesPage />;
+  return <SalesPage audience="both" />;
 }
