@@ -26,6 +26,7 @@ import { isEligible } from "@/lib/fit";
 import { CitySearch } from "@/components/onboarding/CitySearch";
 import { SchoolSearch } from "@/components/onboarding/SchoolSearch";
 import { ConferenceSearch } from "@/components/onboarding/ConferenceSearch";
+import { FacilityPicker } from "@/components/onboarding/FacilityPicker";
 import { MockScreen, type ScreenKey } from "@/components/tour/MockScreens";
 import type { UserRole, Player, Need } from "@/lib/types";
 
@@ -1294,6 +1295,7 @@ function CoachWizard({
   // which reveals the inline location picker in the program step.
   const [schoolChosen, setSchoolChosen] = useState(false);
   const [about, setAbout] = useState("");
+  const [facilities, setFacilities] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -1428,6 +1430,19 @@ function CoachWizard({
           { name: confName, division },
           { onConflict: "name_key,division", ignoreDuplicates: true }
         );
+    }
+    // Crowdsource any facility tags the coach added so others can pick them.
+    const newFacilities = facilities
+      .map((f) => f.trim())
+      .filter(Boolean)
+      .map((name) => ({ name }));
+    if (newFacilities.length) {
+      void supabase
+        .from("facilities")
+        .upsert(newFacilities, {
+          onConflict: "name_key",
+          ignoreDuplicates: true,
+        });
     }
 
     // Add this coach to the program (ignore if they're already on it).
@@ -1615,10 +1630,18 @@ function CoachWizard({
                 culture, how you develop players, and where you send them.
               </h1>
               <p className="mt-3 text-[15px] text-body-2">
-                A few sentences in your own words — then our platform will clean
-                it up for you.
+                Click the facilities that apply — we&rsquo;ll use them to draft
+                your description. Then edit it, or write your own.
               </p>
             </div>
+
+            <div>
+              <p className="mb-2 text-sm font-semibold text-body-2">
+                What does your program have?
+              </p>
+              <FacilityPicker value={facilities} onChange={setFacilities} />
+            </div>
+
             <AboutYouAI
               mode="program"
               value={about}
@@ -1626,6 +1649,7 @@ function CoachWizard({
               programName={programName}
               division={division}
               conference={conference}
+              facilities={facilities}
             />
           </div>
         )}
