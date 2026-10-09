@@ -1601,9 +1601,13 @@ function CoachWizard({
                 onChange={(v) => {
                   setProgramName(v);
                   // Editing the name re-opens the search: forget the chosen
-                  // school and drop any prefilled location so we don't carry
-                  // the wrong city/state forward.
+                  // school and drop any prefilled location/level so we don't
+                  // carry the wrong details forward.
                   setSchoolChosen(false);
+                  if (schoolPicked) {
+                    setDivision("");
+                    setConference("");
+                  }
                   if (schoolPicked || city || state) {
                     setCity("");
                     setState("");
@@ -1618,6 +1622,10 @@ function CoachWizard({
                   setState(s.state ?? "");
                   setLat(s.lat);
                   setLng(s.lng);
+                  // Pre-fill level + conference from the school record; the
+                  // coach can still change them on the level step.
+                  if (s.division) setDivision(s.division);
+                  if (s.conference) setConference(s.conference);
                   setSchoolPicked(true);
                   setSchoolChosen(true);
                 }}
