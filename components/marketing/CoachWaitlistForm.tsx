@@ -177,7 +177,7 @@ export function CoachWaitlistForm() {
         disabled={saving}
         className="h-[54px] w-full rounded-cta bg-accent text-base font-semibold text-surface transition-colors hover:bg-accent-dark disabled:opacity-60"
       >
-        {saving ? "Sending…" : "Request early access"}
+        {saving ? "Sending…" : "Join the waitlist"}
       </button>
       <p className="text-center text-xs text-muted-2">
         Free for the test group. No spam — we&rsquo;ll only email about your access.
