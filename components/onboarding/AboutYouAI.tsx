@@ -44,8 +44,21 @@ export function AboutYouAI({
   const busy = polishing || generating;
 
   const recRef = useRef<any>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const valueRef = useRef(value);
   valueRef.current = value;
+
+  // Auto-grow the textarea so the full description is always visible (no
+  // inner scroll), including when it's filled by Generate/Polish.
+  function autosize() {
+    const ta = wrapRef.current?.querySelector("textarea");
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${ta.scrollHeight}px`;
+  }
+  useEffect(() => {
+    autosize();
+  }, [value]);
 
   const speechSupported =
     typeof window !== "undefined" &&
@@ -188,17 +201,21 @@ export function AboutYouAI({
 
   return (
     <div className="space-y-3">
-      <div className="relative">
+      <div className="relative" ref={wrapRef}>
         <Textarea
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            autosize();
+          }}
           placeholder={
             isProgram
               ? "e.g. JUCO contender in the KJCCC. Turf infield, indoor cages and TrackMan. We develop hitters and send guys up — 11 to four-year programs the last three years. Hard-nosed culture, strong classroom support, and we compete for a conference title every season."
               : "e.g. I'm a left-handed hitting shortstop at Wichita East, class of 2026. Hit .380 with plus speed last spring and captained the team…"
           }
           maxLength={700}
-          rows={6}
+          rows={5}
+          className="resize-none overflow-hidden"
         />
         {speechSupported && (
           <button
