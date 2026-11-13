@@ -1,78 +1,51 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, Manrope } from "next/font/google";
-import { headers } from "next/headers";
+import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
-import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
-const barlow = Barlow_Condensed({
+const display = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["600", "700"],
-  variable: "--font-barlow",
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
   display: "swap",
 });
 
-const manrope = Manrope({
+const body = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-manrope",
+  variable: "--font-body",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  applicationName: "Athletx",
-  title: "Athletx — find your spot",
+  applicationName: "Wellness",
+  title: "Noel Pierce Wellness",
   description:
-    "Coaches post the spots they're recruiting for. Players see where they line up and show their interest — and always hear back.",
-  manifest: "/manifest.webmanifest",
-  icons: {
-    icon: [
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: "/apple-touch-icon.png",
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Athletx",
-  },
+    "Log everyday movement with your team, cheer each other on, and earn the rewards your admin sets.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F1210",
+  themeColor: "#0c120f",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 };
 
-const themeInit = `(function(){try{var t=localStorage.getItem('athletx-theme');if(t!=='light'&&t!=='dark')t='dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
+const themeInit = `(function(){try{var t=localStorage.getItem('wellness-theme');if(t!=='light'&&t!=='dark')t='dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Marketing routes (e.g. /coaches) render full-width; the app itself stays
-  // inside the mobile-first 480px frame.
-  const pathname = headers().get("x-pathname") ?? "";
-  // Full-width marketing: the public sales page (root + /coaches). The app and
-  // the /qa testing flow stay inside the mobile-first 480px frame.
-  const fullWidth =
-    pathname === "/" ||
-    pathname.startsWith("/coaches") ||
-    pathname.startsWith("/players") ||
-    pathname.startsWith("/parents");
-
   return (
     <html
       lang="en"
-      className={`${barlow.variable} ${manrope.variable}`}
+      className={`${display.variable} ${body.variable}`}
       suppressHydrationWarning
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body>
-        {fullWidth ? children : <div className="app-frame">{children}</div>}
-        <ServiceWorkerRegister />
+        <div className="app-frame">{children}</div>
       </body>
     </html>
   );

@@ -17,7 +17,10 @@ const config: Config = {
           dark: t("--c-accent-dark"),
           soft: t("--c-accent-soft"),
         },
-        gold: t("--c-gold"),
+        gold: {
+          DEFAULT: t("--c-gold"),
+          soft: t("--c-gold-soft"),
+        },
         "ink-2": t("--c-ink-2"),
         muted: {
           DEFAULT: t("--c-muted"),
@@ -36,9 +39,9 @@ const config: Config = {
       },
       fontFamily: {
         // display / headings / big numbers
-        display: ["var(--font-barlow)", "sans-serif"],
+        display: ["var(--font-display)", "sans-serif"],
         // body / UI
-        sans: ["var(--font-manrope)", "sans-serif"],
+        sans: ["var(--font-body)", "sans-serif"],
       },
       borderRadius: {
         card: "18px",
