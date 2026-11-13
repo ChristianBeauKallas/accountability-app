@@ -169,12 +169,12 @@ begin
   if not exists (select 1 from pg_policies where schemaname='storage' and tablename='objects' and policyname='wl_storage_write') then
     create policy "wl_storage_write" on storage.objects
       for insert to authenticated
-      with check (bucket_id = 'wellness' and owner = auth.uid());
+      with check (bucket_id = 'wellness');
   end if;
 
   if not exists (select 1 from pg_policies where schemaname='storage' and tablename='objects' and policyname='wl_storage_update') then
     create policy "wl_storage_update" on storage.objects
       for update to authenticated
-      using (bucket_id = 'wellness' and owner = auth.uid());
+      using (bucket_id = 'wellness');
   end if;
 end$$;
