@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { RunnerIcon, RunnerMark } from "./Runner";
 
 const RULES = [
-  { n: "01", title: "Days per month", body: "Days they move to qualify." },
-  { n: "02", title: "Minutes per day", body: "How long counts toward a day." },
-  { n: "03", title: "Wellness hours", body: "Banked monthly — used as sick time." },
-  { n: "04", title: "Monthly bonus", body: "Cash for hitting the goal." },
+  { n: "01", title: "Days per month", body: "How many days someone exercises to qualify that month." },
+  { n: "02", title: "Minutes per day", body: "The shortest workout that counts — sessions can add up." },
+  { n: "03", title: "Wellness hours", body: "Paid time they bank each month, usable as sick days." },
+  { n: "04", title: "Monthly bonus", body: "Cash added to their paycheck for hitting the goal." },
 ];
 
 type Slide = {
@@ -42,7 +42,7 @@ const SLIDES: Slide[] = [
     variant: "rules",
     eyebrow: "You're in control",
     title: "You set the rules.",
-    body: "Four dials, fully in your hands. Change them anytime.",
+    body: "The whole program runs on four simple settings. Pick them once, and change them whenever you want.",
     cta: "What's the best part?",
   },
   {
@@ -144,17 +144,26 @@ export function Landing() {
               )}
 
               {slide!.variant === "rules" && (
-                <div className="mt-5 flex flex-col gap-2.5">
-                  {RULES.map((r) => (
-                    <div key={r.n} className="flex items-center gap-3.5 rounded-card border border-border bg-surface p-3.5 shadow-card">
-                      <span className="font-display text-[1.05rem] font-bold text-accent">{r.n}</span>
-                      <div>
-                        <div className="font-display text-[0.98rem] font-bold leading-tight text-ink">{r.title}</div>
-                        <div className="text-[0.82rem] leading-snug text-muted">{r.body}</div>
+                <>
+                  <div className="mt-5 flex flex-col gap-2.5">
+                    {RULES.map((r) => (
+                      <div key={r.n} className="flex items-center gap-3.5 rounded-card border border-border bg-surface p-3.5 shadow-card">
+                        <span className="font-display text-[1.05rem] font-bold text-accent">{r.n}</span>
+                        <div>
+                          <div className="font-display text-[0.98rem] font-bold leading-tight text-ink">{r.title}</div>
+                          <div className="text-[0.82rem] leading-snug text-muted">{r.body}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 rounded-card border border-accent/30 bg-accent-soft p-3.5">
+                    <div className="mb-1 font-display text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-accent">For example</div>
+                    <p className="text-[0.86rem] leading-snug text-body-2">
+                      Exercise <b className="text-ink">12 days</b> of <b className="text-ink">30+ min</b> a month → earn{" "}
+                      <b className="text-ink">4 wellness hours</b> + <b className="text-ink">$50</b>.
+                    </p>
+                  </div>
+                </>
               )}
 
               {slide!.variant === "culture" && <FeedPeek />}
