@@ -27,29 +27,29 @@ const SLIDES: Slide[] = [
     variant: "text",
     eyebrow: "The problem",
     title: "Your best people\nhave options.",
-    body: "Bigger employers lure them with perks you can't match. A benefit people actually feel is hard to come by.",
+    body: "Bigger companies win them with benefits you can't match. Real perks are hard to offer on a small-team budget.",
     cta: "So what's the fix?",
   },
   {
     variant: "text",
     mark: true,
     eyebrow: "The idea",
-    title: "Set the targets.",
-    body: "Give your team simple movement goals. Hit them, and they earn wellness hours and a cash bonus — every month.",
+    title: "Make movement\npay off.",
+    body: "Pick a simple goal — say, 12 active days a month. Anyone who hits it earns paid wellness hours and a cash bonus. No gym required.",
     cta: "How does it work?",
   },
   {
     variant: "rules",
     eyebrow: "You're in control",
     title: "You set the rules.",
-    body: "Four simple dials. Change them anytime.",
+    body: "Four dials, fully in your hands. Change them anytime.",
     cta: "What's the best part?",
   },
   {
     variant: "culture",
     eyebrow: "The best part",
     title: "Build the culture.",
-    body: "Your team sees each other show up — and roots each other on.",
+    body: "Everyone shares a quick check-in. Momentum builds — and people keep each other going.",
     note: "Free to set up · about a minute.",
     cta: "Create my group",
   },
@@ -74,7 +74,7 @@ export function Landing() {
 
   return (
     <main
-      className="relative flex min-h-dvh flex-col overflow-hidden"
+      className="relative flex h-dvh flex-col overflow-hidden"
       style={{
         background:
           "radial-gradient(135% 85% at 50% -5%, rgb(var(--c-accent-soft)), transparent 58%)",
@@ -97,10 +97,10 @@ export function Landing() {
             <RunnerMark tile={80} icon={40} radius={25} halo bob />
             <div>
               <h1 className="whitespace-pre-line font-display text-[2.2rem] font-bold leading-[1.06] tracking-tight text-ink">
-                {"A wellness perk\nyour team uses."}
+                {"The perk your team\nwill actually use."}
               </h1>
-              <p className="mx-auto mt-3 max-w-[17rem] text-[0.92rem] leading-snug text-body-2">
-                Health incentives for small- to medium-sized businesses.
+              <p className="mx-auto mt-3 max-w-[18rem] text-[0.92rem] leading-snug text-body-2">
+                Reward healthy habits with wellness hours and a cash bonus — built for small teams.
               </p>
             </div>
           </div>
