@@ -1,46 +1,26 @@
-/* Athletx service worker — web push */
-
-self.addEventListener("install", () => {
-  self.skipWaiting();
-});
+// Retired service worker. The app no longer uses a service worker; this
+// replaces the old PWA cache so existing installs stop serving stale content.
+// On activation it deletes all caches, unregisters itself, and reloads any
+// open tabs so they pick up the live app.
+self.addEventListener("install", () => self.skipWaiting());
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
-});
-
-self.addEventListener("push", (event) => {
-  let payload = {};
-  try {
-    payload = event.data ? event.data.json() : {};
-  } catch (e) {
-    payload = { title: "Athletx", body: event.data ? event.data.text() : "" };
-  }
-
-  const title = payload.title || "Athletx";
-  const options = {
-    body: payload.body || "",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
-    tag: payload.tag || undefined,
-    data: { url: payload.url || "/notifications" },
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/";
-
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clients) => {
-        for (const client of clients) {
-          const path = new URL(client.url).pathname;
-          if (path === url && "focus" in client) return client.focus();
-        }
-        if (self.clients.openWindow) return self.clients.openWindow(url);
-      })
+    (async () => {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      } catch (e) {}
+      try {
+        await self.registration.unregister();
+      } catch (e) {}
+      try {
+        const clients = await self.clients.matchAll({ type: "window" });
+        clients.forEach((c) => c.navigate(c.url));
+      } catch (e) {}
+    })(),
   );
 });
+
+// Never serve from cache while this is still active — always hit the network.
+self.addEventListener("fetch", () => {});
