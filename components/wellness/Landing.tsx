@@ -18,27 +18,29 @@ type Slide = {
   body?: string;
   rules?: boolean;
   mark?: boolean;
+  note?: string;
   cta: string;
 };
 
 const SLIDES: Slide[] = [
   {
-    eyebrow: "What we do",
-    title: "Healthier, more\nenergetic teams.",
-    body: "We help small and midsize business owners build wellness incentive programs their teams actually use.",
-    mark: true,
-    cta: "How it works",
+    eyebrow: "The problem",
+    title: "Your best people\nhave options.",
+    body: "Bigger employers lure them with perks you can't match. A benefit people actually feel is hard to come by.",
+    cta: "So what's the fix?",
   },
   {
-    eyebrow: "The problem",
-    title: "Good benefits\nare hard to offer.",
-    body: "Most small teams can't match big-company perks. wlns is one you can — it rewards people for moving and staying healthy.",
-    cta: "Tell me more",
+    eyebrow: "The payoff",
+    title: "Healthier teams,\nby design.",
+    body: "Teams that move together have more energy, fewer sick days, and stay longer. You give them that — wlns runs it for you.",
+    mark: true,
+    cta: "Show me how",
   },
   {
     eyebrow: "The mechanics",
     title: "You set\nthe rules.",
     rules: true,
+    note: "Free to set up · about a minute.",
     cta: "Create my group",
   },
 ];
@@ -86,8 +88,8 @@ export function Landing() {
                 <br />
                 <span className="text-accent">Earn together.</span>
               </h1>
-              <p className="mt-3 text-[0.92rem] text-body-2">
-                Wellness incentive programs for your team.
+              <p className="mx-auto mt-3 max-w-[16rem] text-[0.92rem] leading-snug text-body-2">
+                A real benefit for your team, without the big-company budget.
               </p>
             </div>
           </div>
@@ -153,9 +155,12 @@ export function Landing() {
                   ))}
                 </div>
                 <div className="flex-1" />
+                {slide!.note && (
+                  <p className="mt-5 text-center text-[0.8rem] text-muted">{slide!.note}</p>
+                )}
                 <button
                   onClick={advance}
-                  className="mt-5 flex h-[52px] items-center justify-center rounded-cta bg-accent font-display font-semibold text-surface transition-colors hover:bg-accent-dark"
+                  className="mt-2.5 flex h-[52px] items-center justify-center rounded-cta bg-accent font-display font-semibold text-surface transition-colors hover:bg-accent-dark"
                 >
                   {slide!.cta}
                 </button>
