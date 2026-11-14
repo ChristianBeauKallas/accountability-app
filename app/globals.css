@@ -8,23 +8,24 @@
   :root,
   [data-theme="dark"] {
     color-scheme: dark;
-    --c-ink: 244 245 242;
-    --c-ground: 15 18 16;
-    --c-surface: 25 28 26;
-    --c-accent: 79 176 122;
-    --c-accent-dark: 62 154 102;
-    --c-accent-soft: 23 39 31;
-    --c-gold: 242 180 107;
-    --c-ink-2: 230 232 228;
-    --c-muted: 155 164 158;
-    --c-muted-2: 118 127 121;
+    --c-ink: 233 242 236;
+    --c-ground: 12 18 15;
+    --c-surface: 20 29 24;
+    --c-accent: 54 192 140;
+    --c-accent-dark: 47 174 126;
+    --c-accent-soft: 22 50 38;
+    --c-gold: 227 177 97;
+    --c-gold-soft: 42 33 17;
+    --c-ink-2: 224 232 227;
+    --c-muted: 124 138 129;
+    --c-muted-2: 108 122 113;
     --c-muted-on-dark: 169 180 173;
     --c-soft-on-dark: 201 209 203;
-    --c-body-2: 196 204 198;
-    --c-chip: 32 35 31;
-    --c-track: 39 43 40;
-    --c-border: 43 48 44;
-    --c-divider: 36 40 37;
+    --c-body-2: 174 186 178;
+    --c-chip: 27 38 31;
+    --c-track: 33 46 38;
+    --c-border: 38 49 40;
+    --c-divider: 31 40 33;
     --c-warm-soft: 243 227 207;
     --c-warm-text: 122 62 12;
     --c-danger: 240 138 107;
@@ -32,23 +33,24 @@
 
   [data-theme="light"] {
     color-scheme: light;
-    --c-ink: 19 32 26;
-    --c-ground: 245 244 239;
+    --c-ink: 21 33 27;
+    --c-ground: 238 242 238;
     --c-surface: 255 255 255;
-    --c-accent: 31 92 61;
-    --c-accent-dark: 18 59 39;
-    --c-accent-soft: 220 229 223;
-    --c-gold: 242 180 107;
+    --c-accent: 21 122 87;
+    --c-accent-dark: 15 106 73;
+    --c-accent-soft: 228 243 236;
+    --c-gold: 183 121 31;
+    --c-gold-soft: 251 241 221;
     --c-ink-2: 42 58 49;
-    --c-muted: 91 102 95;
+    --c-muted: 125 141 132;
     --c-muted-2: 122 132 126;
     --c-muted-on-dark: 169 180 173;
     --c-soft-on-dark: 201 209 203;
-    --c-body-2: 62 73 67;
-    --c-chip: 240 239 232;
-    --c-track: 233 232 225;
-    --c-border: 213 216 210;
-    --c-divider: 228 229 223;
+    --c-body-2: 68 84 76;
+    --c-chip: 244 247 244;
+    --c-track: 233 239 233;
+    --c-border: 226 232 226;
+    --c-divider: 228 232 228;
     --c-warm-soft: 243 227 207;
     --c-warm-text: 122 62 12;
     --c-danger: 194 65 12;
@@ -77,7 +79,7 @@
   }
   /* Big, condensed display type used for titles, stats and fit scores. */
   .font-display {
-    font-family: var(--font-barlow), sans-serif;
+    font-family: var(--font-display), sans-serif;
     letter-spacing: -0.011em;
   }
   h1,
@@ -120,4 +122,43 @@
 }
 .animate-tour-screen {
   animation: tourScreenIn 0.32s ease-out;
+}
+
+/* Runner mark bob */
+@keyframes wbob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.animate-bob {
+  animation: wbob 1.5s ease-in-out infinite;
+}
+.animate-bob-fast {
+  animation: wbob 0.72s ease-in-out infinite;
+}
+/* Welcome ambient glow */
+@keyframes wglow {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.12;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.13);
+    opacity: 0.2;
+  }
+}
+.animate-glow {
+  animation: wglow 7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-bob,
+  .animate-bob-fast,
+  .animate-glow {
+    animation: none;
+  }
 }
