@@ -17,8 +17,8 @@ const body = Inter({
 });
 
 export const metadata: Metadata = {
-  applicationName: "Wellness",
-  title: "Noel Pierce Wellness",
+  applicationName: "wlns",
+  title: "wlns",
   description:
     "Log everyday movement with your team, cheer each other on, and earn the rewards your admin sets.",
 };

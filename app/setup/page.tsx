@@ -329,7 +329,7 @@ function StepBody(props: any) {
           onClick={onStart}
           className="flex h-[52px] items-center justify-center rounded-cta bg-accent font-display font-semibold text-surface transition-colors hover:bg-accent-dark"
         >
-          Let&apos;s do it on this page
+          Let&apos;s do it
         </button>
       </div>
     );
