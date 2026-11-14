@@ -34,8 +34,8 @@ const SLIDES: Slide[] = [
     variant: "text",
     mark: true,
     eyebrow: "The idea",
-    title: "Make movement\npay off.",
-    body: "Pick a simple goal — say, 12 active days a month. Anyone who hits it earns paid wellness hours and a cash bonus. No gym required.",
+    title: "Make exercise\npay off.",
+    body: "Your team is already active — now it counts for something. Each month you set a simple goal, like exercising a set number of days. Anyone who hits it earns paid wellness hours plus a cash bonus. Walks, home workouts, the gym, a bike ride — it all qualifies, so there's nothing for them to buy.",
     cta: "How does it work?",
   },
   {
@@ -170,11 +170,12 @@ export function Landing() {
   );
 }
 
-/* A small peek of the in-app team feed — the "culture" proof. */
+/* An actual-looking snippet of the in-app team feed — the "culture" proof.
+   Mirrors the real feed card in app/feed/page.tsx. */
 function FeedPeek() {
   return (
-    <div className="mt-6 rounded-2xl border border-border bg-surface p-3 shadow-card">
-      <div className="mb-2.5 flex items-center justify-between">
+    <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <span className="inline-flex items-center gap-1.5 font-display text-xs font-bold text-ink">
           <span className="grid h-5 w-5 place-items-center rounded-[6px] bg-gradient-to-br from-accent to-accent-dark text-white">
             <RunnerIcon size={12} strokeWidth={2.2} />
@@ -183,41 +184,32 @@ function FeedPeek() {
         </span>
         <span className="text-[0.62rem] text-muted">Your team</span>
       </div>
-      <div className="flex flex-col gap-2">
-        <MiniPost initials="SM" color="#b4552f" name="Sarah" caption="5k before work" dur="34m" photo="from-amber-300 to-sky-400" />
-        <MiniPost initials="DC" color="#2f6fb4" name="Devin" caption="Lunch walk w/ the team" dur="40m" photo="from-emerald-300 to-emerald-600" />
-      </div>
-    </div>
-  );
-}
-
-function MiniPost({
-  initials,
-  color,
-  name,
-  caption,
-  dur,
-  photo,
-}: {
-  initials: string;
-  color: string;
-  name: string;
-  caption: string;
-  dur: string;
-  photo: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 rounded-xl bg-chip px-2.5 py-2">
-      <span className="grid h-7 w-7 flex-none place-items-center rounded-full font-display text-[0.62rem] font-bold text-white" style={{ background: color }}>
-        {initials}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[0.78rem] font-semibold text-ink">
-          {name} <span className="font-normal text-muted">· {dur}</span>
+      <div className="p-3">
+        <div className="flex items-center gap-2.5 pb-2.5">
+          <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-full font-display text-[0.66rem] font-bold text-white" style={{ background: "#b4552f" }}>
+            SM
+          </span>
+          <div className="min-w-0">
+            <div className="text-[0.82rem] font-bold leading-tight text-ink">Sarah Mitchell</div>
+            <div className="text-[0.68rem] text-muted">22m ago</div>
+          </div>
         </div>
-        <div className="truncate text-[0.72rem] text-muted">{caption}</div>
+        <div className="relative h-36 overflow-hidden rounded-xl bg-gradient-to-br from-amber-300 via-orange-400 to-sky-500">
+          <span className="absolute right-2 top-2 rounded-pill bg-black/60 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white backdrop-blur">
+            50m
+          </span>
+          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-pill bg-black/60 px-2 py-[3px] text-[0.68rem] font-semibold text-white backdrop-blur">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Lifetime Fitness
+          </span>
+        </div>
+        <div className="pt-2.5 text-[0.82rem] leading-snug text-body-2">
+          <b className="text-ink">Sarah</b> Leg day before the kids woke up.
+        </div>
       </div>
-      <span className={`h-9 w-9 flex-none rounded-lg bg-gradient-to-br ${photo}`} />
     </div>
   );
 }
