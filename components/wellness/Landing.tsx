@@ -5,8 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RunnerMark } from "./Runner";
 
-const PRODUCT = "wlns";
-
 const RULES = [
   { n: "01", title: "Days per month", body: "Days they move to qualify." },
   { n: "02", title: "Minutes per day", body: "How long counts toward a day." },
@@ -25,21 +23,21 @@ type Slide = {
 
 const SLIDES: Slide[] = [
   {
-    eyebrow: "How it works",
-    title: "Move more.\nEarn more.",
-    body: "wlns turns your team's everyday movement into monthly rewards.",
+    eyebrow: "What we do",
+    title: "Healthier, more\nenergetic teams.",
+    body: "We help small and midsize business owners build wellness incentive programs their teams actually use.",
     mark: true,
-    cta: "Next",
+    cta: "How it works",
   },
   {
-    eyebrow: "The payoff",
-    title: "Hit the goal,\nevery month.",
-    body: "They earn wellness hours — use them as sick time — plus a cash bonus.",
-    cta: "Next",
+    eyebrow: "The problem",
+    title: "Good benefits\nare hard to offer.",
+    body: "Most small teams can't match big-company perks. wlns is one you can — it rewards people for moving and staying healthy.",
+    cta: "Tell me more",
   },
   {
-    eyebrow: "What you set",
-    title: "You decide\nthe rules.",
+    eyebrow: "The mechanics",
+    title: "You set\nthe rules.",
     rules: true,
     cta: "Create my group",
   },
@@ -78,15 +76,20 @@ export function Landing() {
         /* ---------- hero ---------- */
         <div className="relative z-10 flex flex-1 flex-col px-[30px] pb-9 pt-12 text-center">
           <div className="font-display text-base font-bold tracking-[0.04em] text-accent">
-            {PRODUCT}
+            wlns
           </div>
-          <div className="flex flex-1 flex-col items-center justify-center gap-7">
+          <div className="flex flex-1 flex-col items-center justify-center gap-6">
             <RunnerMark tile={80} icon={40} radius={25} halo bob />
-            <h1 className="font-display text-[2.35rem] font-bold leading-[1.04] tracking-tight text-ink">
-              Move together.
-              <br />
-              <span className="text-accent">Earn together.</span>
-            </h1>
+            <div>
+              <h1 className="font-display text-[2.35rem] font-bold leading-[1.04] tracking-tight text-ink">
+                Move together.
+                <br />
+                <span className="text-accent">Earn together.</span>
+              </h1>
+              <p className="mt-3 text-[0.92rem] text-body-2">
+                Wellness incentive programs for your team.
+              </p>
+            </div>
           </div>
           <div className="flex flex-col items-center gap-3">
             <button
@@ -130,7 +133,7 @@ export function Landing() {
                 <div className="font-display text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-accent">
                   {slide!.eyebrow}
                 </div>
-                <h2 className="mt-1.5 whitespace-pre-line font-display text-[1.9rem] font-bold leading-[1.08] tracking-tight text-ink">
+                <h2 className="mt-1.5 whitespace-pre-line font-display text-[1.95rem] font-bold leading-[1.08] tracking-tight text-ink">
                   {slide!.title}
                 </h2>
                 <div className="mt-5 flex flex-col gap-2.5">
@@ -165,7 +168,7 @@ export function Landing() {
                     <div className="font-display text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-accent">
                       {slide!.eyebrow}
                     </div>
-                    <h2 className="mt-2 whitespace-pre-line font-display text-[2.4rem] font-bold leading-[1.02] tracking-tight text-ink">
+                    <h2 className="mt-2 whitespace-pre-line font-display text-[2.2rem] font-bold leading-[1.05] tracking-tight text-ink">
                       {slide!.title}
                     </h2>
                   </div>
