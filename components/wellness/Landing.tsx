@@ -34,7 +34,7 @@ const SLIDES: Slide[] = [
     variant: "text",
     mark: true,
     eyebrow: "The idea",
-    title: "Make healthy\nhabits pay.",
+    title: "Reward healthy\nhabits.",
     body: "Each month you set a simple goal, like exercising a set number of days. Anyone who hits it earns paid wellness hours plus a cash bonus. Walks, home workouts, the gym, a bike ride — it all qualifies, so there's nothing for them to buy.",
     cta: "How does it work?",
   },
