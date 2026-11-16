@@ -102,7 +102,7 @@ export function Landing() {
             <RunnerMark tile={80} icon={40} radius={25} halo bob />
             <div>
               <h1 className="whitespace-pre-line font-display text-[1.95rem] font-bold leading-[1.1] tracking-tight text-ink">
-                {"The wellness incentive\nfor small- to mid-sized teams."}
+                {"The wellness incentive\nfor small to medium teams."}
               </h1>
               <p className="mx-auto mt-3.5 max-w-[18rem] text-[0.95rem] leading-snug text-body-2">
                 Reward your team&apos;s healthy habits with wellness hours and cash bonuses.
