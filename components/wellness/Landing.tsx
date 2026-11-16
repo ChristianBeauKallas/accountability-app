@@ -96,11 +96,11 @@ export function Landing() {
           <div className="flex flex-1 flex-col items-center justify-center gap-6">
             <RunnerMark tile={80} icon={40} radius={25} halo bob />
             <div>
-              <h1 className="whitespace-pre-line font-display text-[2.2rem] font-bold leading-[1.06] tracking-tight text-ink">
-                {"The perk your team\nwill actually use."}
+              <h1 className="whitespace-pre-line font-display text-[2.05rem] font-bold leading-[1.08] tracking-tight text-ink">
+                {"The wellness incentive\nfor small & midsize teams."}
               </h1>
-              <p className="mx-auto mt-3 max-w-[18rem] text-[0.92rem] leading-snug text-body-2">
-                Reward healthy habits with wellness hours and a cash bonus — built for small teams.
+              <p className="mx-auto mt-3.5 max-w-[18rem] text-[0.95rem] leading-snug text-body-2">
+                Reward your team&apos;s healthy habits with wellness hours and cash bonuses.
               </p>
             </div>
           </div>
