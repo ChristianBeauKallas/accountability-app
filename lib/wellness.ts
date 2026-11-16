@@ -47,8 +47,38 @@ export type Viewer = {
 // ---------------------------------------------------------------------------
 // Stats math
 // ---------------------------------------------------------------------------
-const dayKey = (iso: string) => iso.slice(0, 10); // YYYY-MM-DD (UTC)
-const monthKey = (iso: string) => iso.slice(0, 7); // YYYY-MM
+// All day/month bucketing happens in the team's timezone, so "today" and
+// "this month" match the wall clock rather than UTC. Change TZ to your team's.
+export const TZ = "America/Chicago";
+const _dayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ });
+export const tzDay = (iso: string | Date) =>
+  _dayFmt.format(typeof iso === "string" ? new Date(iso) : iso); // YYYY-MM-DD
+export const tzMonth = (iso: string | Date) => tzDay(iso).slice(0, 7);
+
+function tzOffsetMinutes(date: Date): number {
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const p = Object.fromEntries(dtf.formatToParts(date).map((x) => [x.type, x.value])) as Record<string, string>;
+  const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  return (asUTC - date.getTime()) / 60000;
+}
+
+// The UTC instant of the start of "today" in the team's timezone.
+export function tzStartOfDayISO(now: Date = new Date()): string {
+  const utcMidnight = Date.parse(tzDay(now) + "T00:00:00Z");
+  return new Date(utcMidnight - tzOffsetMinutes(now) * 60000).toISOString();
+}
+
+const dayKey = (iso: string) => tzDay(iso);
+const monthKey = (iso: string) => tzMonth(iso);
 
 export type Stats = {
   goal: number;
@@ -70,13 +100,13 @@ export function computeStats(
   program: Program,
   now: Date = new Date(),
 ): Stats {
-  const year = now.toISOString().slice(0, 4);
-  const thisMonth = now.toISOString().slice(0, 7);
+  const year = tzDay(now).slice(0, 4);
+  const thisMonth = tzMonth(now);
 
   // month -> day -> minutes
   const byMonth = new Map<string, Map<string, number>>();
   for (const c of checkins) {
-    if (!c.created_at.startsWith(year)) continue;
+    if (tzDay(c.created_at).slice(0, 4) !== year) continue;
     const mk = monthKey(c.created_at);
     const dk = dayKey(c.created_at);
     const days = byMonth.get(mk) ?? new Map<string, number>();
@@ -123,7 +153,7 @@ export function qualifyingDaysByMember(
   program: Program,
   now: Date = new Date(),
 ): Map<string, number> {
-  const thisMonth = now.toISOString().slice(0, 7);
+  const thisMonth = tzMonth(now);
   // member -> day -> minutes
   const byMember = new Map<string, Map<string, number>>();
   for (const c of checkins) {

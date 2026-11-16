@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/wellness-server";
-import { computeStats, formatHours, formatMoney } from "@/lib/wellness";
+import { computeStats, formatHours, formatMoney, tzDay } from "@/lib/wellness";
 import { Avatar } from "@/components/ui/Avatar";
 import { TabBar } from "@/components/wellness/TabBar";
 
@@ -10,15 +10,15 @@ export const dynamic = "force-dynamic";
 
 function currentStreak(dayKeys: Set<string>, now: Date): number {
   let streak = 0;
-  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  let cursor = new Date(now);
   // allow the streak to count from today or yesterday
-  if (!dayKeys.has(d.toISOString().slice(0, 10))) {
-    d.setUTCDate(d.getUTCDate() - 1);
-    if (!dayKeys.has(d.toISOString().slice(0, 10))) return 0;
+  if (!dayKeys.has(tzDay(cursor))) {
+    cursor = new Date(cursor.getTime() - 86400000);
+    if (!dayKeys.has(tzDay(cursor))) return 0;
   }
-  while (dayKeys.has(d.toISOString().slice(0, 10))) {
+  while (dayKeys.has(tzDay(cursor))) {
     streak++;
-    d.setUTCDate(d.getUTCDate() - 1);
+    cursor = new Date(cursor.getTime() - 86400000);
   }
   return streak;
 }
@@ -30,7 +30,7 @@ export default async function ProfilePage() {
   const supabase = createClient();
 
   const now = new Date();
-  const startYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1)).toISOString();
+  const startYear = new Date(Date.UTC(now.getUTCFullYear() - 1, 11, 1)).toISOString();
   const startMonth = new Date(
     Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
   ).toISOString();
@@ -52,7 +52,7 @@ export default async function ProfilePage() {
     .limit(12);
   const logs = logsRaw ?? [];
 
-  const dayKeys = new Set(year.map((c) => c.created_at.slice(0, 10)));
+  const dayKeys = new Set(year.map((c) => tzDay(c.created_at)));
   const streak = currentStreak(dayKeys, now);
 
   const monthName = now.toLocaleString("en-US", { month: "long" });

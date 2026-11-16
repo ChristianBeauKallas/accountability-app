@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/wellness-server";
-import { computeStats, qualifyingDaysByMember, timeAgo } from "@/lib/wellness";
+import { computeStats, qualifyingDaysByMember, timeAgo, tzStartOfDayISO } from "@/lib/wellness";
 import { Avatar } from "@/components/ui/Avatar";
 import { RunnerIcon, RunnerMark } from "@/components/wellness/Runner";
 import { TabBar } from "@/components/wellness/TabBar";
@@ -34,10 +34,8 @@ export default async function FeedPage() {
   const supabase = createClient();
 
   const now = new Date();
-  const startToday = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  ).toISOString();
-  const startYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1)).toISOString();
+  const startToday = tzStartOfDayISO(now);
+  const startYear = new Date(Date.UTC(now.getUTCFullYear() - 1, 11, 1)).toISOString();
 
   const { data: postsRaw } = await supabase
     .from("wl_checkins")
