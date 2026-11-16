@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { RunnerIcon, RunnerMark } from "./Runner";
 
 const RULES = [
-  { n: "01", title: "Days per month", body: "How many days someone exercises to qualify that month." },
-  { n: "02", title: "Minutes per day", body: "The shortest workout that counts — sessions can add up." },
-  { n: "03", title: "Wellness hours", body: "Paid time they bank each month, usable as sick days." },
-  { n: "04", title: "Monthly bonus", body: "Cash added to their paycheck for hitting the goal." },
+  { n: "01", title: "Days per month", body: "How many days someone exercises to qualify for the incentive that month." },
+  { n: "02", title: "Minutes per day", body: "The shortest a workout can be to count. A few sessions in a day can add up to it." },
+  { n: "03", title: "Wellness hours", body: "Paid hours they bank each month they qualify — saved to use later as sick days." },
+  { n: "04", title: "Monthly bonus", body: "A cash bonus added to the paycheck of everyone who hits the goal." },
 ];
 
 type Slide = {
@@ -42,7 +42,7 @@ const SLIDES: Slide[] = [
     variant: "rules",
     eyebrow: "You're in control",
     title: "You set the rules.",
-    body: "The whole program runs on four simple settings. Pick them once, and change them whenever you want.",
+    body: "The whole incentive runs on four simple settings:",
     cta: "What's the best part?",
   },
   {
