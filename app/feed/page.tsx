@@ -2,11 +2,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/wellness-server";
-import { computeStats, formatMoney, timeAgo } from "@/lib/wellness";
+import { computeStats, qualifyingDaysByMember, timeAgo } from "@/lib/wellness";
 import { Avatar } from "@/components/ui/Avatar";
 import { RunnerIcon, RunnerMark } from "@/components/wellness/Runner";
 import { TabBar } from "@/components/wellness/TabBar";
 import { InviteBanner } from "@/components/wellness/InviteBanner";
+import { PostReactions, type ReactionState } from "@/components/wellness/PostReactions";
+
+type EKey = "fire" | "thumb" | "heart";
+const emptyReactions = (): ReactionState => ({
+  fire: { count: 0, me: false },
+  thumb: { count: 0, me: false },
+  heart: { count: 0, me: false },
+});
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +55,34 @@ export default async function FeedPage() {
     .eq("member_id", userId)
     .gte("created_at", startYear);
   const stats = computeStats(mine ?? [], program);
+
+  // Per-member qualifying days this month (for the badge on each post).
+  const startMonth = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  ).toISOString();
+  const { data: monthRaw } = await supabase
+    .from("wl_checkins")
+    .select("member_id, created_at, duration_minutes")
+    .eq("program_id", program.id)
+    .gte("created_at", startMonth);
+  const daysByMember = qualifyingDaysByMember(monthRaw ?? [], program, now);
+
+  // Reactions for today's posts.
+  const postIds = posts.map((p) => p.id);
+  const reactionMap = new Map<string, ReactionState>();
+  posts.forEach((p) => reactionMap.set(p.id, emptyReactions()));
+  if (postIds.length) {
+    const { data: rx } = await supabase
+      .from("wl_reactions")
+      .select("checkin_id, emoji, member_id")
+      .in("checkin_id", postIds);
+    for (const r of (rx ?? []) as { checkin_id: string; emoji: EKey; member_id: string }[]) {
+      const e = reactionMap.get(r.checkin_id);
+      if (!e || !e[r.emoji]) continue;
+      e[r.emoji].count++;
+      if (r.member_id === userId) e[r.emoji].me = true;
+    }
+  }
 
   const R = 19;
   const C = 2 * Math.PI * R;
@@ -145,13 +181,17 @@ export default async function FeedPage() {
                         {p.place}
                       </span>
                     )}
+                    <span className="absolute bottom-2.5 right-2.5 rounded-pill bg-black/60 px-2.5 py-[5px] font-display text-[0.72rem] font-bold text-white backdrop-blur">
+                      {daysByMember.get(p.member_id) ?? 0}/{program.days_goal} days
+                    </span>
                   </div>
                   {p.description && (
-                    <div className="px-[13px] pb-3.5 pt-2.5 text-[0.86rem] leading-snug text-body-2">
+                    <div className="px-[13px] pb-1 pt-2.5 text-[0.86rem] leading-snug text-body-2">
                       <b className="text-ink">{(p.member?.name ?? "Member").split(" ")[0]}</b>{" "}
                       {p.description}
                     </div>
                   )}
+                  <PostReactions checkinId={p.id} memberId={userId} initial={reactionMap.get(p.id)!} />
                 </article>
               );
             })
