@@ -49,7 +49,7 @@ const SLIDES: Slide[] = [
     variant: "culture",
     eyebrow: "The best part",
     title: "Build the culture.",
-    body: "Everyone shares a quick check-in. Momentum builds — and people keep each other going.",
+    body: "A team feed where everyone shares their daily check-ins — so people cheer each other on, keep each other accountable, and build real momentum together.",
     note: "Free to set up · about a minute.",
     cta: "Create my group",
   },
@@ -198,32 +198,105 @@ function FeedPeek() {
         </span>
         <span className="text-[0.62rem] text-muted">Your team</span>
       </div>
-      <div className="p-3">
-        <div className="flex items-center gap-2.5 pb-2.5">
-          <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-full font-display text-[0.66rem] font-bold text-white" style={{ background: "#b4552f" }}>
-            SM
-          </span>
-          <div className="min-w-0">
-            <div className="text-[0.82rem] font-bold leading-tight text-ink">Sarah Mitchell</div>
-            <div className="text-[0.68rem] text-muted">22m ago</div>
-          </div>
-        </div>
-        <div className="relative h-36 overflow-hidden rounded-xl bg-gradient-to-br from-amber-300 via-orange-400 to-sky-500">
-          <span className="absolute right-2 top-2 rounded-pill bg-black/60 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white backdrop-blur">
-            50m
-          </span>
-          <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-pill bg-black/60 px-2 py-[3px] text-[0.68rem] font-semibold text-white backdrop-blur">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            Lifetime Fitness
-          </span>
-        </div>
-        <div className="pt-2.5 text-[0.82rem] leading-snug text-body-2">
-          <b className="text-ink">Sarah</b> Leg day before the kids woke up.
-        </div>
+      <div className="divide-y divide-border">
+        <PeekPost initials="SM" color="#b4552f" name="Sarah Mitchell" time="22m ago" dur="34m" place="Shoal Creek Trail" caption="Trail run before work." scene={<TrailScene />} />
+        <PeekPost initials="MR" color="#2f6fb4" name="Marcus Reyes" time="1h ago" dur="40m" place="Riverside Park" caption="Lunch walk with the team." scene={<ParkScene />} />
       </div>
     </div>
+  );
+}
+
+function PeekPost({
+  initials,
+  color,
+  name,
+  time,
+  dur,
+  place,
+  caption,
+  scene,
+}: {
+  initials: string;
+  color: string;
+  name: string;
+  time: string;
+  dur: string;
+  place: string;
+  caption: string;
+  scene: React.ReactNode;
+}) {
+  return (
+    <div className="p-3">
+      <div className="flex items-center gap-2.5 pb-2.5">
+        <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-full font-display text-[0.66rem] font-bold text-white" style={{ background: color }}>
+          {initials}
+        </span>
+        <div className="min-w-0">
+          <div className="text-[0.82rem] font-bold leading-tight text-ink">{name}</div>
+          <div className="text-[0.68rem] text-muted">{time}</div>
+        </div>
+      </div>
+      <div className="relative h-32 overflow-hidden rounded-xl bg-chip">
+        {scene}
+        <span className="absolute right-2 top-2 rounded-pill bg-black/55 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white backdrop-blur">
+          {dur}
+        </span>
+        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-pill bg-black/55 px-2 py-[3px] text-[0.68rem] font-semibold text-white backdrop-blur">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          {place}
+        </span>
+      </div>
+      <div className="pt-2.5 text-[0.82rem] leading-snug text-body-2">
+        <b className="text-ink">{name.split(" ")[0]}</b> {caption}
+      </div>
+    </div>
+  );
+}
+
+/* Self-contained illustrated scenes (swap for real photos anytime). */
+function TrailScene() {
+  return (
+    <svg viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
+      <defs>
+        <linearGradient id="np-sky1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe0a3" />
+          <stop offset="0.5" stopColor="#ffb480" />
+          <stop offset="1" stopColor="#a9c58f" />
+        </linearGradient>
+      </defs>
+      <rect width="120" height="90" fill="url(#np-sky1)" />
+      <circle cx="84" cy="27" r="11" fill="#fff4da" />
+      <path d="M0 58 Q32 46 64 56 T120 54 L120 90 L0 90 Z" fill="#6b9a63" />
+      <path d="M0 70 Q40 60 78 70 T120 68 L120 90 L0 90 Z" fill="#3f6e45" />
+      <path d="M52 90 Q58 66 56 56 Q54 66 42 90 Z" fill="#dccca2" opacity="0.85" />
+    </svg>
+  );
+}
+
+function ParkScene() {
+  return (
+    <svg viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
+      <defs>
+        <linearGradient id="np-sky2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#bfe3f2" />
+          <stop offset="0.6" stopColor="#8fc8d8" />
+          <stop offset="1" stopColor="#8fb98f" />
+        </linearGradient>
+      </defs>
+      <rect width="120" height="90" fill="url(#np-sky2)" />
+      <circle cx="24" cy="23" r="9" fill="#fdfbe8" />
+      <rect y="62" width="120" height="28" fill="#4f7e52" />
+      <g fill="#2e3b33">
+        <rect x="46" y="54" width="34" height="4" rx="1" />
+        <rect x="46" y="44" width="34" height="3" rx="1" />
+        <rect x="48" y="47" width="2" height="7" />
+        <rect x="76" y="47" width="2" height="7" />
+        <rect x="49" y="58" width="2" height="8" />
+        <rect x="75" y="58" width="2" height="8" />
+      </g>
+    </svg>
   );
 }
