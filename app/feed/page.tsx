@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/wellness-server";
 import { computeStats, formatMoney, timeAgo } from "@/lib/wellness";
 import { Avatar } from "@/components/ui/Avatar";
-import { RunnerIcon } from "@/components/wellness/Runner";
+import { RunnerIcon, RunnerMark } from "@/components/wellness/Runner";
 import { TabBar } from "@/components/wellness/TabBar";
 import { InviteBanner } from "@/components/wellness/InviteBanner";
 
@@ -166,11 +166,18 @@ export default async function FeedPage() {
 
 function EmptyFeed() {
   return (
-    <div className="rounded-card border border-dashed border-border bg-surface px-6 py-10 text-center">
-      <p className="font-display text-base font-bold text-ink">No check-ins yet today</p>
-      <p className="mt-1 text-sm text-body-2">
-        Be the first — tap the + button to log your movement.
-      </p>
+    <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border bg-surface px-6 py-9 text-center">
+      <RunnerMark tile={48} icon={24} radius={14} />
+      <div>
+        <p className="font-display text-base font-bold text-ink">Nothing logged yet today</p>
+        <p className="mt-1 text-sm text-body-2">Be the first to check in — it only takes a few taps.</p>
+      </div>
+      <Link
+        href="/log"
+        className="mt-1 flex h-10 items-center justify-center rounded-cta bg-accent px-5 font-display text-sm font-semibold text-surface transition-colors hover:bg-accent-dark"
+      >
+        Log your movement
+      </Link>
     </div>
   );
 }
