@@ -26,8 +26,8 @@ const SLIDES: Slide[] = [
   {
     variant: "text",
     eyebrow: "The problem",
-    title: "Your best people\nhave options.",
-    body: "Bigger companies win them with benefits you can't match. Real perks are hard to offer on a small-team budget.",
+    title: "Benefits favor\nthe big guys.",
+    body: "Big companies can offer comprehensive benefits a small team can't match. On a tighter budget, real perks are hard to come by.",
     cta: "So what's the fix?",
   },
   {
