@@ -23,6 +23,7 @@ export function Compose({
   const [desc, setDesc] = useState("");
   const [dur, setDur] = useState(Math.max(minsPerDay, minsPerDay + 5));
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -94,8 +95,8 @@ export function Compose({
       setBusy(false);
       return;
     }
-    router.push("/feed");
-    router.refresh();
+    setBusy(false);
+    setDone(true);
   }
 
   const qualifies = dur >= minsPerDay;
@@ -146,7 +147,7 @@ export function Compose({
               </>
             )}
           </button>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={pickPhoto} />
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pickPhoto} />
 
           {/* location */}
           <div className="flex flex-col gap-2">
@@ -224,6 +225,31 @@ export function Compose({
       </div>
 
       {busy && <BobLoader message="Posting your check-in…" />}
+
+      {done && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-ground px-8 text-center">
+          <div className="grid h-[86px] w-[86px] place-items-center rounded-full bg-accent-soft text-accent">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </div>
+          <h2 className="font-display text-[1.4rem] font-bold text-ink">Logged!</h2>
+          <p className="max-w-[16rem] text-sm leading-relaxed text-body-2">
+            {qualifies
+              ? `Nice work — that's a qualifying day (${minsPerDay}+ min).`
+              : "Nice work — every bit counts."}
+          </p>
+          <button
+            onClick={() => {
+              router.push("/feed");
+              router.refresh();
+            }}
+            className="mt-3 flex h-[52px] items-center justify-center rounded-cta bg-accent px-7 font-display font-semibold text-surface transition-colors hover:bg-accent-dark"
+          >
+            See the feed
+          </button>
+        </div>
+      )}
     </main>
   );
 }
