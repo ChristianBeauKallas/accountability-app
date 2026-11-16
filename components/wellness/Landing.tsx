@@ -92,12 +92,17 @@ export function Landing() {
       {step === 0 ? (
         /* ---------- hero ---------- */
         <div className="relative z-10 flex flex-1 flex-col px-[30px] pb-9 pt-12 text-center">
-          <div className="font-display text-base font-bold tracking-[0.04em] text-accent">wlns</div>
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="font-display text-base font-bold tracking-[0.04em] text-accent">wlns</div>
+            <div className="text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-muted">
+              Team wellness, made simple
+            </div>
+          </div>
           <div className="flex flex-1 flex-col items-center justify-center gap-6">
             <RunnerMark tile={80} icon={40} radius={25} halo bob />
             <div>
-              <h1 className="whitespace-pre-line font-display text-[2.05rem] font-bold leading-[1.08] tracking-tight text-ink">
-                {"The wellness incentive\nfor small & midsize teams."}
+              <h1 className="whitespace-pre-line font-display text-[1.95rem] font-bold leading-[1.1] tracking-tight text-ink">
+                {"The wellness incentive\nfor small- to mid-sized teams."}
               </h1>
               <p className="mx-auto mt-3.5 max-w-[18rem] text-[0.95rem] leading-snug text-body-2">
                 Reward your team&apos;s healthy habits with wellness hours and cash bonuses.
