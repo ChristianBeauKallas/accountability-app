@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { makeInviteCode } from "@/lib/wellness";
-import { RunnerMark } from "@/components/wellness/Runner";
 import { BobLoader } from "@/components/wellness/BobLoader";
 import { Input } from "@/components/ui/Field";
 
-type Step = "intro" | "days" | "mins" | "hours" | "bonus" | "review" | "business" | "account";
-const ORDER: Step[] = ["intro", "days", "mins", "hours", "bonus", "review", "business", "account"];
+type Step = "days" | "mins" | "hours" | "bonus" | "review" | "business" | "account";
+const ORDER: Step[] = ["days", "mins", "hours", "bonus", "review", "business", "account"];
 
 type Key = "days" | "mins" | "hours" | "bonus";
+const QKEYS: Key[] = ["days", "mins", "hours", "bonus"];
 const BOUNDS: Record<Key, [number, number, number]> = {
   days: [1, 31, 1],
   mins: [5, 120, 5],
@@ -20,27 +20,23 @@ const BOUNDS: Record<Key, [number, number, number]> = {
   bonus: [0, 500, 5],
 };
 
-const QMETA: Record<Key, { count: string; title: string; unit: string; prefix?: string; help: string }> = {
+const QMETA: Record<Key, { title: string; unit: string; prefix?: string; help: string }> = {
   days: {
-    count: "Question 1 of 4",
-    title: "How many days a month\nmust they exercise?",
+    title: "How many days a month\nshould they exercise?",
     unit: "days / month",
-    help: "The number of days someone works out to qualify that month.",
+    help: "The number of days someone exercises to qualify that month.",
   },
   mins: {
-    count: "Question 2 of 4",
     title: "How long should\neach workout be?",
     unit: "minutes / day",
-    help: "The least movement that makes a day count. Shorter sessions add up across the day.",
+    help: "The least a workout can be to count. Shorter sessions can add up across the day.",
   },
   hours: {
-    count: "Question 3 of 4",
-    title: "How many wellness\nhours do they earn?",
+    title: "How many wellness hours\ndo they earn per month?",
     unit: "hours / month",
-    help: "Paid time they bank each qualifying month — usable as sick days.",
+    help: "Paid time they bank each qualifying month — usable later as sick days.",
   },
   bonus: {
-    count: "Question 4 of 4",
     title: "What's the\nmonthly cash bonus?",
     unit: "per qualifying month",
     prefix: "$",
@@ -50,7 +46,7 @@ const QMETA: Record<Key, { count: string; title: string; unit: string; prefix?: 
 
 export default function SetupPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("intro");
+  const [step, setStep] = useState<Step>("days");
   const [draft, setDraft] = useState({ days: 12, mins: 30, hours: 4, bonus: 50 });
   const [business, setBusiness] = useState("");
   const [name, setName] = useState("");
@@ -85,7 +81,7 @@ export default function SetupPage() {
 
   async function createProgram() {
     setErr(null);
-    setLoader("Creating your group…");
+    setLoader("Creating your incentive group…");
     const supabase = createClient();
 
     const { data: signUp, error: suErr } = await supabase.auth.signUp({ email: email.trim(), password: pw });
@@ -144,6 +140,9 @@ export default function SetupPage() {
     router.refresh();
   }
 
+  const k = step as Key;
+  const isQuestion = QKEYS.includes(k);
+
   return (
     <main
       className="relative flex h-dvh flex-col"
@@ -165,39 +164,32 @@ export default function SetupPage() {
       </div>
 
       <div key={step} className="flex-1 overflow-y-auto">
-        <div className="animate-tour-screen flex min-h-full flex-col px-[26px] pb-7 pt-4">
-          {/* ---------- intro ---------- */}
-          {step === "intro" && (
-            <>
-              <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-                <RunnerMark tile={66} icon={34} radius={20} bob />
-                <h2 className="font-display text-[1.6rem] font-bold leading-tight tracking-tight text-ink">We&apos;re glad you&apos;re here.</h2>
-                <p className="max-w-[18rem] text-[0.95rem] leading-relaxed text-body-2">
-                  Let&apos;s build your team&apos;s wellness incentive in four quick steps. You can change anything later.
-                </p>
-              </div>
-              <Cta label="Let's do it" onClick={() => go("days", "Setting things up…", 900)} />
-            </>
-          )}
-
-          {/* ---------- questions ---------- */}
-          {(["days", "mins", "hours", "bonus"] as Key[]).includes(step as Key) && (
+        <div className="animate-tour-screen flex min-h-full flex-col px-[26px] pb-7 pt-5">
+          {isQuestion && (
             <Question
-              k={step as Key}
-              value={draft[step as Key]}
+              k={k}
+              value={draft[k]}
               draft={draft}
               bump={bump}
+              lead={
+                k === "days"
+                  ? {
+                      title: "Let's build your team's wellness incentive.",
+                      sub: "Four quick questions. You can change anything later.",
+                    }
+                  : undefined
+              }
+              prompt={k === "days" ? "First — how many days a month should they exercise?" : undefined}
               onNext={() => {
-                if (step === "bonus") go("review", "Putting your program together…", 1500);
+                if (k === "bonus") go("review", "Putting your team's incentive together…", 1500);
                 else go(ORDER[idx + 1], "Got it.", 600);
               }}
             />
           )}
 
-          {/* ---------- review ---------- */}
           {step === "review" && (
             <>
-              <Eyebrow>Your program</Eyebrow>
+              <Eyebrow>Your incentive program</Eyebrow>
               <h2 className="mt-1.5 font-display text-[2rem] font-bold leading-[1.06] tracking-tight text-ink">Here&apos;s the deal.</h2>
 
               <div className="mt-5 rounded-card border border-border bg-gradient-to-br from-accent-soft to-surface p-4 shadow-card">
@@ -224,11 +216,10 @@ export default function SetupPage() {
 
               <p className="mt-3 text-center text-[0.8rem] text-muted">You can fine-tune all of this later.</p>
               <div className="min-h-[18px] flex-1" />
-              <Cta label="Create program" onClick={() => go("business", "Locking it in…", 1100)} />
+              <Cta label="Create incentive program" onClick={() => go("business", "Locking it in…", 1100)} />
             </>
           )}
 
-          {/* ---------- business ---------- */}
           {step === "business" && (
             <>
               <Eyebrow>Almost there</Eyebrow>
@@ -242,7 +233,6 @@ export default function SetupPage() {
             </>
           )}
 
-          {/* ---------- account ---------- */}
           {step === "account" && (
             <>
               <Eyebrow>Last step</Eyebrow>
@@ -270,7 +260,7 @@ export default function SetupPage() {
               </div>
               {err && <p className="mt-3 text-sm text-danger">{err}</p>}
               <div className="min-h-[16px] flex-1" />
-              <Cta label="Create my group" disabled={!name.trim() || !email.trim() || pw.length < 6} onClick={createProgram} />
+              <Cta label="Create my incentive group" disabled={!name.trim() || !email.trim() || pw.length < 6} onClick={createProgram} />
             </>
           )}
         </div>
@@ -291,18 +281,29 @@ function Question({
   draft,
   bump,
   onNext,
+  lead,
+  prompt,
 }: {
   k: Key;
   value: number;
   draft: { days: number; mins: number; hours: number; bonus: number };
   bump: (k: Key, dir: 1 | -1) => void;
   onNext: () => void;
+  lead?: { title: string; sub: string };
+  prompt?: string;
 }) {
   const m = QMETA[k];
   return (
     <>
-      <Eyebrow>{m.count}</Eyebrow>
-      <h2 className="mt-1.5 whitespace-pre-line font-display text-[1.85rem] font-bold leading-[1.1] tracking-tight text-ink">{m.title}</h2>
+      {lead ? (
+        <>
+          <h2 className="font-display text-[1.7rem] font-bold leading-[1.12] tracking-tight text-ink">{lead.title}</h2>
+          <p className="mt-2.5 text-[0.92rem] leading-snug text-body-2">{lead.sub}</p>
+          <div className="mt-6 font-display text-[1.05rem] font-bold text-ink">{prompt}</div>
+        </>
+      ) : (
+        <h2 className="whitespace-pre-line font-display text-[1.85rem] font-bold leading-[1.1] tracking-tight text-ink">{m.title}</h2>
+      )}
 
       <div className="mt-7 flex items-center justify-center gap-[18px]">
         <button onClick={() => bump(k, -1)} aria-label="less" className="h-[58px] w-[58px] flex-none rounded-full border border-border bg-surface text-[1.7rem] text-ink shadow-card transition-colors hover:border-accent hover:text-accent active:scale-95">
@@ -324,23 +325,45 @@ function Question({
 
       <div className="min-h-[18px] flex-1" />
 
-      <DealPreview draft={draft} />
+      <DealPreview draft={draft} step={k} />
       <Cta label="Continue" onClick={onNext} />
     </>
   );
 }
 
-function DealPreview({ draft }: { draft: { days: number; mins: number; hours: number; bonus: number } }) {
+// Progressive "deal so far" — only reveals the parts the admin has reached.
+function DealPreview({ draft, step }: { draft: { days: number; mins: number; hours: number; bonus: number }; step: Key }) {
+  const i = QKEYS.indexOf(step);
+  const showMins = i >= 1;
+  const showHours = i >= 2;
+  const showBonus = i >= 3;
+  const rewardShown = showHours || (showBonus && draft.bonus > 0);
   return (
     <div className="mb-3 rounded-card border border-border bg-chip p-3.5 text-left">
       <div className="mb-1 font-display text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-accent">The deal so far</div>
       <p className="text-[0.88rem] leading-snug text-body-2">
-        Exercise <b className="text-ink">{draft.days} {draft.days === 1 ? "day" : "days"}</b> a month, <b className="text-ink">{draft.mins}+ min</b> each — earn{" "}
-        <b className="text-ink">{draft.hours} {draft.hours === 1 ? "hr" : "hrs"}</b>
-        {draft.bonus > 0 && (
+        Exercise <b className="text-ink">{draft.days} {draft.days === 1 ? "day" : "days"}</b>
+        {showMins && (
           <>
-            {" + "}
-            <b className="text-ink">${draft.bonus}</b>
+            {" of "}
+            <b className="text-ink">{draft.mins}+ min</b>
+          </>
+        )}
+        {" a month"}
+        {rewardShown && (
+          <>
+            {" → earn "}
+            {showHours && (
+              <b className="text-ink">
+                {draft.hours} {draft.hours === 1 ? "hr" : "hrs"}
+              </b>
+            )}
+            {showBonus && draft.bonus > 0 && (
+              <>
+                {showHours ? " + " : ""}
+                <b className="text-ink">${draft.bonus}</b>
+              </>
+            )}
           </>
         )}
         .
