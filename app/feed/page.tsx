@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/wellness-server";
-import { computeStats, qualifyingDaysByMember, timeAgo, tzStartOfDayISO } from "@/lib/wellness";
+import { computeStats, qualifyingDaysByMember, timeAgo } from "@/lib/wellness";
 import { Avatar } from "@/components/ui/Avatar";
 import { RunnerIcon, RunnerMark } from "@/components/wellness/Runner";
 import { TabBar } from "@/components/wellness/TabBar";
@@ -34,7 +34,8 @@ export default async function FeedPage() {
   const supabase = createClient();
 
   const now = new Date();
-  const startToday = tzStartOfDayISO(now);
+  // Rolling recent feed (last 7 days) so posts don't vanish at midnight.
+  const since = new Date(now.getTime() - 7 * 86400000).toISOString();
   const startYear = new Date(Date.UTC(now.getUTCFullYear() - 1, 11, 1)).toISOString();
 
   const { data: postsRaw } = await supabase
@@ -43,7 +44,7 @@ export default async function FeedPage() {
       "id, created_at, photo_url, place, description, duration_minutes, member_id, member:wl_members(name, avatar_url)",
     )
     .eq("program_id", program.id)
-    .gte("created_at", startToday)
+    .gte("created_at", since)
     .order("created_at", { ascending: false });
   const posts = (postsRaw ?? []) as any[];
 
@@ -94,7 +95,7 @@ export default async function FeedPage() {
           <span className="grid h-[26px] w-[26px] place-items-center rounded-[8px] bg-gradient-to-br from-accent to-accent-dark text-white">
             <RunnerIcon size={15} strokeWidth={2.2} />
           </span>
-          Today
+          Feed
         </span>
         <Link href="/me" aria-label="Your profile">
           <Avatar name={member.name} src={member.avatar_url} size={28} />
@@ -207,7 +208,7 @@ function EmptyFeed() {
     <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border bg-surface px-6 py-9 text-center">
       <RunnerMark tile={48} icon={24} radius={14} />
       <div>
-        <p className="font-display text-base font-bold text-ink">Nothing logged yet today</p>
+        <p className="font-display text-base font-bold text-ink">No check-ins yet</p>
         <p className="mt-1 text-sm text-body-2">Be the first to check in — it only takes a few taps.</p>
       </div>
       <Link
