@@ -1,13 +1,14 @@
 {
-  "name": "Athletx",
-  "short_name": "Athletx",
-  "description": "Coaches post open roster spots. Players see where they actually fit.",
+  "id": "/",
+  "name": "wlns",
+  "short_name": "wlns",
+  "description": "Log everyday movement with your team, cheer each other on, and earn the rewards your admin sets.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F5F4EF",
-  "theme_color": "#13201A",
+  "background_color": "#0c120f",
+  "theme_color": "#0c120f",
   "icons": [
     {
       "src": "/icon-192.png",
