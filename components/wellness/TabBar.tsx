@@ -25,7 +25,7 @@ export function TabBar() {
   const path = usePathname();
   const active = (p: string) => path === p;
   return (
-    <nav className="flex shrink-0 items-center justify-around border-t border-border bg-surface px-1.5 pt-2 pb-safe">
+    <nav className="flex shrink-0 items-center justify-around border-t border-border bg-surface px-1.5 pt-3 pb-safe">
       <Link
         href="/feed"
         className={cn(
