@@ -40,13 +40,22 @@ export default async function FeedPage() {
 
   const { data: postsRaw } = await supabase
     .from("wl_checkins")
-    .select(
-      "id, created_at, photo_url, place, description, duration_minutes, member_id, member:wl_members(name, avatar_url)",
-    )
+    .select("id, created_at, photo_url, place, description, duration_minutes, member_id")
     .eq("program_id", program.id)
     .gte("created_at", since)
     .order("created_at", { ascending: false });
   const posts = (postsRaw ?? []) as any[];
+
+  // Member names/avatars, fetched separately (a PostgREST embed here was
+  // failing and returning an empty feed).
+  const { data: membersRaw } = await supabase
+    .from("wl_members")
+    .select("id, name, avatar_url")
+    .eq("program_id", program.id);
+  const memberMap = new Map<string, { name: string; avatar_url: string | null }>();
+  for (const mm of (membersRaw ?? []) as { id: string; name: string; avatar_url: string | null }[]) {
+    memberMap.set(mm.id, { name: mm.name, avatar_url: mm.avatar_url });
+  }
 
   const { data: mine } = await supabase
     .from("wl_checkins")
@@ -145,16 +154,17 @@ export default async function FeedPage() {
           ) : (
             posts.map((p) => {
               const mine = p.member_id === userId;
+              const m = memberMap.get(p.member_id);
               return (
                 <article
                   key={p.id}
                   className={`overflow-hidden rounded-card border bg-surface shadow-card ${mine ? "border-accent ring-1 ring-accent" : "border-border"}`}
                 >
                   <div className="flex items-center gap-2.5 p-[11px]">
-                    <Avatar name={p.member?.name ?? "Member"} src={p.member?.avatar_url} size={34} />
+                    <Avatar name={m?.name ?? "Member"} src={m?.avatar_url} size={34} />
                     <div className="min-w-0">
                       <div className="truncate text-[0.86rem] font-bold text-ink">
-                        {p.member?.name ?? "Member"}
+                        {m?.name ?? "Member"}
                       </div>
                       <div className="text-[0.72rem] text-muted">{timeAgo(p.created_at, now)}</div>
                     </div>
@@ -186,7 +196,7 @@ export default async function FeedPage() {
                   </div>
                   {p.description && (
                     <div className="px-[13px] pb-1 pt-2.5 text-[0.86rem] leading-snug text-body-2">
-                      <b className="text-ink">{(p.member?.name ?? "Member").split(" ")[0]}</b>{" "}
+                      <b className="text-ink">{(m?.name ?? "Member").split(" ")[0]}</b>{" "}
                       {p.description}
                     </div>
                   )}
