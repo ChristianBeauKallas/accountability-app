@@ -150,7 +150,7 @@ export function AppTour() {
 
       {/* highlighted nav replica over the real tab bar */}
       {hasNav && (
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-around border-t border-border bg-surface px-1.5 pt-2 pb-safe">
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-around border-t border-border bg-surface px-1.5 pt-3 pb-safe">
           <span className={`flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-semibold transition ${step.spot === "feed" ? "scale-110 text-accent" : "text-muted opacity-40"}`}>
             <HomeIcon />
             Feed
