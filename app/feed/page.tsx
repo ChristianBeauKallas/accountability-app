@@ -151,6 +151,7 @@ export default async function FeedPage() {
                   viewerId={userId}
                   reactions={reactionMap.get(p.id)!}
                   now={now}
+                  minsPerDay={program.mins_per_day}
                 />
               );
             })
