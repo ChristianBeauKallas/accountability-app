@@ -78,7 +78,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-[18px] pb-3 pt-2.5">
+      <header className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-[18px] pb-3 pt-safe">
         <h1 className="font-display text-lg font-bold text-ink">Your month</h1>
         {member.is_admin && (
           <Link

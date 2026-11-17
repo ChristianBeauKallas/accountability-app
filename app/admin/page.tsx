@@ -51,7 +51,7 @@ export default async function AdminPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-[18px] py-2.5">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-[18px] pb-2.5 pt-safe">
         <Link
           href="/me"
           className="rounded-btn border border-border bg-surface px-2.5 py-[7px] text-sm font-semibold text-ink"

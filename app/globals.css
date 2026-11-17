@@ -109,6 +109,18 @@
   }
 }
 
+@layer utilities {
+  /* Standalone PWA draws under the translucent status bar / home indicator,
+     so top bars and bottom bars add the device safe-area insets on top of
+     their normal padding. */
+  .pt-safe {
+    padding-top: calc(env(safe-area-inset-top) + 0.625rem);
+  }
+  .pb-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.625rem);
+  }
+}
+
 /* Welcome-tour screen cross-fade */
 @keyframes tourScreenIn {
   from {
