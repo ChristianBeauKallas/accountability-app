@@ -6,6 +6,7 @@ import { computeStats, formatHours, formatMoney, tzDay } from "@/lib/wellness";
 import { Avatar } from "@/components/ui/Avatar";
 import { TabBar } from "@/components/wellness/TabBar";
 import { PostCard } from "@/components/wellness/PostCard";
+import { ReplayTutorial } from "@/components/wellness/ReplayTutorial";
 import { buildReactionMap, type ReactionRow } from "@/lib/reactions";
 
 export const dynamic = "force-dynamic";
@@ -203,7 +204,10 @@ export default async function ProfilePage() {
             </div>
           )}
 
-          <form action="/auth/signout" method="post" className="pt-1">
+          <div className="pt-1">
+            <ReplayTutorial />
+          </div>
+          <form action="/auth/signout" method="post">
             <button className="w-full rounded-btn border border-border bg-surface py-2.5 text-sm font-semibold text-muted">
               Log out
             </button>

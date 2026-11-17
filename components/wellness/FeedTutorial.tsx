@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { RunnerMark } from "./Runner";
 
-const KEY = "wlns_tour_done";
+export const TOUR_KEY = "wlns_tour_done";
 
 function HomeIcon() {
   return (
@@ -53,7 +53,7 @@ export function FeedTutorial() {
 
   useEffect(() => {
     try {
-      if (!localStorage.getItem(KEY)) setPhase("intro");
+      if (!localStorage.getItem(TOUR_KEY)) setPhase("intro");
     } catch {
       /* ignore */
     }
@@ -61,7 +61,7 @@ export function FeedTutorial() {
 
   function finish() {
     try {
-      localStorage.setItem(KEY, "1");
+      localStorage.setItem(TOUR_KEY, "1");
     } catch {
       /* ignore */
     }
