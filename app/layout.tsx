@@ -21,6 +21,16 @@ export const metadata: Metadata = {
   title: "wlns",
   description:
     "Log everyday movement with your team, cheer each other on, and earn the rewards your admin sets.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "wlns",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
