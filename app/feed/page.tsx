@@ -2,30 +2,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getViewer } from "@/lib/wellness-server";
-import { computeStats, qualifyingDaysByMember, timeAgo } from "@/lib/wellness";
+import { computeStats, qualifyingDaysByMember } from "@/lib/wellness";
+import { buildReactionMap, type ReactionRow } from "@/lib/reactions";
 import { Avatar } from "@/components/ui/Avatar";
 import { RunnerIcon, RunnerMark } from "@/components/wellness/Runner";
 import { TabBar } from "@/components/wellness/TabBar";
 import { InviteBanner } from "@/components/wellness/InviteBanner";
-import { PostReactions, type ReactionState } from "@/components/wellness/PostReactions";
-
-type EKey = "fire" | "thumb" | "heart";
-const emptyReactions = (): ReactionState => ({
-  fire: { count: 0, me: false },
-  thumb: { count: 0, me: false },
-  heart: { count: 0, me: false },
-});
+import { PostCard } from "@/components/wellness/PostCard";
 
 export const dynamic = "force-dynamic";
-
-function PinIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  );
-}
 
 export default async function FeedPage() {
   const viewer = await getViewer();
@@ -75,22 +60,17 @@ export default async function FeedPage() {
     .gte("created_at", startMonth);
   const daysByMember = qualifyingDaysByMember(monthRaw ?? [], program, now);
 
-  // Reactions for today's posts.
+  // Reactions for the visible posts.
   const postIds = posts.map((p) => p.id);
-  const reactionMap = new Map<string, ReactionState>();
-  posts.forEach((p) => reactionMap.set(p.id, emptyReactions()));
+  let reactionRows: ReactionRow[] = [];
   if (postIds.length) {
     const { data: rx } = await supabase
       .from("wl_reactions")
       .select("checkin_id, emoji, member_id")
       .in("checkin_id", postIds);
-    for (const r of (rx ?? []) as { checkin_id: string; emoji: EKey; member_id: string }[]) {
-      const e = reactionMap.get(r.checkin_id);
-      if (!e || !e[r.emoji]) continue;
-      e[r.emoji].count++;
-      if (r.member_id === userId) e[r.emoji].me = true;
-    }
+    reactionRows = (rx ?? []) as ReactionRow[];
   }
+  const reactionMap = buildReactionMap(postIds, reactionRows, userId);
 
   const R = 19;
   const C = 2 * Math.PI * R;
@@ -153,55 +133,24 @@ export default async function FeedPage() {
             <EmptyFeed />
           ) : (
             posts.map((p) => {
-              const mine = p.member_id === userId;
               const m = memberMap.get(p.member_id);
               return (
-                <article
+                <PostCard
                   key={p.id}
-                  className={`overflow-hidden rounded-card border bg-surface shadow-card ${mine ? "border-accent ring-1 ring-accent" : "border-border"}`}
-                >
-                  <div className="flex items-center gap-2.5 p-[11px]">
-                    <Avatar name={m?.name ?? "Member"} src={m?.avatar_url} size={34} />
-                    <div className="min-w-0">
-                      <div className="truncate text-[0.86rem] font-bold text-ink">
-                        {m?.name ?? "Member"}
-                      </div>
-                      <div className="text-[0.72rem] text-muted">{timeAgo(p.created_at, now)}</div>
-                    </div>
-                    {mine && (
-                      <span className="ml-auto rounded-pill bg-accent-soft px-2 py-[3px] text-[0.64rem] font-bold tracking-wide text-accent">
-                        YOU
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative aspect-square w-full bg-chip">
-                    {p.photo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.photo_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-accent-soft to-chip" />
-                    )}
-                    <span className="absolute right-2.5 top-2.5 rounded-pill bg-black/60 px-2 py-[5px] font-display text-[0.72rem] font-bold text-white backdrop-blur">
-                      {p.duration_minutes}m
-                    </span>
-                    {p.place && (
-                      <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1.5 rounded-pill bg-black/60 px-2.5 py-[5px] text-[0.72rem] font-semibold text-white backdrop-blur">
-                        <PinIcon />
-                        {p.place}
-                      </span>
-                    )}
-                    <span className="absolute bottom-2.5 right-2.5 rounded-pill bg-black/60 px-2.5 py-[5px] font-display text-[0.72rem] font-bold text-white backdrop-blur">
-                      {daysByMember.get(p.member_id) ?? 0}/{program.days_goal} days
-                    </span>
-                  </div>
-                  {p.description && (
-                    <div className="px-[13px] pb-1 pt-2.5 text-[0.86rem] leading-snug text-body-2">
-                      <b className="text-ink">{(m?.name ?? "Member").split(" ")[0]}</b>{" "}
-                      {p.description}
-                    </div>
-                  )}
-                  <PostReactions checkinId={p.id} memberId={userId} initial={reactionMap.get(p.id)!} />
-                </article>
+                  id={p.id}
+                  photoUrl={p.photo_url}
+                  place={p.place}
+                  description={p.description}
+                  durationMinutes={p.duration_minutes}
+                  createdAt={p.created_at}
+                  name={m?.name ?? "Member"}
+                  avatarUrl={m?.avatar_url ?? null}
+                  mine={p.member_id === userId}
+                  daysLabel={`${daysByMember.get(p.member_id) ?? 0}/${program.days_goal} days`}
+                  viewerId={userId}
+                  reactions={reactionMap.get(p.id)!}
+                  now={now}
+                />
               );
             })
           )}

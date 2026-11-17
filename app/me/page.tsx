@@ -5,6 +5,8 @@ import { getViewer } from "@/lib/wellness-server";
 import { computeStats, formatHours, formatMoney, tzDay } from "@/lib/wellness";
 import { Avatar } from "@/components/ui/Avatar";
 import { TabBar } from "@/components/wellness/TabBar";
+import { PostCard } from "@/components/wellness/PostCard";
+import { buildReactionMap, type ReactionRow } from "@/lib/reactions";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +33,6 @@ export default async function ProfilePage() {
 
   const now = new Date();
   const startYear = new Date(Date.UTC(now.getUTCFullYear() - 1, 11, 1)).toISOString();
-  const startMonth = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-  ).toISOString();
 
   const { data: yearRaw } = await supabase
     .from("wl_checkins")
@@ -43,14 +42,26 @@ export default async function ProfilePage() {
   const year = yearRaw ?? [];
   const stats = computeStats(year, program);
 
-  const { data: logsRaw } = await supabase
+  // The member's own check-ins, shown as full feed-style cards.
+  const { data: postsRaw } = await supabase
     .from("wl_checkins")
     .select("id, created_at, photo_url, place, description, duration_minutes")
     .eq("member_id", userId)
-    .gte("created_at", startMonth)
     .order("created_at", { ascending: false })
-    .limit(12);
-  const logs = logsRaw ?? [];
+    .limit(30);
+  const posts = (postsRaw ?? []) as any[];
+
+  const postIds = posts.map((p) => p.id);
+  let reactionRows: ReactionRow[] = [];
+  if (postIds.length) {
+    const { data: rx } = await supabase
+      .from("wl_reactions")
+      .select("checkin_id, emoji, member_id")
+      .in("checkin_id", postIds);
+    reactionRows = (rx ?? []) as ReactionRow[];
+  }
+  const reactionMap = buildReactionMap(postIds, reactionRows, userId);
+  const daysLabel = `${stats.qualifyingDays}/${stats.goal} days`;
 
   const dayKeys = new Set(year.map((c) => tzDay(c.created_at)));
   const streak = currentStreak(dayKeys, now);
@@ -161,45 +172,33 @@ export default async function ProfilePage() {
             <div className="mt-2 text-[0.7rem] text-muted">Rolls over · use as sick time</div>
           </div>
 
-          {/* logs */}
+          {/* your check-ins */}
           <div className="px-0.5 pt-0.5 font-display text-[0.78rem] font-bold uppercase tracking-wide text-muted">
-            This month&apos;s logs
+            Your check-ins
           </div>
-          {logs.length === 0 ? (
+          {posts.length === 0 ? (
             <div className="rounded-card border border-dashed border-border bg-surface px-5 py-8 text-center text-sm text-body-2">
-              No check-ins yet this month.
+              No check-ins yet. Tap the ＋ to log your first.
             </div>
           ) : (
-            <div className="rounded-card border border-border bg-surface px-3.5 py-1 shadow-card">
-              {logs.map((l, i) => (
-                <div
-                  key={l.id}
-                  className={`flex items-center gap-3 py-[11px] ${i < logs.length - 1 ? "border-b border-border" : ""}`}
-                >
-                  <div className="h-[42px] w-[42px] flex-none overflow-hidden rounded-[11px] bg-chip">
-                    {l.photo_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={l.photo_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-accent-soft to-chip" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[0.84rem] font-semibold text-ink">
-                      {l.description || "Movement"}
-                    </div>
-                    <div className="truncate text-[0.72rem] text-muted">
-                      {new Date(l.created_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                      {l.place ? ` · ${l.place}` : ""}
-                    </div>
-                  </div>
-                  <span className="font-display text-[0.82rem] font-bold text-body-2">
-                    {l.duration_minutes}m
-                  </span>
-                </div>
+            <div className="flex flex-col gap-3.5">
+              {posts.map((p) => (
+                <PostCard
+                  key={p.id}
+                  id={p.id}
+                  photoUrl={p.photo_url}
+                  place={p.place}
+                  description={p.description}
+                  durationMinutes={p.duration_minutes}
+                  createdAt={p.created_at}
+                  name={member.name}
+                  avatarUrl={member.avatar_url}
+                  mine
+                  daysLabel={daysLabel}
+                  viewerId={userId}
+                  reactions={reactionMap.get(p.id)!}
+                  now={now}
+                />
               ))}
             </div>
           )}

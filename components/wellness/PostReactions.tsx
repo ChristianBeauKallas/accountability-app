@@ -2,12 +2,9 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { EMOJI, type EKey, type ReactionState } from "@/lib/reactions";
 
-const EMOJI = { fire: "🔥", thumb: "👍", heart: "❤️" } as const;
-type Key = keyof typeof EMOJI;
-const KEYS = Object.keys(EMOJI) as Key[];
-
-export type ReactionState = Record<Key, { count: number; me: boolean }>;
+const KEYS = Object.keys(EMOJI) as EKey[];
 
 export function PostReactions({
   checkinId,
@@ -20,7 +17,7 @@ export function PostReactions({
 }) {
   const [state, setState] = useState<ReactionState>(initial);
 
-  async function toggle(k: Key) {
+  async function toggle(k: EKey) {
     const cur = state[k];
     const nextMe = !cur.me;
     setState((s) => ({ ...s, [k]: { me: nextMe, count: Math.max(0, cur.count + (nextMe ? 1 : -1)) } }));
@@ -38,7 +35,6 @@ export function PostReactions({
           .eq("emoji", k);
       }
     } catch {
-      // revert on failure
       setState((s) => ({ ...s, [k]: cur }));
     }
   }
