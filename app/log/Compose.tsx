@@ -103,21 +103,15 @@ export function Compose({
 
   return (
     <main className="relative flex min-h-dvh flex-col">
-      <header className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-[18px] py-2.5">
+      <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2.5 border-b border-border px-[18px] pb-2.5 pt-safe">
         <Link
           href="/feed"
-          className="rounded-btn border border-border bg-surface px-2.5 py-[7px] text-sm font-semibold text-ink"
+          className="justify-self-start rounded-btn border border-border bg-surface px-2.5 py-[7px] text-sm font-semibold text-ink"
         >
           Cancel
         </Link>
         <h1 className="font-display text-base font-bold text-ink">Log movement</h1>
-        <button
-          onClick={post}
-          disabled={busy}
-          className="rounded-btn bg-accent px-3.5 py-[7px] text-sm font-semibold text-surface disabled:opacity-50"
-        >
-          Post
-        </button>
+        <span aria-hidden />
       </header>
 
       <div className="flex-1 overflow-y-auto">
@@ -210,19 +204,37 @@ export function Compose({
                 +
               </button>
             </div>
-            {qualifies && (
-              <div className="flex items-center gap-1.5 text-[0.74rem] font-semibold text-accent">
+          </div>
+        </div>
+      </div>
+
+      {/* bottom action bar */}
+      <footer className="shrink-0 border-t border-border bg-surface px-[18px] pt-3 pb-safe">
+        {err && <p className="mb-2 text-sm text-danger">{err}</p>}
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 text-[0.76rem] font-semibold leading-snug">
+            {qualifies ? (
+              <span className="flex items-center gap-1.5 text-accent">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
-                This counts as a qualifying day ({minsPerDay}+ min)
-              </div>
+                Qualifying day · {dur} min
+              </span>
+            ) : (
+              <span className="text-muted">
+                {minsPerDay - dur} more min to qualify
+              </span>
             )}
           </div>
-
-          {err && <p className="text-sm text-danger">{err}</p>}
+          <button
+            onClick={post}
+            disabled={busy}
+            className="flex h-12 flex-none items-center justify-center rounded-cta bg-accent px-8 font-display text-[0.95rem] font-semibold text-surface shadow-[0_6px_16px_rgb(var(--c-accent)/0.35)] transition-colors hover:bg-accent-dark disabled:opacity-50"
+          >
+            Post
+          </button>
         </div>
-      </div>
+      </footer>
 
       {busy && <BobLoader message="Posting your check-in…" />}
 

@@ -80,7 +80,7 @@ export default async function FeedPage() {
   return (
     <div className="flex min-h-dvh flex-col">
       {/* app bar */}
-      <header className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-[18px] pb-3 pt-2.5">
+      <header className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-[18px] pb-3 pt-safe">
         <span className="inline-flex items-center gap-2 font-display font-bold text-ink">
           <span className="grid h-[26px] w-[26px] place-items-center rounded-[8px] bg-gradient-to-br from-accent to-accent-dark text-white">
             <RunnerIcon size={15} strokeWidth={2.2} />
