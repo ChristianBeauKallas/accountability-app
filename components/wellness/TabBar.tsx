@@ -25,7 +25,7 @@ export function TabBar() {
   const path = usePathname();
   const active = (p: string) => path === p;
   return (
-    <nav className="flex shrink-0 items-center justify-around border-t border-border bg-surface px-1.5 pt-3 pb-safe">
+    <nav className="flex shrink-0 items-center justify-around border-t border-border bg-surface px-1.5 pt-1.5 pb-safe">
       <Link
         href="/feed"
         className={cn(
@@ -37,8 +37,8 @@ export function TabBar() {
         Feed
       </Link>
       <Link href="/log" aria-label="Log a workout" className="flex-none">
-        <span className="-mt-4 grid h-[50px] w-[50px] place-items-center rounded-[16px] bg-accent text-surface shadow-[0_6px_16px_rgb(var(--c-accent)/0.4)]">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+        <span className="-mt-3 grid h-[46px] w-[46px] place-items-center rounded-[15px] bg-accent text-surface shadow-[0_6px_16px_rgb(var(--c-accent)/0.4)]">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
             <path d="M12 5v14M5 12h14" />
           </svg>
         </span>

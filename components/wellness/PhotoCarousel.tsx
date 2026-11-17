@@ -31,7 +31,7 @@ export function PhotoCarousel({ urls }: { urls: string[] }) {
         ))}
       </div>
       {urls.length > 1 && (
-        <div className="pointer-events-none absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-pill bg-black/35 px-2 py-1 backdrop-blur">
+        <div className="pointer-events-none absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-pill bg-black/50 px-2 py-1">
           {urls.map((_, i) => (
             <span
               key={i}
