@@ -126,7 +126,7 @@ export function Compose({
   const qualifies = dur >= minsPerDay;
 
   return (
-    <main className="relative flex min-h-dvh flex-col">
+    <main className="relative flex h-dvh flex-col">
       <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2.5 border-b border-border px-[18px] pb-2.5 pt-safe">
         <Link
           href="/feed"
@@ -138,7 +138,7 @@ export function Compose({
         <span aria-hidden />
       </header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-y-contain">
         <div className="flex flex-col gap-3.5 p-[18px]">
           {/* photos */}
           {photos.length === 0 ? (
