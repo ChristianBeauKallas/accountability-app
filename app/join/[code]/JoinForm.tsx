@@ -125,12 +125,12 @@ export function JoinForm({
               <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
                 <RunnerMark tile={78} icon={40} radius={24} halo bob />
                 <div>
-                  <div className="font-display text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-accent">You&apos;re invited</div>
-                  <h1 className="mt-2 font-display text-[2rem] font-bold leading-[1.08] tracking-tight text-ink">
-                    {programName}&apos;s wellness program.
+                  <div className="font-display text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-accent">You&apos;re invited to opt in to</div>
+                  <h1 className="mt-2 font-display text-[1.9rem] font-bold leading-[1.1] tracking-tight text-ink">
+                    {programName}&apos;s wellness incentive program.
                   </h1>
                   <p className="mx-auto mt-3 max-w-[18rem] text-[0.95rem] leading-relaxed text-body-2">
-                    A benefit that rewards you for staying active. Let&apos;s show you how it works.
+                    A benefit that rewards healthy behavior. Let&apos;s show you how it works.
                   </p>
                 </div>
               </div>
@@ -141,8 +141,8 @@ export function JoinForm({
           {step === "how" && (
             <>
               <div className="font-display text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-accent">How it works</div>
-              <h2 className="mt-1.5 font-display text-[2rem] font-bold leading-[1.07] tracking-tight text-ink">
-                Move, and get rewarded.
+              <h2 className="mt-1.5 whitespace-pre-line font-display text-[2rem] font-bold leading-[1.07] tracking-tight text-ink">
+                {"Exercise and\nget rewarded."}
               </h2>
               <p className="mt-4 text-[1rem] leading-relaxed text-body-2">
                 Exercise <b className="text-ink">{daysGoal} days a month</b>, at least{" "}
@@ -166,9 +166,10 @@ export function JoinForm({
               <h2 className="mt-1.5 font-display text-[2rem] font-bold leading-[1.07] tracking-tight text-ink">
                 Just check in.
               </h2>
-              <p className="mt-4 text-[1rem] leading-relaxed text-body-2">
-                After each workout, snap a quick photo, tag where you were, and log the minutes. A few taps and you&apos;re done — and the whole team sees you showed up.
+              <p className="mt-3 text-[0.98rem] leading-relaxed text-body-2">
+                After each workout, snap a photo, tag where you were, and log your minutes. Here&apos;s what a check-in looks like:
               </p>
+              <SamplePost />
               <div className="min-h-[18px] flex-1" />
               <Cta label="Create my account" onClick={next} />
             </>
@@ -210,5 +211,55 @@ export function JoinForm({
 
       {busy && <BobLoader message="Setting up your account…" />}
     </main>
+  );
+}
+
+// A static sample of what a feed post looks like, shown during onboarding.
+function SamplePost() {
+  return (
+    <div className="mt-4 overflow-hidden rounded-card border border-border bg-surface shadow-card">
+      <div className="flex items-center gap-2.5 p-[11px]">
+        <span className="grid h-[30px] w-[30px] place-items-center rounded-full font-display text-[0.64rem] font-bold text-white" style={{ background: "#2f6fb4" }}>
+          JR
+        </span>
+        <div className="min-w-0">
+          <div className="text-[0.82rem] font-bold leading-tight text-ink">Jordan Reyes</div>
+          <div className="text-[0.68rem] text-muted">just now</div>
+        </div>
+      </div>
+      <div className="relative h-40 w-full">
+        <svg viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
+          <defs>
+            <linearGradient id="jp-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#ffe0a3" />
+              <stop offset="0.5" stopColor="#ffb480" />
+              <stop offset="1" stopColor="#a9c58f" />
+            </linearGradient>
+          </defs>
+          <rect width="120" height="90" fill="url(#jp-sky)" />
+          <circle cx="84" cy="27" r="11" fill="#fff4da" />
+          <path d="M0 58 Q32 46 64 56 T120 54 L120 90 L0 90 Z" fill="#6b9a63" />
+          <path d="M0 70 Q40 60 78 70 T120 68 L120 90 L0 90 Z" fill="#3f6e45" />
+          <path d="M52 90 Q58 66 56 56 Q54 66 42 90 Z" fill="#dccca2" opacity="0.85" />
+        </svg>
+        <span className="absolute right-2 top-2 rounded-pill bg-black/60 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white backdrop-blur">35m</span>
+        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-pill bg-black/60 px-2 py-[3px] text-[0.68rem] font-semibold text-white backdrop-blur">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          Shoal Creek Trail
+        </span>
+        <span className="absolute bottom-2 right-2 rounded-pill bg-black/60 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white backdrop-blur">8/12 days</span>
+      </div>
+      <div className="px-[13px] pb-2 pt-2.5 text-[0.82rem] leading-snug text-body-2">
+        <b className="text-ink">Jordan</b> Morning run before work.
+      </div>
+      <div className="flex gap-2 px-[13px] pb-3">
+        <span className="rounded-pill border border-accent bg-accent-soft px-2.5 py-1 text-[0.78rem]">🔥 <b className="font-display text-[0.64rem] text-accent">3</b></span>
+        <span className="rounded-pill border border-border bg-surface px-2.5 py-1 text-[0.78rem]">👍</span>
+        <span className="rounded-pill border border-border bg-surface px-2.5 py-1 text-[0.78rem]">❤️</span>
+      </div>
+    </div>
   );
 }

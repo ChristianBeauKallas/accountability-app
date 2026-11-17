@@ -9,6 +9,7 @@ import { RunnerIcon, RunnerMark } from "@/components/wellness/Runner";
 import { TabBar } from "@/components/wellness/TabBar";
 import { InviteBanner } from "@/components/wellness/InviteBanner";
 import { PostCard } from "@/components/wellness/PostCard";
+import { FeedTutorial } from "@/components/wellness/FeedTutorial";
 
 export const dynamic = "force-dynamic";
 
@@ -158,6 +159,7 @@ export default async function FeedPage() {
       </div>
 
       <TabBar />
+      <FeedTutorial />
     </div>
   );
 }
