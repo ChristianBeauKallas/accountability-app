@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { TabBar } from "@/components/wellness/TabBar";
 import { PostCard } from "@/components/wellness/PostCard";
 import { ReplayTutorial } from "@/components/wellness/ReplayTutorial";
+import { AppTour } from "@/components/wellness/AppTour";
 import { buildReactionMap, type ReactionRow } from "@/lib/reactions";
 
 export const dynamic = "force-dynamic";
@@ -216,6 +217,7 @@ export default async function ProfilePage() {
       </div>
 
       <TabBar />
+      <AppTour />
     </div>
   );
 }
