@@ -238,10 +238,10 @@ function PeekPost({
       </div>
       <div className="relative h-32 overflow-hidden rounded-xl bg-chip">
         {scene}
-        <span className="absolute right-2 top-2 rounded-pill bg-black/55 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white backdrop-blur">
+        <span className="absolute right-2 top-2 rounded-pill bg-black/55 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white">
           {dur}
         </span>
-        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-pill bg-black/55 px-2 py-[3px] text-[0.68rem] font-semibold text-white backdrop-blur">
+        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-pill bg-black/55 px-2 py-[3px] text-[0.68rem] font-semibold text-white">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
             <circle cx="12" cy="10" r="3" />

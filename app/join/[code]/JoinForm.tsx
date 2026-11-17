@@ -242,15 +242,15 @@ function SamplePost() {
           <path d="M0 70 Q40 60 78 70 T120 68 L120 90 L0 90 Z" fill="#3f6e45" />
           <path d="M52 90 Q58 66 56 56 Q54 66 42 90 Z" fill="#dccca2" opacity="0.85" />
         </svg>
-        <span className="absolute right-2 top-2 rounded-pill bg-black/60 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white backdrop-blur">35m</span>
-        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-pill bg-black/60 px-2 py-[3px] text-[0.68rem] font-semibold text-white backdrop-blur">
+        <span className="absolute right-2 top-2 rounded-pill bg-black/60 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white">35m</span>
+        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-pill bg-black/60 px-2 py-[3px] text-[0.68rem] font-semibold text-white">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
             <circle cx="12" cy="10" r="3" />
           </svg>
           Shoal Creek Trail
         </span>
-        <span className="absolute bottom-2 right-2 rounded-pill bg-black/60 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white backdrop-blur">8/12 days</span>
+        <span className="absolute bottom-2 right-2 rounded-pill bg-black/60 px-2 py-[3px] font-display text-[0.68rem] font-bold text-white">8/12 days</span>
       </div>
       <div className="px-[13px] pb-2 pt-2.5 text-[0.82rem] leading-snug text-body-2">
         <b className="text-ink">Jordan</b> Morning run before work.

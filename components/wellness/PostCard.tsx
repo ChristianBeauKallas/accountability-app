@@ -65,17 +65,17 @@ export function PostCard({
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-accent-soft to-chip" />
         )}
-        <span className="absolute right-2.5 top-2.5 rounded-pill bg-black/60 px-2 py-[5px] font-display text-[0.72rem] font-bold text-white backdrop-blur">
+        <span className="absolute right-2.5 top-2.5 rounded-pill bg-black/70 px-2 py-[5px] font-display text-[0.72rem] font-bold text-white">
           {durationMinutes}m
         </span>
         {place && (
-          <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1.5 rounded-pill bg-black/60 px-2.5 py-[5px] text-[0.72rem] font-semibold text-white backdrop-blur">
+          <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1.5 rounded-pill bg-black/70 px-2.5 py-[5px] text-[0.72rem] font-semibold text-white">
             <PinIcon />
             {place}
           </span>
         )}
         {daysLabel && (
-          <span className="absolute bottom-2.5 right-2.5 rounded-pill bg-black/60 px-2.5 py-[5px] font-display text-[0.72rem] font-bold text-white backdrop-blur">
+          <span className="absolute bottom-2.5 right-2.5 rounded-pill bg-black/70 px-2.5 py-[5px] font-display text-[0.72rem] font-bold text-white">
             {daysLabel}
           </span>
         )}

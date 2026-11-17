@@ -167,14 +167,14 @@ export function Compose({
                     type="button"
                     onClick={() => removePhoto(i)}
                     aria-label="Remove photo"
-                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white backdrop-blur"
+                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
                       <path d="M6 6l12 12M18 6 6 18" />
                     </svg>
                   </button>
                   {i === 0 && (
-                    <span className="absolute bottom-1 left-1 rounded-pill bg-black/60 px-1.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-wide text-white backdrop-blur">
+                    <span className="absolute bottom-1 left-1 rounded-pill bg-black/70 px-1.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-wide text-white">
                       Cover
                     </span>
                   )}

@@ -114,10 +114,10 @@
      so top bars and bottom bars add the device safe-area insets on top of
      their normal padding. */
   .pt-safe {
-    padding-top: calc(env(safe-area-inset-top) + 1rem);
+    padding-top: calc(env(safe-area-inset-top) + 1.35rem);
   }
   .pb-safe {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.25rem);
   }
 }
 
