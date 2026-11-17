@@ -67,7 +67,7 @@ const STEPS: StepDef[] = [
     page: "log",
     spot: null,
     title: "The check-in screen",
-    body: "Add a photo, tag your location, note what you did, and Post. Every check-in gets you closer to your incentive.",
+    body: "Add a photo or two, tag your location, note what you did, and Post. Every check-in gets you closer to your incentive.",
     next: "/me?tour=profile",
     prev: "/feed?tour=add",
   },

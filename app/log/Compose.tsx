@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { BobLoader } from "@/components/wellness/BobLoader";
 import { Input, Textarea } from "@/components/ui/Field";
 
+const MAX_PHOTOS = 4;
+
 export function Compose({
   programId,
   minsPerDay,
@@ -15,8 +17,7 @@ export function Compose({
   minsPerDay: number;
 }) {
   const router = useRouter();
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoURL, setPhotoURL] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<{ file: File; url: string }[]>([]);
   const [place, setPlace] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
@@ -27,10 +28,25 @@ export function Compose({
   const [err, setErr] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  function pickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0] ?? null;
-    setPhoto(f);
-    setPhotoURL(f ? URL.createObjectURL(f) : null);
+  function addPhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    setErr(null);
+    setPhotos((prev) => {
+      const room = MAX_PHOTOS - prev.length;
+      const next = files
+        .slice(0, room)
+        .map((f) => ({ file: f, url: URL.createObjectURL(f) }));
+      return [...prev, ...next];
+    });
+    e.target.value = "";
+  }
+
+  function removePhoto(i: number) {
+    setPhotos((prev) => {
+      const target = prev[i];
+      if (target) URL.revokeObjectURL(target.url);
+      return prev.filter((_, j) => j !== i);
+    });
   }
 
   function useLocation() {
@@ -55,7 +71,7 @@ export function Compose({
 
   async function post() {
     setErr(null);
-    if (!photo) {
+    if (!photos.length) {
       setErr("Add a photo of your workout first.");
       return;
     }
@@ -69,21 +85,29 @@ export function Compose({
       return;
     }
 
-    const path = `${user.id}/checkin-${Date.now()}`;
-    const { error: upErr } = await supabase.storage
-      .from("wellness")
-      .upload(path, photo, { contentType: photo.type });
-    if (upErr) {
-      setErr(upErr.message);
-      setBusy(false);
-      return;
+    const stamp = Date.now();
+    const photo_urls: string[] = [];
+    for (let i = 0; i < photos.length; i++) {
+      const { file } = photos[i];
+      const path = `${user.id}/checkin-${stamp}-${i}`;
+      const { error: upErr } = await supabase.storage
+        .from("wellness")
+        .upload(path, file, { contentType: file.type });
+      if (upErr) {
+        setErr(upErr.message);
+        setBusy(false);
+        return;
+      }
+      photo_urls.push(
+        supabase.storage.from("wellness").getPublicUrl(path).data.publicUrl,
+      );
     }
-    const photo_url = supabase.storage.from("wellness").getPublicUrl(path).data.publicUrl;
 
     const { error } = await supabase.from("wl_checkins").insert({
       member_id: user.id,
       program_id: programId,
-      photo_url,
+      photo_url: photo_urls[0],
+      photo_urls,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
       place: place.trim() || null,
@@ -116,32 +140,63 @@ export function Compose({
 
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-3.5 p-[18px]">
-          {/* photo */}
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="relative flex aspect-square w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-dashed border-border bg-chip text-center text-muted"
-          >
-            {photoURL ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photoURL} alt="" className="h-full w-full object-cover" />
-                <span className="absolute bottom-3 rounded-pill bg-black/55 px-2.5 py-1 text-[0.72rem] text-white backdrop-blur">
-                  Tap to change
-                </span>
-              </>
-            ) : (
-              <>
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                  <circle cx="12" cy="13" r="3" />
-                </svg>
-                <span className="text-[0.84rem] font-semibold">Add a photo</span>
-                <span className="text-[0.72rem]">You, the gym, the trail — whatever you did</span>
-              </>
-            )}
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={pickPhoto} />
+          {/* photos */}
+          {photos.length === 0 ? (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="relative flex aspect-square w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-dashed border-border bg-chip text-center text-muted"
+            >
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+              <span className="text-[0.84rem] font-semibold">Add photos</span>
+              <span className="text-[0.72rem]">You, the gym, the trail — up to {MAX_PHOTOS}</span>
+            </button>
+          ) : (
+            <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {photos.map((p, i) => (
+                <div
+                  key={p.url}
+                  className="relative aspect-square w-28 flex-none overflow-hidden rounded-xl border border-border bg-chip"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.url} alt="" className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    aria-label="Remove photo"
+                    className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white backdrop-blur"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
+                      <path d="M6 6l12 12M18 6 6 18" />
+                    </svg>
+                  </button>
+                  {i === 0 && (
+                    <span className="absolute bottom-1 left-1 rounded-pill bg-black/60 px-1.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-wide text-white backdrop-blur">
+                      Cover
+                    </span>
+                  )}
+                </div>
+              ))}
+              {photos.length < MAX_PHOTOS && (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="grid aspect-square w-28 flex-none place-items-center rounded-xl border border-dashed border-border bg-chip text-muted"
+                >
+                  <span className="flex flex-col items-center gap-1">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    <span className="text-[0.66rem] font-semibold">Add</span>
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+          <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={addPhotos} />
 
           {/* location */}
           <div className="flex flex-col gap-2">
