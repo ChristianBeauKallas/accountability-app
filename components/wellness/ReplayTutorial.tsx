@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { TOUR_KEY } from "./FeedTutorial";
+import { TOUR_KEY } from "./AppTour";
 
 export function ReplayTutorial() {
   const router = useRouter();
@@ -11,8 +11,7 @@ export function ReplayTutorial() {
     } catch {
       /* ignore */
     }
-    router.push("/feed");
-    router.refresh();
+    router.push("/feed?tour=feed");
   }
   return (
     <button onClick={replay} className="w-full p-1.5 text-center text-sm font-semibold text-muted transition-colors hover:text-accent">
