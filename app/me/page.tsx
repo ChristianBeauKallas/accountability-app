@@ -200,6 +200,7 @@ export default async function ProfilePage() {
                   viewerId={userId}
                   reactions={reactionMap.get(p.id)!}
                   now={now}
+                  minsPerDay={program.mins_per_day}
                 />
               ))}
             </div>

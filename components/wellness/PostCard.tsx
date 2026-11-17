@@ -3,6 +3,7 @@ import { timeAgo } from "@/lib/wellness";
 import type { ReactionState } from "@/lib/reactions";
 import { PostReactions } from "./PostReactions";
 import { PhotoCarousel } from "./PhotoCarousel";
+import { PostMenu } from "./PostMenu";
 
 function PinIcon() {
   return (
@@ -27,6 +28,7 @@ export function PostCard({
   viewerId,
   reactions,
   now,
+  minsPerDay,
 }: {
   id: string;
   photoUrls: string[];
@@ -41,19 +43,29 @@ export function PostCard({
   viewerId: string;
   reactions: ReactionState;
   now: Date;
+  minsPerDay: number;
 }) {
   return (
     <article className={`overflow-hidden rounded-card border bg-surface shadow-card ${mine ? "border-accent ring-1 ring-accent" : "border-border"}`}>
-      <div className="flex items-center gap-2.5 p-[11px]">
+      <div className="relative flex items-center gap-2.5 p-[11px]">
         <Avatar name={name} src={avatarUrl} size={34} />
         <div className="min-w-0">
           <div className="truncate text-[0.86rem] font-bold text-ink">{name}</div>
           <div className="text-[0.72rem] text-muted">{timeAgo(createdAt, now)}</div>
         </div>
         {mine && (
-          <span className="ml-auto rounded-pill bg-accent-soft px-2 py-[3px] text-[0.64rem] font-bold tracking-wide text-accent">
-            YOU
-          </span>
+          <div className="ml-auto flex items-center gap-1">
+            <span className="rounded-pill bg-accent-soft px-2 py-[3px] text-[0.64rem] font-bold tracking-wide text-accent">
+              YOU
+            </span>
+            <PostMenu
+              id={id}
+              description={description}
+              place={place}
+              durationMinutes={durationMinutes}
+              minsPerDay={minsPerDay}
+            />
+          </div>
         )}
       </div>
       <div className="relative aspect-square w-full bg-chip">
