@@ -50,7 +50,7 @@ export default async function AdminPage() {
   const bonusLabel = formatMoney(program.monthly_bonus_cents);
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col">
       <header className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-[18px] pb-2.5 pt-safe">
         <Link
           href="/me"
@@ -70,7 +70,7 @@ export default async function AdminPage() {
         />
       </header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-y-contain">
         <div className="flex flex-col gap-3.5 p-[18px]">
           <div className="grid grid-cols-3 gap-2.5">
             <Summary value={String(roster.length)} label="team members" />

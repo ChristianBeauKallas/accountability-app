@@ -77,7 +77,7 @@ export default async function ProfilePage() {
   const bankPct = stats.bankCap > 0 ? Math.round((stats.bankedHours / stats.bankCap) * 100) : 0;
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col">
       <header className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-[18px] pb-3 pt-safe">
         <h1 className="font-display text-lg font-bold text-ink">Your month</h1>
         {member.is_admin && (
@@ -90,7 +90,7 @@ export default async function ProfilePage() {
         )}
       </header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-y-contain">
         <div className="flex flex-col gap-3.5 p-[18px]">
           {/* identity */}
           <div className="flex items-center gap-3">

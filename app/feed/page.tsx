@@ -78,7 +78,7 @@ export default async function FeedPage() {
   const offset = C * (1 - Math.min(1, stats.qualifyingDays / stats.goal));
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col">
       {/* app bar */}
       <header className="flex shrink-0 items-center justify-between gap-2.5 border-b border-border px-[18px] pb-3 pt-safe">
         <span className="inline-flex items-center gap-2 font-display font-bold text-ink">
@@ -92,7 +92,7 @@ export default async function FeedPage() {
         </Link>
       </header>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overscroll-y-contain">
         <div className="flex flex-col gap-3.5 p-[18px]">
           {member.is_admin && <InviteBanner code={program.invite_code} />}
 
