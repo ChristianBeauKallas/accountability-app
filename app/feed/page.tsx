@@ -26,7 +26,7 @@ export default async function FeedPage() {
 
   const { data: postsRaw } = await supabase
     .from("wl_checkins")
-    .select("id, created_at, photo_url, place, description, duration_minutes, member_id")
+    .select("id, created_at, photo_url, photo_urls, place, description, duration_minutes, member_id")
     .eq("program_id", program.id)
     .gte("created_at", since)
     .order("created_at", { ascending: false });
@@ -139,7 +139,7 @@ export default async function FeedPage() {
                 <PostCard
                   key={p.id}
                   id={p.id}
-                  photoUrl={p.photo_url}
+                  photoUrls={p.photo_urls?.length ? p.photo_urls : p.photo_url ? [p.photo_url] : []}
                   place={p.place}
                   description={p.description}
                   durationMinutes={p.duration_minutes}

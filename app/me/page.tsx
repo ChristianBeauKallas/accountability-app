@@ -47,7 +47,7 @@ export default async function ProfilePage() {
   // The member's own check-ins, shown as full feed-style cards.
   const { data: postsRaw } = await supabase
     .from("wl_checkins")
-    .select("id, created_at, photo_url, place, description, duration_minutes")
+    .select("id, created_at, photo_url, photo_urls, place, description, duration_minutes")
     .eq("member_id", userId)
     .order("created_at", { ascending: false })
     .limit(30);
@@ -188,7 +188,7 @@ export default async function ProfilePage() {
                 <PostCard
                   key={p.id}
                   id={p.id}
-                  photoUrl={p.photo_url}
+                  photoUrls={p.photo_urls?.length ? p.photo_urls : p.photo_url ? [p.photo_url] : []}
                   place={p.place}
                   description={p.description}
                   durationMinutes={p.duration_minutes}

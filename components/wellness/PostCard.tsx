@@ -2,6 +2,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { timeAgo } from "@/lib/wellness";
 import type { ReactionState } from "@/lib/reactions";
 import { PostReactions } from "./PostReactions";
+import { PhotoCarousel } from "./PhotoCarousel";
 
 function PinIcon() {
   return (
@@ -14,7 +15,7 @@ function PinIcon() {
 
 export function PostCard({
   id,
-  photoUrl,
+  photoUrls,
   place,
   description,
   durationMinutes,
@@ -28,7 +29,7 @@ export function PostCard({
   now,
 }: {
   id: string;
-  photoUrl: string | null;
+  photoUrls: string[];
   place: string | null;
   description: string | null;
   durationMinutes: number;
@@ -56,9 +57,11 @@ export function PostCard({
         )}
       </div>
       <div className="relative aspect-square w-full bg-chip">
-        {photoUrl ? (
+        {photoUrls.length > 1 ? (
+          <PhotoCarousel urls={photoUrls} />
+        ) : photoUrls.length === 1 ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+          <img src={photoUrls[0]} alt="" className="h-full w-full object-cover" />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-accent-soft to-chip" />
         )}
