@@ -150,13 +150,13 @@ export function AppTour() {
 
       {/* highlighted nav replica over the real tab bar */}
       {hasNav && (
-        <div className="absolute inset-x-0 bottom-0 flex items-center justify-around border-t border-border bg-surface px-1.5 pt-1.5 pb-safe">
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-around border-t border-border bg-surface px-1.5 pt-3 pb-safe">
           <span className={`flex flex-1 flex-col items-center gap-0.5 py-1 text-[11px] font-semibold transition ${step.spot === "feed" ? "scale-110 text-accent" : "text-muted opacity-40"}`}>
             <HomeIcon />
             Feed
           </span>
           <span className="flex-none">
-            <span className={`-mt-3 grid h-[46px] w-[46px] place-items-center rounded-[15px] bg-accent text-surface transition ${step.spot === "add" ? "scale-110 ring-4 ring-accent/40" : "opacity-40"}`}>
+            <span className={`-mt-2 grid h-[46px] w-[46px] place-items-center rounded-[15px] bg-accent text-surface transition ${step.spot === "add" ? "scale-110 ring-4 ring-accent/40" : "opacity-40"}`}>
               <PlusIcon />
             </span>
           </span>
