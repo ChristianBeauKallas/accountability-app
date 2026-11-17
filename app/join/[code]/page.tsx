@@ -12,7 +12,17 @@ export default async function JoinPage({ params }: { params: { code: string } })
 
   const supabase = createClient();
   const { data } = await supabase.rpc("wl_program_by_code", { p_code: params.code });
-  const program = Array.isArray(data) && data[0] ? (data[0] as { id: string; name: string }) : null;
+  const program =
+    Array.isArray(data) && data[0]
+      ? (data[0] as {
+          id: string;
+          name: string;
+          days_goal: number;
+          mins_per_day: number;
+          bank_hours_per_month: number;
+          monthly_bonus_cents: number;
+        })
+      : null;
 
   if (!program) {
     return (
@@ -28,5 +38,14 @@ export default async function JoinPage({ params }: { params: { code: string } })
     );
   }
 
-  return <JoinForm programId={program.id} programName={program.name} />;
+  return (
+    <JoinForm
+      programId={program.id}
+      programName={program.name}
+      daysGoal={program.days_goal}
+      minsPerDay={program.mins_per_day}
+      bankHours={program.bank_hours_per_month}
+      bonusCents={program.monthly_bonus_cents}
+    />
+  );
 }
